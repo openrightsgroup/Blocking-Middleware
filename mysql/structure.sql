@@ -1,9 +1,3 @@
-/*
-SQLyog Community v9.63 
-MySQL - 5.0.77 : Database - bowdlerize
-*********************************************************************
-*/
-
 /*!40101 SET NAMES utf8 */;
 
 /*!40101 SET SQL_MODE=''*/;
@@ -32,10 +26,34 @@ CREATE TABLE `probes` (
   `probeRespRecv` int(11) default NULL,
   `enabled` tinyint(1) default '1',
   `frequency` int(11) default '2',
+  `gcmType` int(11) default '0',
   PRIMARY KEY  (`uuid`,`id`),
   UNIQUE KEY `probeUUID` (`uuid`),
   KEY `id` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+
+/*Table structure for table `tempURLs` */
+
+DROP TABLE IF EXISTS `tempURLs`;
+
+CREATE TABLE `tempURLs` (
+  `tempID` int(11) NOT NULL auto_increment,
+  `URL` text,
+  `hash` varchar(32) default NULL,
+  `headers` text,
+  `content_type` text,
+  `code` int(11) default NULL,
+  `fullFidelityReq` tinyint(1) default '0',
+  `urgency` int(11) default '0',
+  `source` enum('social','user','canary','probe') default NULL,
+  `targetASN` int(11) default NULL,
+  `status` enum('pending','failed','ready','complete') default NULL,
+  `lastPolled` datetime default NULL,
+  `inserted` timestamp NULL default CURRENT_TIMESTAMP,
+  `polledAttempts` int(11) default '0',
+  `polledSuccess` int(11) default '0',
+  PRIMARY KEY  (`tempID`)
+) ENGINE=MyISAM AUTO_INCREMENT=1401808 DEFAULT CHARSET=latin1;
 
 /*Table structure for table `users` */
 
