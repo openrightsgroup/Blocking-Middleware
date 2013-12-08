@@ -10,7 +10,10 @@
 	RewriteRule ^status/user$ status_user.php [NC,L,qsa]
 	RewriteRule ^prepare/probe$ prepare_probe.php [NC,L,qsa]
 	RewriteRule ^register/probe$ register_probe.php [NC,L,qsa]
-	RewriteRule ^update/gcm$ updategcm.php [NC,L,qsa]
+	RewriteRule ^update/gcm$ update_gcm.php [NC,L,qsa]
+	RewriteRule ^status/ip status_ip.php [NC,L,qsa]
+	RewriteRule ^submit/url submit_url.php [NC,L,qsa]
+	RewriteRule ^request/httpt request_url.php [NC,L,qsa]
 
 </IfModule>
 DirectoryIndex index.php

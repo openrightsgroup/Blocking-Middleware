@@ -7,6 +7,7 @@
 
         $email = mysql_real_escape_string($_POST['email']);
 	$signature = base64_decode(str_replace(" ","",$_POST['signature']));
+	$url = mysql_real_escape_string($_POST['url']);
 
         $result = array();
         $result['success'] = false;
@@ -28,27 +29,25 @@
 
 				$row = mysql_fetch_assoc($mySQLresult);
 
-				if($row['status'] == "ok")
+				if(Middleware::verifyUserSignature($row['publicKey'],$signature,$url))
 				{
-					if(Middleware::verifyUserSignature($row['publicKey'],$signature,$email))
-					{
-						$result['success'] = true;
-						
-						$probeHMAC = md5(date('Y-m-d H:i:s') . rand());
+					$Query = "insert into tempURLs (URL,hash,lastPolled) VALUES (\"$url\",\"$md5\",\"2013-12-01 00:00:01\")";
+        	                        mysql_query($Query);
+	
+                	                if(mysql_errno() == 0)
+                        	        {
+                                	        $result['success'] = true;
+                                        	$result['uuid'] = mysql_insert_id();
+                                	}
+                                	else
+                                	{
+                                        	$result['error'] = mysql_error();
+                                	}
 
-						$Query = "update users set probeHMAC = \"$probeHMAC\" where email = \"$email\"";
-						mysql_query($Query);
-
-						$result['probe_hmac'] = $probeHMAC;
-					}
-					else
-					{
-						$result['error'] = "Public key signature verification failed";
-					}
 				}
 				else
 				{
-					$result['error'] = "Account is " . $row['status'];
+					$result['error'] = "Public key signature verification failed";
 				}
 			}
 			else
