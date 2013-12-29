@@ -6,7 +6,7 @@
 
 
         $email = mysql_real_escape_string($_POST['email']);
-        $password = md5($Salt . mysql_real_escape_string($_POST['password']));
+        $password = password_hash(mysql_real_escape_string($_POST['password']), PASSWORD_DEFAULT);
 	$probeHMAC = md5($Salt . rand() . $email);
 
         $result = array();
