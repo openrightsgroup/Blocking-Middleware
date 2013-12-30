@@ -62,7 +62,7 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL auto_increment,
   `email` varchar(128) NOT NULL,
-  `password` varchar(32) default NULL,
+  `password` varchar(255) default NULL,
   `preference` text,
   `fullName` varchar(60) default NULL,
   `isPublic` tinyint(1) default '0',

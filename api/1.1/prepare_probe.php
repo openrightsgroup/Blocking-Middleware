@@ -32,14 +32,22 @@
 				{
 					if(Middleware::verifyUserSignature($row['publicKey'],$signature,$email))
 					{
-						$result['success'] = true;
-						
-						$probeHMAC = md5(date('Y-m-d H:i:s') . rand());
+						// Using 32 bytes for randomness as it seems secure enough.
+						$probeHMAC = password_hash(date('Y-m-d H:i:s') . openssl_random_pseudo_bytes(32, $crypto_strong));
 
-						$Query = "update users set probeHMAC = \"$probeHMAC\" where email = \"$email\"";
-						mysql_query($Query);
+						if($crypto_strong)
+						{
+							$result['success'] = true;
 
-						$result['probe_hmac'] = $probeHMAC;
+							$Query = "update users set probeHMAC = \"$probeHMAC\" where email = \"$email\"";
+							mysql_query($Query);
+
+							$result['probe_hmac'] = $probeHMAC;
+						}
+						else
+						{
+							$result['error'] = "Failed to generate a secure signature";
+						}
 					}
 					else
 					{
