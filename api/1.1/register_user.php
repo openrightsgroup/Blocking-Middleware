@@ -6,7 +6,9 @@
 
 
         $email = mysql_real_escape_string($_POST['email']);
-        $password = password_hash(mysql_real_escape_string($_POST['password']), PASSWORD_DEFAULT);
+        /* removed escape_string below, since if user's password contains single quote it will have hashed a 
+           different value. */
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 	$probeHMAC = md5($Salt . rand() . $email);
 
         $result = array();
@@ -25,29 +27,22 @@
                 {
 			include('libs/pki.php');
 			$rowID = mysql_insert_id();
-			$pki = Middleware::generateKeys(); 
+			$secret = Middleware::generateSharedSecret(); 
 
 
-			if(!empty($pki['public']))
-			{
-				$Query = "update users set publicKey = \"" . $pki['public'] ."\" where id = " . $rowID;
-		                mysql_query($Query);
+                        $Query = "update users set secret = \"" . $secret ."\" where id = " . $rowID;
+                        mysql_query($Query);
 
-				if(mysql_errno() == 0)
-		                {
-                	        	$result['success'] = true;
-					$result['status'] = 'pending';
-					$result['private_key'] = $pki['private'];
-				}
-				else
-				{
-					$result['error'] = "Your user account was created but building a public/private key failed. Please contact ORG";
-				}
-			}
-			else
-			{
-				$result['error'] = "Your user account was created but building a public/private key failed. Please contact ORG";
-			}
+                        if(mysql_errno() == 0)
+                        {
+                                $result['success'] = true;
+                                $result['status'] = 'pending';
+                                $result['secret'] = $secret;
+                        }
+                        else
+                        {
+                                $result['error'] = "Your user account was created but storing your shared secret failed. Please contact ORG";
+                        }
                 }
                 else
                 {

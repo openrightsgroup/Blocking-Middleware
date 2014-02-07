@@ -17,6 +17,7 @@ CREATE TABLE `probes` (
   `uuid` varchar(32) NOT NULL,
   `userID` int(11) default NULL,
   `publicKey` text,
+  `secret` varchar(128),
   `type` enum('raspi','android','atlas','web') NOT NULL,
   `lastSeen` datetime default NULL,
   `gcmRegID` text,
@@ -72,6 +73,7 @@ CREATE TABLE `users` (
   `pgpKey` text,
   `yubiKey` varchar(12) default NULL,
   `publicKey` text,
+  `secret` varchar(128),
   `createdAt` timestamp NULL default CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;

@@ -6,7 +6,7 @@
 
 
         $email = mysql_real_escape_string($_POST['email']);
-	$signature = base64_decode(str_replace(" ","",$_POST['signature']));
+	$signature = $_POST['signature']; // sha512 hmac should not need to have been base64-encoded
 
         $result = array();
         $result['success'] = false;
@@ -17,7 +17,7 @@
         }
         else
         {
-                $Query = "select publicKey,status from users where email = \"$email\"";
+                $Query = "select secret,status from users where email = \"$email\"";
 		$mySQLresult = mysql_query($Query);
 
                 if(mysql_errno() == 0)
@@ -30,7 +30,7 @@
 
 				if($row['status'] == "ok")
 				{
-					if(Middleware::verifyUserSignature($row['publicKey'],$signature,$email))
+					if(Middleware::verifyUserMessage($email, $row['secret'],$signature))
 					{
 						// Using 32 bytes for randomness as it seems secure enough.
 						$probeHMAC = password_hash(date('Y-m-d H:i:s') . openssl_random_pseudo_bytes(32, $crypto_strong));
