@@ -9,7 +9,7 @@
         $probeUUID = mysql_real_escape_string($_POST['probe_uuid']);
 	$probeSeed = mysql_real_escape_string($_POST['probe_seed']);
 	$probeType = mysql_real_escape_string($_POST['probe_type']);
-	$signature = $_POST['signature'];
+	$signature = base64_decode(str_replace(" ","",$_POST['signature']));
 	$countryCode = mysql_real_escape_string($_POST['cc']);
 
         $result = array();
@@ -21,7 +21,7 @@
         }
         else
         {
-                $Query = "select id,secret,probeHMAC,status from users where email = \"$email\"";
+                $Query = "select id,publicKey,probeHMAC,status from users where email = \"$email\"";
 		$mySQLresult = mysql_query($Query);
 
                 if(mysql_errno() == 0)
@@ -36,29 +36,36 @@
 				{
 					if(md5($probeSeed . "-" . $row['probeHMAC']) == $probeUUID)
 					{
-						if(Middleware::verifyUserMessage($probeUUID, $row['secret'],$signature))
+						if(Middleware::verifyUserSignature($row['publicKey'],$signature,$probeUUID))
 						{
-							$secret = Middleware::generateSharedSecret();
+							$pki = Middleware::generateKeys();
 
-                                                        $userID = $row['id'];
+							if(!empty($pki['public']))
+							{
+								$userID = $row['id'];
 
-                                                        $Query = "insert into probes (uuid,userID,secret,countryCode,type) VALUES (\"$probeUUID\",$userID,\"$secret\",\"$countryCode\",\"$probeType\")";
-                                                        $mySQLresult = mysql_query($Query);
-                                                        if(mysql_errno() == 0)
-                                                        {
-                                                                /*print($pki['private']);
-                                                                print("\n\n\n\n\n");*/
-                                                                $result['success'] = true;
-                                                                $result['secret'] = $secret;
-                                                        }
-                                                        else
-                                                        {
-                                                                $result['error'] = "Adding probe to the database failed";
-                                                        }
+								$Query = "insert into probes (uuid,userID,publicKey,countryCode,type) VALUES (\"$probeUUID\",$userID,\"{$pki['public']}\",\"$countryCode\",\"$probeType\")";
+								$mySQLresult = mysql_query($Query);
+								if(mysql_errno() == 0)
+								{
+									/*print($pki['private']);
+									print("\n\n\n\n\n");*/
+									$result['success'] = true;
+									$result['private_key'] = $pki['private'];
+								}
+								else
+								{
+									$result['error'] = "Adding probe to the database failed";
+								}
+							}
+							else
+							{
+								$result['error'] = "Succesfully authenticated but probe PKI generation failed";
+							}
 						}
 						else
 						{
-							$result['error'] = "Signature verification failed";
+							$result['error'] = "Public key signature verification failed";
 						}
 					}
 					else

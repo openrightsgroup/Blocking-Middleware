@@ -34,31 +34,4 @@ class Middleware
 			return false;	
 		}
 	}
-
-	public static function generateSharedSecret()
-	{
-		// generates a suitably long shared secret to use with HMAC signing
-		$chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		$char_count = 62;
-
-		$out = '';
-		for ($i=0; $i < 36; $i++) {
-			$out .= substr($chars, rand(0, $char_count-1), 1);
-		}
-		return $out;
-	}
-
-	public static function createSignatureHash($message, $secret) {
-		return hash_hmac('sha512', $message, $secret);
-	}
-
-	public static function verifyUserMessage($message, $secret, $hash) {
-		if (hash_hmac('sha512', $message, $secret) == $hash) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-		
-
 }

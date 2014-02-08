@@ -6,7 +6,7 @@
 
 
         $email = mysql_real_escape_string($_POST['email']);
-	$signature = $_POST['signature'];
+	$signature = base64_decode(str_replace(" ","",$_POST['signature']));
 	$url = mysql_real_escape_string($_POST['url']);
 
         $result = array();
@@ -18,7 +18,7 @@
         }
         else
         {
-                $Query = "select secret,status from users where email = \"$email\"";
+                $Query = "select publicKey,status from users where email = \"$email\"";
 		$mySQLresult = mysql_query($Query);
 
                 if(mysql_errno() == 0)
@@ -29,7 +29,7 @@
 
 				$row = mysql_fetch_assoc($mySQLresult);
 
-				if(Middleware::verifyUserMessage($url, $row['secret'],$signature))
+				if(Middleware::verifyUserSignature($row['publicKey'],$signature,$url))
 				{
 					$Query = "insert into tempURLs (URL,hash,lastPolled) VALUES (\"$url\",\"$md5\",\"2013-12-01 00:00:01\")";
         	                        mysql_query($Query);
@@ -47,7 +47,7 @@
 				}
 				else
 				{
-					$result['error'] = "Signature verification failed";
+					$result['error'] = "Public key signature verification failed";
 				}
 			}
 			else

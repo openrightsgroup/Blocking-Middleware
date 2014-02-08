@@ -7,7 +7,7 @@
 
         $email = mysql_real_escape_string($_POST['email']);
         //$password = md5($Salt . mysql_real_escape_string($_POST['password']));
-	$signature = $_POST['signature'];
+	$signature = base64_decode(str_replace(" ","",$_POST['signature']));
 
         $result = array();
         $result['success'] = false;
@@ -18,7 +18,7 @@
         }
         else
         {
-                $Query = "select secret,status from users where email = \"$email\"";
+                $Query = "select publicKey,status from users where email = \"$email\"";
 		$mySQLresult = mysql_query($Query);
 
                 if(mysql_errno() == 0)
@@ -29,14 +29,14 @@
 
 				$row = mysql_fetch_assoc($mySQLresult);
 
-				if(Middleware::verifyUserMessage($email,$row['secret'],$signature))
+				if(Middleware::verifyUserSignature($row['publicKey'],$signature,$email))
 				{
 					$result['success'] = true;
 					$result['status'] = $row['status'];
 				}
 				else
 				{
-					$result['error'] = "Signature verification failed";
+					$result['error'] = "Public key signature verification failed";
 				}
 			}
 			else
