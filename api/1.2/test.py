@@ -4,18 +4,26 @@ import getopt
 import requests
 
 import hmac, hashlib
+import logging
 
-optlist, optargs = getopt.getopt(sys.argv[1:],'', [
+
+
+optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'email=',
 	'host=',
 	'password=',
 	'secret=',
+	'url='
 	])
 opts = dict(optlist)
 
+logging.basicConfig(
+	level = logging.DEBUG if '-v' in opts else logging.INFO,
+	)
+
 class TestClient:
-	MODES = ['user','user_status']
-	PREFIX='/api/1.1/'
+	MODES = ['user','user_status','submit']
+	PREFIX='/api/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
@@ -30,15 +38,24 @@ class TestClient:
 		rq = requests.post('http://' + self.host + self.PREFIX+'register/user',
 			data={'email': self.opts['--email'],'password': self.opts['--password']}
 			)
-		return rq.content
+		return rq.status_code, rq.content
 
 	def user_status(self):
-		rq = requests.post('http://' + self.host + self.PREFIX+'status/user',
-			data={
+		rq = requests.get('http://' + self.host + self.PREFIX+'status/user',
+			params={
 				'email': self.opts['--email'],
 				'signature': self.sign(self.opts['--email']),
 				}
 			)
+		return rq.status_code, rq.content
+
+	def submit(self):
+		rq = requests.post('http://' + self.host + self.PREFIX + 'submit/url',
+		data = {
+			'email': opts['--email'],
+			'url': opts['--url'],
+			'signature': self.sign(opts['--url']),
+			})
 		return rq.status_code, rq.content
 
 	def sign(self, msg):

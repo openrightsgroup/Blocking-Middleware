@@ -1,5 +1,8 @@
 <?php
 	include('libs/DB.php');
+        include('libs/password.php');
+        include('libs/compat.php');
+        include('libs/pki.php');
 
         header('Content-type: application/json');
         header("API-Version: $APIVersion");
@@ -15,6 +18,7 @@
 	if(empty($email) || empty($signature))
         {
                 $result['error'] = "Email address or signature were blank";
+                $status = 400;
         }
         else
         {
@@ -25,7 +29,6 @@
                 {
 			if(mysql_num_rows($mySQLresult) == 1)
 			{
-				include('libs/pki.php');
 
 				$row = mysql_fetch_assoc($mySQLresult);
 
@@ -38,28 +41,35 @@
                         	        {
                                 	        $result['success'] = true;
                                         	$result['uuid'] = mysql_insert_id();
+                                                $status = 201;
                                 	}
                                 	else
                                 	{
                                         	$result['error'] = mysql_error();
+                                                $status = 500;
                                 	}
 
 				}
 				else
 				{
 					$result['error'] = "Signature verification failed";
+                                        $status = 403;
 				}
 			}
 			else
 			{
 				$result['error'] = "No matches in DB. Please contact ORG support";
+                                $status = 404;
 			}
                 }
                 else
                 {
                         $result['error'] = mysql_error();
+                        $status = 500;
                 }
         }
 
-
+        if ($status) {
+                http_response_code($status);
+        }
         print(json_encode($result));
