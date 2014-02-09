@@ -14,6 +14,7 @@ $_http_messages = array(
 
 if (!function_exists('http_response_code')) {
 	function http_response_code($code) {
+		global $_http_messages;
 		header($_SERVER['SERVER_PROTOCOL'] . " $code {$_http_messages[$code]}");
 	}
 }
