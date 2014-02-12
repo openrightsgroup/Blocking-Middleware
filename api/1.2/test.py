@@ -11,6 +11,7 @@ import logging
 optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'email=',
 	'host=',
+	'port=',
 	'password=',
 	'secret=',
 	'url='
@@ -28,6 +29,7 @@ class TestClient:
 	def __init__(self, options):
 		self.opts = options
 		self.host = options.get('--host','localhost')
+		self.port = options.get('--port','80')
 		self.secret = options.get('--secret','')
 
 	def run(self, mode):
@@ -35,13 +37,13 @@ class TestClient:
 		return getattr(self, mode)()
 
 	def user(self):
-		rq = requests.post('http://' + self.host + self.PREFIX+'register/user',
+		rq = requests.post('http://' + self.host +":"+self.port+ self.PREFIX+'register/user',
 			data={'email': self.opts['--email'],'password': self.opts['--password']}
 			)
 		return rq.status_code, rq.content
 
 	def user_status(self):
-		rq = requests.get('http://' + self.host + self.PREFIX+'status/user',
+		rq = requests.get('http://' + self.host+":"+self.port + self.PREFIX+'status/user',
 			params={
 				'email': self.opts['--email'],
 				'signature': self.sign(self.opts['--email']),
@@ -50,7 +52,7 @@ class TestClient:
 		return rq.status_code, rq.content
 
 	def submit(self):
-		rq = requests.post('http://' + self.host + self.PREFIX + 'submit/url',
+		rq = requests.post('http://' + self.host+":"+self.port + self.PREFIX + 'submit/url',
 		data = {
 			'email': opts['--email'],
 			'url': opts['--url'],
