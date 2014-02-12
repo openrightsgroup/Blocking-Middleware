@@ -1,6 +1,8 @@
 <IfModule mod_rewrite.c>
         RewriteEngine On
 
+	RewriteBase /api/1.2
+
         #Don't rewrie for files and dirs
         RewriteCond %{SCRIPT_FILENAME} !-d
         RewriteCond %{SCRIPT_FILENAME} !-f
