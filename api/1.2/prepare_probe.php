@@ -10,13 +10,19 @@
 
         $email = mysql_real_escape_string($_POST['email']);
 	$signature = $_POST['signature']; // sha512 hmac should not need to have been base64-encoded
+        $date = $_POST['date'];
+
 
         $result = array();
         $result['success'] = false;
 	
-	if(empty($email) || empty($signature))
+	if(empty($email) || empty($signature) || empty($date))
         {
-                $result['error'] = "Email address or signature were blank";
+                $result['error'] = "Email address, datestamp or signature was blank";
+                $status = 400;
+        }
+        elseif (!Middleware::checkMessageTimestamp($date)) {
+                $result['error'] = "Timestamp out of range (too old/new)";
                 $status = 400;
         }
         else
@@ -32,26 +38,18 @@
 
 				if($row['status'] == "ok")
 				{
-					if(Middleware::verifyUserMessage($email, $row['secret'],$signature))
+					if(Middleware::verifyUserMessage($email.":".$date, $row['secret'],$signature))
 					{
-						// Using 32 bytes for randomness as it seems secure enough.
-						$probeHMAC = password_hash(date('Y-m-d H:i:s') . openssl_random_pseudo_bytes(32, $crypto_strong));
+						// Generate a shared secret for associating the probe with a user
+						$probeHMAC = Middleware::generateSharedSecret(32);
 
-						if($crypto_strong)
-						{
-							$result['success'] = true;
+                                                $result['success'] = true;
 
-							$Query = "update users set probeHMAC = \"$probeHMAC\" where email = \"$email\"";
-							mysql_query($Query);
+                                                $Query = "update users set probeHMAC = \"$probeHMAC\" where email = \"$email\"";
+                                                mysql_query($Query);
 
-							$result['probe_hmac'] = $probeHMAC;
-                                                        $status = 200;
-						}
-						else
-						{
-							$result['error'] = "Failed to generate a secure signature";
-                                                        $status = 500;
-						}
+                                                $result['probe_hmac'] = $probeHMAC;
+                                                $status = 200;
 					}
 					else
 					{

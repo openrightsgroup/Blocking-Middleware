@@ -35,14 +35,14 @@ class Middleware
 		}
 	}
 
-	public static function generateSharedSecret()
+	public static function generateSharedSecret($length=36)
 	{
 		// generates a suitably long shared secret to use with HMAC signing
 		$chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		$char_count = 62;
 
 		$out = '';
-		for ($i=0; $i < 36; $i++) {
+		for ($i=0; $i < $length; $i++) {
 			$out .= substr($chars, rand(0, $char_count-1), 1);
 		}
 		return $out;
@@ -60,5 +60,15 @@ class Middleware
 		}
 	}
 		
+        public static function checkMessageTimestamp($time) {
+                # messages are valid for up to 15 minutes
+                $now = time();
+                $msgtime = strtotime($time);
+                if (abs($msgtime - $now) > (15*60)) {
+                        return false;
+                } else {
+                        return true;
+                }
+        }
 
 }

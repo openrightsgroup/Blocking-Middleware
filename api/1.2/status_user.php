@@ -10,14 +10,19 @@
         // I'm leaning towards this being a GET endpoint, since it doesn't alter any data
         // changing to $_REQUEST in the meantime
         $email = mysql_real_escape_string($_REQUEST['email']);
-	$signature = $_REQUEST['signature'];
+        $signature = $_REQUEST['signature'];
+        $date = $_REQUEST['date'];
 
         $result = array();
         $result['success'] = false;
 
-	if(empty($email) || empty($signature))
+        if(empty($email) || empty($signature) || empty($date))
         {
-                $result['error'] = "Email address or signature were blank";
+                $result['error'] = "Email address, datestamp or signature was blank";
+                $status = 400;
+        }
+        elseif (!Middleware::checkMessageTimestamp($date)) {
+                $result['error'] = "Timestamp out of range (too old/new)";
                 $status = 400;
         }
         else
@@ -31,7 +36,7 @@
 			{
 				$row = mysql_fetch_assoc($mySQLresult);
 
-				if(Middleware::verifyUserMessage($email,$row['secret'],$signature))
+				if(Middleware::verifyUserMessage($email.':'.$date,$row['secret'],$signature))
 				{
 					$result['success'] = true;
 					$result['status'] = $row['status'];
