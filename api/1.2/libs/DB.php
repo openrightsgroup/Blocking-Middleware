@@ -14,5 +14,5 @@
 	$memcache->addServer('127.0.0.1', 11211);
 	$MemcacheShard = 0;
 	
-	$APIVersion = "1.1";
+	$APIVersion = "1.2";
 	$Salt = "PASSWORD SALT";	
