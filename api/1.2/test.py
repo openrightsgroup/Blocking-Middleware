@@ -17,6 +17,7 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'secret=',
 	'url=',
         'fuzzdate',
+	'new',
 
         # probe registration
         'probeseed=', 
@@ -37,6 +38,10 @@ class TestClient:
 		self.host = options.get('--host','localhost')
 		self.port = options.get('--port','80')
 		self.secret = options.get('--secret','')
+		if '--new' in options:
+			self.prefix = self.PREFIX+'api.php/'
+		else:
+			self.prefix = self.PREFIX
 
         def timestamp(self):
                 if '--fuzzdate' in opts:
@@ -48,14 +53,14 @@ class TestClient:
 		return getattr(self, mode)()
 
 	def user(self):
-		rq = requests.post('http://' + self.host +":"+self.port+ self.PREFIX+'register/user',
+		rq = requests.post('http://' + self.host +":"+self.port+ self.prefix+'register/user',
 			data={'email': self.opts['--email'],'password': self.opts['--password']}
 			)
 		return rq.status_code, rq.content
 
 	def user_status(self):
                 ts = self.timestamp()
-		rq = requests.get('http://' + self.host+":"+self.port + self.PREFIX+'status/user',
+		rq = requests.get('http://' + self.host+":"+self.port + self.prefix+'status/user',
 			params={
 				'email': self.opts['--email'],
                                 'date': ts,
@@ -66,7 +71,7 @@ class TestClient:
 
         def prepare_probe(self):
                 ts = self.timestamp()
-		rq = requests.post('http://' + self.host+":"+self.port + self.PREFIX+'prepare/probe',
+		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'prepare/probe',
 			data={
 				'email': self.opts['--email'],
                                 'date': ts,
@@ -77,7 +82,7 @@ class TestClient:
                 
         def register_probe(self):
                 uuid = hashlib.md5(self.opts['--probeseed'] + '-' + self.opts['--probehmac']).hexdigest()
-		rq = requests.post('http://' + self.host+":"+self.port + self.PREFIX+'register/probe',
+		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'register/probe',
 			data={
 				'email': self.opts['--email'],
                                 'probe_seed': self.opts['--probeseed'],
@@ -90,8 +95,8 @@ class TestClient:
                 
 
 	def submit(self):
-		rq = requests.post('http://' + self.host+":"+self.port + self.PREFIX + 'submit/url',
-		data = {
+		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'submit/url',
+		params = {
 			'email': opts['--email'],
 			'url': opts['--url'],
 			'signature': self.sign(opts['--url']),
