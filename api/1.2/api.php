@@ -29,6 +29,10 @@ function checkParameters($req, $params) {
 
 $app->error(function(APIException $e, $code) {
 	switch(get_class($e)) {
+		case "ProbeLookupError":
+			$code = 404;
+			$message = "No matches in DB, please contact ORG support";
+			break;
 		case "UserLookupError":
 			$code = 404;
 			$message = "No matches in DB, please contact ORG support";
@@ -52,6 +56,10 @@ $app->error(function(APIException $e, $code) {
 		case "ConflictError":
 			$code = 409;
 			$message = $e->getMessage();
+			break;
+		case 'UserStatusError':
+			$code = 403;
+			$message = "Account is " . $e->getMessage();
 			break;
 	};
 	return new JsonResponse(array('success'=>false, 'error'=>$message), $code);
@@ -145,6 +153,107 @@ $app->post('/register/user', function(Request $req) use ($app) {
 		201
 	);
 });
+
+$app->post('/prepare/probe', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$conn = $app['service.db'];
+
+	$result = $conn->query("select secret,status from users where email = ?",
+		array($req->get('email'))
+		);
+
+	if ($result->num_rows == 0) {
+		throw new UserLookupError();
+	}
+	$row = $result->fetch_assoc();
+	if ($row['status'] != 'ok') {
+		throw new UserStatusError($row['status']);
+	}
+
+	Middleware::verifyUserMessage($req->get('email') . ':' . $req->get('date'), $row['secret'], $req->get('signature'));
+
+	$probeHMAC = Middleware::generateSharedSecret(32);
+
+	$conn->query("update users set probeHMAC = ? where email = ?",
+		array($probeHMAC, $req->get('email'))
+		);
+
+	return $app->json(array(
+		'success' => true,
+		'probe_hmac' => $probeHMAC
+		));
+});
+
+$app->post('/register/probe', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature'));
+
+	$conn = $app['service.db'];
+	$result = $conn->query(
+		"select id,secret,probeHMAC,status from users where email = ?",
+		array($req->get('email')));
+	
+	if ($result->num_rows == 0) {
+		throw new UserLookupError();
+	}
+	$row = $result->fetch_assoc();
+	if ($row['status'] != 'ok') {
+		throw new UserStatusError($row['status']);
+	}
+	if (md5($req->get('probe_seed') . '_' . $row['probeHMAC']) != $req->get('probe_uuid')) {
+		return $app->json(array(
+			'success' => false,
+			'error' => 'Probe seed and HMAC verification failed'
+			), 403);
+	}
+
+	$secret = Middleware::generateSharedSecret();
+
+	$conn->query("insert into probes (uuid,userID,secret,countrycode,type) values (?,?,?,?,?)",
+		array($req->get('probe_uuid'), $row['id'], $secret, $req->get('country_code'), $req->get('probe_type'))
+		);
+
+	return $app->json(array(
+		'success' => true,
+		'secret' => $secret), 201);
+});
+
+$app->get('/request/httpt', function(Request $req) use ($app) {
+	checkParameters($req, array('probe_uuid','signature'));
+	$conn = $app['service.db'];
+
+	$result = $conn->query("select secret from probes where probeUUID=?",
+		array($req->get('probe_uuid')));
+	if ($result->numrows == 0) {
+		throw new ProbeLookupError();
+	}
+	$row = $result->fetchrow_assoc();
+
+	Middleware::verifyUserMessage($req->get('probe_uuid'), $req->get('signature'), $row['secret']);
+
+	$result = $conn->query("select tempID,URL,hash from tempURLs ORDER BY lastPolled ASC,polledAttempts DESC LIMIT 1");
+	if ($result->num_rows == 0) {
+		return $app->json(array(
+			'success' => false,
+			'error' => 'No queued URLs found'
+			), 404);
+	}
+	$row = $result->fetch_assoc();
+	$ret = array(
+		'success' => true,
+		'url' => $row['URL'],
+		'hash' => $row['hash']
+		);
+	$conn->query(
+		"update tempURLs set lastPolled = now(), polledAttempts = polledAttempts + 1 where tempID = ?",
+		array($row['tempID'])
+		);
+
+	return $app->json($ret, 200);
+});
+
 
 
 $app->run();

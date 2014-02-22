@@ -17,3 +17,8 @@ class TimestampError extends APIException {
 // user status
 class UserLookupError extends APIException {
 }
+class UserStatusError extends APIException {
+}
+
+class ProbeLookupError extends APIException {
+}
