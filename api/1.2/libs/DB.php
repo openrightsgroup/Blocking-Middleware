@@ -23,18 +23,33 @@
 		return $conn;
 	}
 
-	db_connect();
+	#db_connect();
 
-	function db_escape($conn, $sql, $args) {
-		// a sloppy positional escape function
-		// because I really hate having to type escape_string so many times
-		$n = 0;
-		while (strpos($sql, '?') !== false) {
-			$sql = str_replace('?', "'" . $conn->escape_string($args[$n]) . "'", $sql);
-			$n += 1;
+	class APIDB extends mysqli {
+
+		function query($sql, $args, $mode=MYSQLI_STORE_RESULT) {
+			return parent::query($this->escape($sql, $args), $mode);
 		}
-		return $sql;
+
+		function escape($sql, $args) {
+			// a sloppy positional escape function
+			// because I really hate having to type escape_string so many times
+			$n = 0;
+			$startpos = 0;
+			// startpos is used to that we don't get confused by escaped data that contains
+			// the placeholder
+			while (($startpos = strpos($sql, '?', $startpos)) !== false) {
+				$esc = $this->escape_string($args[$n]) ;
+				$sql = substr_replace($sql, "'" .$esc . "'", $startpos, 1);
+				$n++;
+				$startpos += strlen($esc+2); // move startpos past the end of the escaped string
+			}
+			if ($n != count($args)) {
+				$c = count($args);
+				throw new Exception("APIDB::escape: number of placeholders ($n) does not match number of arguments ($c)");
+			}
+			return $sql;
+		}
+
 	}
-			
-			
 			

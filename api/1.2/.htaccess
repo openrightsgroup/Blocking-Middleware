@@ -8,13 +8,13 @@
         RewriteCond %{SCRIPT_FILENAME} !-f
 
         #All our subpages
-        RewriteRule ^register/user$ register_user.php [NC,L,qsa]
+        RewriteRule ^register/user$ api.php/register_user.php [NC,L,qsa]
 	RewriteRule ^status/user$ status_user.php [NC,L,qsa]
 	RewriteRule ^prepare/probe$ prepare_probe.php [NC,L,qsa]
 	RewriteRule ^register/probe$ register_probe.php [NC,L,qsa]
 	RewriteRule ^update/gcm$ update_gcm.php [NC,L,qsa]
 	RewriteRule ^status/ip status_ip.php [NC,L,qsa]
-	RewriteRule ^submit/url submit_url.php [NC,L,qsa]
+	RewriteRule ^submit/url api.php/submit_url.php [NC,L,qsa]
 	RewriteRule ^request/httpt request_url.php [NC,L,qsa]
 
 </IfModule>
