@@ -48,7 +48,7 @@
 				$esc = $this->escape_string($args[$n]) ;
 				$sql = substr_replace($sql, "'" .$esc . "'", $startpos, 1);
 				$n++;
-				$startpos += strlen($esc+2); // move startpos past the end of the escaped string
+				$startpos += strlen($esc)+2; // move startpos past the end of the escaped string
 			}
 			if ($n != count($args)) {
 				$c = count($args);
