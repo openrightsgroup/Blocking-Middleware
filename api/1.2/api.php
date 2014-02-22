@@ -2,10 +2,10 @@
 
 require_once __DIR__."/../silex/vendor/autoload.php";
 
-include "libs/DB.php";
-include "libs/pki.php";
-include "libs/password.php";
-include "libs/exceptions.php";
+include_once "libs/DB.php";
+include_once "libs/pki.php";
+include_once "libs/password.php";
+include_once "libs/exceptions.php";
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -67,30 +67,23 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	checkParameters($req, array('email','signature'));
 
-	if (!$result = $conn->query(
+	$result = $conn->query(
 		"select secret,status from users where email = ?",
 		array($req->get('email'))
-		)) {
+		);
 
-		throw new DatabaseError($conn->error, $conn->errno);
-	}
 	if ($result->num_rows == 0) {
 		throw new UserLookupError();
 	}
 	$row = $result->fetch_assoc();
 
-	if (!Middleware::verifyUserMessage($req->get('url'), $row['secret'], $req->get('signature'))) {
-		throw new SignatureError();
-	}
+	Middleware::verifyUserMessage($req->get('url'), $row['secret'], $req->get('signature'));
 
-	$result = $conn->query(
+	$conn->query(
 		"insert into tempURLs(URL, hash, lastPolled) values (?,?,now())",
 		array($req->get('url'), md5($req->get('url')))
 		);
 
-	if (!$result) {
-		throw new DatabaseError($conn->error, $conn->errno);
-	}
 
 	return $app->json(array('success' => true, 'uuid' => $conn->insert_id), 201);
 });
@@ -100,27 +93,20 @@ $app->get('/status/user',function(Request $req) use ($app) {
 
 	checkParameters($req, array('email','signature','date'));
 
-	if (!Middleware::checkMessageTimestamp($req->get('date'))) {
-		throw new TimestampError();
-	}
+	Middleware::checkMessageTimestamp($req->get('date'));
 	$result = $conn->query(
 		"select secret,status from users where email = ?",
 		array($req->get('email'))
 		);
 
-	if ($conn->errno != 0) {
-		throw new DatabaseError($conn->error, $conn->errno);
-	}
 	if ($result->num_rows == 0) {
 		throw new UserLookupError();
 	}
 	$row = $result->fetch_assoc();
 
-	if (!Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'), 
-		$row['secret'], $req->get('signature'))) {
+	Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'), 
+		$row['secret'], $req->get('signature'));
 
-		throw new SignatureError();
-	}
 
 	return $app->json(array('success'=>'true', 'status'=> $row['status']));
 	
@@ -137,15 +123,18 @@ $app->post('/register/user', function(Request $req) use ($app) {
 	$probeHMAC = md5($Salt . rand() . $email);
 
 	$secret = Middleware::generateSharedSecret(); 
-	$result = $conn->query(
-		"insert into users (email, password, probeHMAC, secret) VALUES (?,?,?,?)",
-		array($email,$password,$probeHMAC,$secret)
-		);
-	if (!$result) {
-		if ($conn->errno == 1062) {
+	try {
+		$result = $conn->query(
+			"insert into users (email, password, probeHMAC, secret) VALUES (?,?,?,?)",
+			array($email,$password,$probeHMAC,$secret)
+			);
+	}
+	catch (DatabaseError $e) {
+		
+		if ($e->getCode() == 1062) {
 			throw new ConflictError("A user account with this email address has already been registered");
 		} else {
-			throw new DatabaseError($conn->error, $conn->errno);
+			throw $e;
 		}
 	}
 	return $app->json(array(

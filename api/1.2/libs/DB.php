@@ -3,6 +3,8 @@
 	$dbuser = 'db_username';
 	$dbpass = 'db_password';
 	$dbname = 'DB_NAME';
+
+	include_once "exceptions.php";
 	
 
 	define("GOOGLE_API_KEY", "GOOGLE_KEY");
@@ -28,7 +30,11 @@
 	class APIDB extends mysqli {
 
 		function query($sql, $args, $mode=MYSQLI_STORE_RESULT) {
-			return parent::query($this->escape($sql, $args), $mode);
+			$ret = parent::query($this->escape($sql, $args), $mode);
+			if (!$ret) {
+			 	throw new DatabaseError($this->error, $this->errno);
+			}
+			return $ret;
 		}
 
 		function escape($sql, $args) {
