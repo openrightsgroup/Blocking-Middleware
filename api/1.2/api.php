@@ -47,7 +47,7 @@ $app->error(function(APIException $e, $code) {
 			break;
 		case "InputError":
 			$code = 400;
-			$message = "One or more required parameters missing";
+			$message = "One or more required parameters missing or invalid";
 			break;
 		case "DatabaseError":
 			$code = 500;
