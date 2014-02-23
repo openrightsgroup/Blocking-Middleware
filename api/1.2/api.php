@@ -6,6 +6,7 @@ include_once "libs/DB.php";
 include_once "libs/pki.php";
 include_once "libs/password.php";
 include_once "libs/exceptions.php";
+include_once "libs/services.php";
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,9 +15,16 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 $app = new Silex\Application();
 $app['debug'] = true;
 
-$app['service.db'] = function() {
+$app['service.db'] = $app->share(function() {
 	global $dbuser, $dbpass, $dbhost, $dbname;
 	return new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+});
+
+$app['db.user.load'] = function($app) {
+	return new UserLoader($app['service.db']);
+};
+$app['db.probe.load'] = function($app) {
+	return new ProbeLoader($app['service.db']);
 };
 
 function checkParameters($req, $params) {
@@ -70,20 +78,15 @@ $app->after(function(Request $request, Response $response) {
 	$response->headers->set('API-Version', $APIVersion);
 });
 
+/* URL Endpoints */
+
 $app->post('/submit/url', function(Request $req) use ($app) {
+	/* Add a URL for testing */
 	$conn = $app['service.db'];
 
 	checkParameters($req, array('email','signature'));
 
-	$result = $conn->query(
-		"select secret,status from users where email = ?",
-		array($req->get('email'))
-		);
-
-	if ($result->num_rows == 0) {
-		throw new UserLookupError();
-	}
-	$row = $result->fetch_assoc();
+	$row = $app['db.user.load']->load($req->get('email'));
 
 	Middleware::verifyUserMessage($req->get('url'), $row['secret'], $req->get('signature'));
 
@@ -102,15 +105,8 @@ $app->get('/status/user',function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
 	Middleware::checkMessageTimestamp($req->get('date'));
-	$result = $conn->query(
-		"select secret,status from users where email = ?",
-		array($req->get('email'))
-		);
 
-	if ($result->num_rows == 0) {
-		throw new UserLookupError();
-	}
-	$row = $result->fetch_assoc();
+	$row = $app['db.user.load']->load($req->get('email'));
 
 	Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'), 
 		$row['secret'], $req->get('signature'));
@@ -119,6 +115,7 @@ $app->get('/status/user',function(Request $req) use ($app) {
 	return $app->json(array('success'=>'true', 'status'=> $row['status']));
 	
 });
+
 
 $app->post('/register/user', function(Request $req) use ($app) {
 	global $Salt;
@@ -161,14 +158,7 @@ $app->post('/prepare/probe', function(Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 
-	$result = $conn->query("select secret,status from users where email = ?",
-		array($req->get('email'))
-		);
-
-	if ($result->num_rows == 0) {
-		throw new UserLookupError();
-	}
-	$row = $result->fetch_assoc();
+	$row = $app['db.user.load']->load($req->get('email'));
 	if ($row['status'] != 'ok') {
 		throw new UserStatusError($row['status']);
 	}
@@ -191,18 +181,13 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$conn = $app['service.db'];
-	$result = $conn->query(
-		"select id,secret,probeHMAC,status from users where email = ?",
-		array($req->get('email')));
-	
-	if ($result->num_rows == 0) {
-		throw new UserLookupError();
-	}
-	$row = $result->fetch_assoc();
+	$row = $app['db.user.load']->load($req->get('email'));
 	if ($row['status'] != 'ok') {
 		throw new UserStatusError($row['status']);
 	}
-	if (md5($req->get('probe_seed') . '_' . $row['probeHMAC']) != $req->get('probe_uuid')) {
+
+	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probeHMAC']);
+	if ($check_uuid != $req->get('probe_uuid')) {
 		return $app->json(array(
 			'success' => false,
 			'error' => 'Probe seed and HMAC verification failed'
@@ -224,12 +209,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	checkParameters($req, array('probe_uuid','signature'));
 	$conn = $app['service.db'];
 
-	$result = $conn->query("select secret from probes where probeUUID=?",
-		array($req->get('probe_uuid')));
-	if ($result->numrows == 0) {
-		throw new ProbeLookupError();
-	}
-	$row = $result->fetchrow_assoc();
+	$row = $app['db.probe.load']->load($req->get('probe_uuid'));
 
 	Middleware::verifyUserMessage($req->get('probe_uuid'), $req->get('signature'), $row['secret']);
 
@@ -254,6 +234,23 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	return $app->json($ret, 200);
 });
 
+$app->post('/response/httpt', function(Request $req) use ($app) {
 
+	return $app->json(array('success' => true));
+
+});
+
+$app->get('/config/{version}', function (Request $req, $version) use ($app) {
+	if (!$version) {
+		throw new InputError();
+	}
+	if ($version != 'latest' && !is_numeric($version)) {
+		throw new InputError();
+	}
+		
+	// fetch and return config here
+	
+	return "";
+});
 
 $app->run();

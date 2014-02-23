@@ -3,6 +3,7 @@ import os,sys
 import getopt
 import requests
 import datetime
+from pprint import pprint
 
 import hmac, hashlib
 import logging
@@ -82,6 +83,7 @@ class TestClient:
                 
         def register_probe(self):
                 uuid = hashlib.md5(self.opts['--probeseed'] + '-' + self.opts['--probehmac']).hexdigest()
+		logging.info("Sending UUID: %s", uuid)
 		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'register/probe',
 			data={
 				'email': self.opts['--email'],
