@@ -37,6 +37,11 @@ function checkParameters($req, $params) {
 		}
 	}
 }
+function checkPrivileges($user, $level) {
+	if (false) {
+		throw new UserPrivsError();
+	}
+}
 
 $app->error(function(APIException $e, $code) {
 	switch(get_class($e)) {
@@ -72,6 +77,9 @@ $app->error(function(APIException $e, $code) {
 			$code = 403;
 			$message = "Account is " . $e->getMessage();
 			break;
+		case 'UserPrivsError':
+			$code = 403;
+			$message("User is not authorised to perform this action";
 	};
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
