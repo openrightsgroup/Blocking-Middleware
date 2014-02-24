@@ -26,6 +26,9 @@ $app['db.user.load'] = function($app) {
 $app['db.probe.load'] = function($app) {
 	return new ProbeLoader($app['service.db']);
 };
+$app['db.url.load'] = function($app) {
+	return new UrlLoader($app['service.db']);
+};
 
 function checkParameters($req, $params) {
 	foreach($params as $requiredParam) {
@@ -70,7 +73,9 @@ $app->error(function(APIException $e, $code) {
 			$message = "Account is " . $e->getMessage();
 			break;
 	};
-	return new JsonResponse(array('success'=>false, 'error'=>$message), $code);
+	return new JsonResponse(
+		array('success'=>false, 'error'=>$message), $code
+		);
 });
 
 $app->after(function(Request $request, Response $response) {
@@ -88,7 +93,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$row = $app['db.user.load']->load($req->get('email'));
 
-	Middleware::verifyUserMessage($req->get('url'), $row['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($req->get('url'), $row['secret'], 
+		$req->get('signature')
+	);
 
 	$conn->query(
 		"insert into tempURLs(URL, hash, lastPolled) values (?,?,now())",
@@ -197,7 +204,10 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	$secret = Middleware::generateSharedSecret();
 
 	$conn->query("insert into probes (uuid,userID,secret,countrycode,type) values (?,?,?,?,?)",
-		array($req->get('probe_uuid'), $row['id'], $secret, $req->get('country_code'), $req->get('probe_type'))
+		array(
+			$req->get('probe_uuid'), $row['id'], $secret, 
+			$req->get('country_code'), $req->get('probe_type')
+			)
 		);
 
 	return $app->json(array(
@@ -210,17 +220,18 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	$row = $app['db.probe.load']->load($req->get('probe_uuid'));
+	if ($row['enabled'] != 1) {
+		throw new ProbeStateError();
+	}
+	Middleware::verifyUserMessage($req->get('probe_uuid'),  $row['secret'], $req->get('signature'));
 
-	Middleware::verifyUserMessage($req->get('probe_uuid'), $req->get('signature'), $row['secret']);
-
-	$result = $conn->query("select tempID,URL,hash from tempURLs ORDER BY lastPolled ASC,polledAttempts DESC LIMIT 1");
-	if ($result->num_rows == 0) {
+	$row = $app['db.url.load']->get_next();
+	if ($row == null) {
 		return $app->json(array(
 			'success' => false,
 			'error' => 'No queued URLs found'
 			), 404);
 	}
-	$row = $result->fetch_assoc();
 	$ret = array(
 		'success' => true,
 		'url' => $row['URL'],
@@ -235,8 +246,44 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 });
 
 $app->post('/response/httpt', function(Request $req) use ($app) {
+	checkParameters($req, 
+		array('probe_uuid','url','config','ip_network','status',
+		'http_status','date','signature','network_name')
+		);
 
-	return $app->json(array('success' => true));
+	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	$url = $app['db.url.load']->load($req->get('url'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	Middleware::verifyUserMessage(
+		implode(":", array(
+			$req->get('probe_uuid'),
+			$req->get('url'),
+			$req->get('status'),
+			$req->get('date'),
+			$req->get('config')
+			)
+		),
+		$probe['secret'],
+		$req->get('signature')
+	);
+
+	$conn = $app['service.db'];
+	$conn->query(
+		"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
+		array(
+			$url['tempID'],$probe['id'], $req->get('config'),$req->get('ip_network'),
+			$req->get('status'),$req->get('http_status'), $req->get('network_name')
+		)
+	);
+
+	$conn->query(
+		"update tempURLs set polledSuccess = polledSuccess + 1 where tempID = ?",
+		array($url['tempID'])
+		);
+
+	return $app->json(array('success' => true, 'status' => 'ok'));
 
 });
 

@@ -19,6 +19,13 @@ class UserLookupError extends APIException {
 }
 class UserStatusError extends APIException {
 }
+class UserPrivsError extends APIException {
+}
 
 class ProbeLookupError extends APIException {
+}
+class ProbeStateError extends APIException {
+}
+
+class UrlLookupError extends APIException {
 }

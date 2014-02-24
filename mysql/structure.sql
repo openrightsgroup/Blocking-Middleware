@@ -53,7 +53,8 @@ CREATE TABLE `tempURLs` (
   `inserted` timestamp NULL default CURRENT_TIMESTAMP,
   `polledAttempts` int(11) unsigned default '0',
   `polledSuccess` int(11) unsigned default '0',
-  PRIMARY KEY  (`tempID`)
+  PRIMARY KEY  (`tempID`),
+  UNIQUE KEY `tempurl_url` (`URL`(767))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Table structure for table `users` */
@@ -77,6 +78,21 @@ CREATE TABLE `users` (
   `createdAt` timestamp NULL default CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `results`;
+
+CREATE TABLE `results` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `urlID` int(11) NOT NULL,
+  `probeID` int(11) NOT NULL,
+  `config` int(11) NOT NULL,
+  `ip_network` varchar(16) DEFAULT NULL,
+  `status` varchar(8) DEFAULT NULL,
+  `http_status` int(11) DEFAULT NULL,
+  `network_name` varchar(32) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
