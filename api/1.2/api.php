@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__."/../backend/silex/vendor/autoload.php";
+require_once __DIR__."/../../backend/silex/vendor/autoload.php";
 
 include_once "libs/DB.php";
 include_once "libs/pki.php";
@@ -79,7 +79,7 @@ $app->error(function(APIException $e, $code) {
 			break;
 		case 'UserPrivsError':
 			$code = 403;
-			$message("User is not authorised to perform this action";
+			$message("User is not authorised to perform this action");
 	};
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
