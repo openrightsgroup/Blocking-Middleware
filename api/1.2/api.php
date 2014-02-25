@@ -317,4 +317,24 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 	return "";
 });
 
+$app->post('/update/gcm', function(Request $req) use ($app) {
+	checkParameters($req, array('gcm_id','probe_uuid','signature'));
+
+	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+
+	Middleware::verifyUserMessage($req->get('gcm_id'), $req->get('signature'), $probe['secret']);
+
+	$conn = $app['service.db'];
+	$conn->query("update probes set gcmRegID=?, lastSeen=now(), gcmType=?, frequency=? where uuid=?",
+		array(
+			$req->get('gcm_id'),
+			$req->get('gcm_type'),
+			$req->get('frequency'),
+			$req->get('probe_uuid'),
+			));
+
+	return $app->json(array('success'=>true,'status'=>'ok'));
+});
+
+
 $app->run();

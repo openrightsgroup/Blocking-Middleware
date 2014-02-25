@@ -23,6 +23,7 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
         # probe registration
         'probeseed=', 
         'probehmac=',
+        'probeuuid=',
 	])
 opts = dict(optlist)
 
@@ -31,7 +32,7 @@ logging.basicConfig(
 	)
 
 class TestClient:
-	MODES = ['user','user_status','submit','prepare_probe','register_probe']
+	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm']
 	PREFIX='/api/1.2/'
 
 	def __init__(self, options):
@@ -94,6 +95,18 @@ class TestClient:
 			)
 		return rq.status_code, rq.content
                 
+	def update_gcm(self):
+		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'update/gcm',
+			data={
+                                'probe_uuid': opts['--probeuuid'],
+                                'gcm_type': 8,
+                                'frequency': 30,
+                                'gcm_id': 'abcdefg',
+                                'signature': self.sign('abcdefg'),
+                            }
+                        )
+
+                return rq.status_code, rq.content
                 
 
 	def submit(self):
