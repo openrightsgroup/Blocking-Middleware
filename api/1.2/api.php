@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__."/../silex/vendor/autoload.php";
+require_once __DIR__."/../backend/silex/vendor/autoload.php";
 
 include_once "libs/DB.php";
 include_once "libs/pki.php";
