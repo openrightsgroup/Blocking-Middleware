@@ -211,12 +211,21 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 
 	$secret = Middleware::generateSharedSecret();
 
-	$conn->query("insert into probes (uuid,userID,secret,countrycode,type) values (?,?,?,?,?)",
-		array(
-			$req->get('probe_uuid'), $row['id'], $secret, 
-			$req->get('country_code'), $req->get('probe_type')
-			)
-		);
+	try {
+		$conn->query("insert into probes (uuid,userID,secret,countrycode,type) values (?,?,?,?,?)",
+			array(
+				$req->get('probe_uuid'), $row['id'], $secret, 
+				$req->get('country_code'), $req->get('probe_type')
+				)
+			);
+	}
+	catch (DatabaseError $e) {
+		if ($e->getCode() == 1062) {
+			throw new ConflictError("A probe with this UUID already exists");
+		} else {
+			throw $e;
+		}
+	}
 
 	return $app->json(array(
 		'success' => true,
