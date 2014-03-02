@@ -1,5 +1,7 @@
 <?php
 
+include_once "exceptions.php";
+
 class Middleware
 {
 	public static function generateKeys()
@@ -56,7 +58,7 @@ class Middleware
 		if (hash_hmac('sha512', $message, $secret) == $hash) {
 			return true;
 		} else {
-			return false;
+			throw new SignatureError();
 		}
 	}
 		
@@ -65,7 +67,7 @@ class Middleware
                 $now = time();
                 $msgtime = strtotime($time);
                 if (abs($msgtime - $now) > (15*60)) {
-                        return false;
+                        throw new TimestampError();
                 } else {
                         return true;
                 }
