@@ -82,7 +82,7 @@ CREATE TABLE `users` (
 DROP TABLE IF EXISTS `results`;
 
 CREATE TABLE `results` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `urlID` int(11) NOT NULL,
   `probeID` int(11) NOT NULL,
   `config` int(11) NOT NULL,
@@ -93,6 +93,17 @@ CREATE TABLE `results` (
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
+
+DROP TABLE IF EXISTS `requests`;
+
+CREATE TABLE `requests` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `submission_info` text,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

@@ -24,6 +24,8 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
         'probeseed=', 
         'probehmac=',
         'probeuuid=',
+
+        'info=',
 	])
 opts = dict(optlist)
 
@@ -110,10 +112,11 @@ class TestClient:
                 
 
 	def submit(self):
-		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'submit/url',
-		params = {
+		rq = requests.post('http://' + self.host+":"+self.port + self.prefix + 'submit/url',
+		data = {
 			'email': opts['--email'],
 			'url': opts['--url'],
+			'additional_data': opts.get('--info',''),
 			'signature': self.sign(opts['--url']),
 			})
 		return rq.status_code, rq.content

@@ -105,13 +105,25 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		$req->get('signature')
 	);
 
+	# there is some badness here - URL is uniquely indexed to only the first 
+	# 767 characters
+
 	$conn->query(
-		"insert into tempURLs(URL, hash, lastPolled) values (?,?,now())",
+		"insert ignore into tempURLs(URL, hash, lastPolled) values (?,?,now())",
 		array($req->get('url'), md5($req->get('url')))
 		);
+	# Because of the unique index (and the insert ignore) we have to query
+	# to get the ID, instead of just using insert_id
+	$url = $app['db.url.load']->load($req->get('url'));
 
+	$conn->query(
+		"insert into requests(urlID, userID, submission_info, created)
+			values (?,?,?,now())",
+		array($url['tempID'], $row['id'], $req->get('additional_data'))
+		);
+	$request_id = $conn->insert_id;
 
-	return $app->json(array('success' => true, 'uuid' => $conn->insert_id), 201);
+	return $app->json(array('success' => true, 'uuid' => $request_id), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
