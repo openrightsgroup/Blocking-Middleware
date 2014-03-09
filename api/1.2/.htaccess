@@ -17,7 +17,7 @@
 	RewriteRule ^response/httpt api.php [NC,L,qsa]
 	RewriteRule ^update/gcm$ api.php [NC,L,qsa]
 
-	RewriteRule ^status/ip status_ip.php [NC,L,qsa]
+	RewriteRule ^status/ip api.php [NC,L,qsa]
 
 </IfModule>
 DirectoryIndex index.php
