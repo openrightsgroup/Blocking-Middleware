@@ -29,3 +29,5 @@ class ProbeStateError extends APIException {
 
 class UrlLookupError extends APIException {
 }
+
+class IpLookupError extends APIException {}

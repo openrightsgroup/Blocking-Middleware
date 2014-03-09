@@ -37,6 +37,13 @@ function checkParameters($req, $params) {
 		}
 	}
 }
+
+function checkProbe($probe) {
+	if ($probe['enabled'] != 1) {
+		throw new ProbeStateError();
+	}
+}
+
 function checkPrivileges($user, $level) {
 	if (false) {
 		throw new UserPrivsError();
@@ -80,6 +87,11 @@ $app->error(function(APIException $e, $code) {
 		case 'UserPrivsError':
 			$code = 403;
 			$message("User is not authorised to perform this action");
+			break;
+		case 'IpLookupError':
+			$code = 500;
+			$message = "An error occurred gathering IP information";
+			break;
 	};
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
@@ -249,9 +261,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	$row = $app['db.probe.load']->load($req->get('probe_uuid'));
-	if ($row['enabled'] != 1) {
-		throw new ProbeStateError();
-	}
+	checkProbe($row);
 	Middleware::verifyUserMessage($req->get('probe_uuid'),  $row['secret'], $req->get('signature'));
 
 	$row = $app['db.url.load']->get_next();
@@ -281,6 +291,7 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		);
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	checkProbe($probe);
 	$url = $app['db.url.load']->load($req->get('url'));
 
 	Middleware::checkMessageTimestamp($req->get('date'));
@@ -320,7 +331,7 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 	if (!$version) {
 		throw new InputError();
 	}
-	if ($version != 'latest' && !is_numeric($version)) {
+	if ($version != 'latest' || !is_numeric($version)) {
 		throw new InputError();
 	}
 		
@@ -334,7 +345,7 @@ $app->post('/update/gcm', function(Request $req) use ($app) {
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 
-	Middleware::verifyUserMessage($req->get('gcm_id'), $req->get('signature'), $probe['secret']);
+	Middleware::verifyUserMessage($req->get('gcm_id'), $probe['secret'],  $req->get('signature'));
 
 	$conn = $app['service.db'];
 	$conn->query("update probes set gcmRegID=?, lastSeen=now(), gcmType=?, frequency=? where uuid=?",
@@ -348,5 +359,44 @@ $app->post('/update/gcm', function(Request $req) use ($app) {
 	return $app->json(array('success'=>true,'status'=>'ok'));
 });
 
+$app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app) {
+	checkParameters($req, array('probe_uuid','signature','date'));
+
+	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	checkProbe($probe);
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	Middleware::verifyUserMessage($req->get('date'), $probe['secret'], $req->get('signature') );
+
+	if ($client_ip) {
+		$ip = $client_ip;
+	} else { 
+		$ip = $req->getClientIp();
+	}
+
+	$cmd = "/usr/bin/whois '" . escapeshellarg($ip) . "'";
+
+	$fp = popen($cmd, 'r');
+	if (!$fp) {
+		throw new IpLookupError();
+	}
+	$descr = '';
+	while (!feof($fp)) {
+		$line = fgets($fp);
+		$parts = explode(":",chop($line));
+		if ($parts[0] == "descr") {
+			$descr = trim($parts[1]);
+		}
+	}
+	fclose($fp);
+
+	if (!$descr) {
+		throw new IpLookupError();
+	}
+
+	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));
+})
+->value('client_ip',''); # make client_ip arg optional
 
 $app->run();
