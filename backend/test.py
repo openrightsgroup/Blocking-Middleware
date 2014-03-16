@@ -18,6 +18,7 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'secret=',
 	'url=',
 	'ip=',
+	'status=',
         'fuzzdate',
 	'new',
 
@@ -35,7 +36,7 @@ logging.basicConfig(
 	)
 
 class TestClient:
-	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip']
+	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users']
 	PREFIX='/api/1.2/'
 
 	def __init__(self, options):
@@ -131,6 +132,18 @@ class TestClient:
 				'signature': self.sign(ts),
 				'probe_uuid': opts['--probeuuid'],
 			}
+		)
+		return rq.status_code, rq.content
+
+	def list_users(self):
+		ts = self.timestamp()
+		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'list/users' + \
+		    ('/'+opts['--status'] if '--status' in opts else ''),
+		    params = {
+			    'date': ts,
+			    'signature': self.sign(ts),
+			    'email': opts.get('--email'),
+		    }
 		)
 		return rq.status_code, rq.content
 

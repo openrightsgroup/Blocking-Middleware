@@ -7,7 +7,7 @@ class UserLoader {
 
 	function load($email) {
 		$result = $this->conn->query(
-			"select id,secret,probeHMAC,status from users where email = ?",
+			"select id,secret,probeHMAC,status,administrator from users where email = ?",
 			array($email)
 			);
 
@@ -35,6 +35,29 @@ class ProbeLoader {
 		$row = $result->fetch_assoc();
 		return $row;
 	}
+
+	function updateReqSent($probe_uuid) {
+		# increment the requests sent counter on the probe record
+		$result = $this->conn->query(
+			"update probes set probeReqSent=probeReqSent+1,lastSeen where uuid=?",
+			array($probe_uuid)
+			);
+		if ($this->conn->affected_rows != 1) {
+			throw new ProbeLookupError();
+		}
+	}
+
+	function updateRespRecv($probe_uuid) {
+		# increment the responses recd counter on the probe record
+		$result = $this->conn->query(
+			"update probes set probeRespRecv=probeRespRecv+1,lastSeen=now() where uuid=?",
+			array($probe_uuid)
+			);
+		if ($this->conn->affected_rows != 1) {
+			throw new ProbeLookupError();
+		}
+	}
+
 };
 class UrlLoader {
 	function __construct($conn) {

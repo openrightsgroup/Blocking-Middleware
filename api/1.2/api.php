@@ -31,21 +31,32 @@ $app['db.url.load'] = function($app) {
 };
 
 function checkParameters($req, $params) {
+	# check that required GET/POST parameters are present
 	foreach($params as $requiredParam) {
 		if (!$req->get($requiredParam)) {
+			# throw if any are missing
 			throw new InputError();
 		}
 	}
 }
 
 function checkProbe($probe) {
+	# Probe status check, throw if not enabled
 	if ($probe['enabled'] != 1) {
 		throw new ProbeStateError();
 	}
 }
+function checkUser($user) {
+	# User status check, throw if not "ok"
+	if ($user['status'] != 'ok') {
+		throw new UserStatusError($row['status']);
+	}
+}
 
-function checkPrivileges($user, $level) {
-	if (false) {
+function checkAdministrator($user) {
+	# Administrator privilege check, throw if not an admin
+	checkUser($user); # also check general user status
+	if ($user['administrator'] == 0) {
 		throw new UserPrivsError();
 	}
 }
@@ -86,7 +97,7 @@ $app->error(function(APIException $e, $code) {
 			break;
 		case 'UserPrivsError':
 			$code = 403;
-			$message("User is not authorised to perform this action");
+			$message = "User is not authorised to perform this action";
 			break;
 		case 'IpLookupError':
 			$code = 500;
@@ -99,6 +110,8 @@ $app->error(function(APIException $e, $code) {
 });
 
 $app->after(function(Request $request, Response $response) {
+	# Set API version header on all responses
+
 	global $APIVersion; // from DB.php
 	$response->headers->set('API-Version', $APIVersion);
 });
@@ -112,6 +125,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$row = $app['db.user.load']->load($req->get('email'));
+	checkUser($row);
 
 	Middleware::verifyUserMessage($req->get('url'), $row['secret'], 
 		$req->get('signature')
@@ -139,6 +153,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
+	# Get the status of a user
 	$conn = $app['service.db'];
 
 	checkParameters($req, array('email','signature','date'));
@@ -157,6 +172,7 @@ $app->get('/status/user',function(Request $req) use ($app) {
 
 
 $app->post('/register/user', function(Request $req) use ($app) {
+	# Add a new user
 	global $Salt;
 
 	$conn = $app['service.db'];
@@ -198,9 +214,7 @@ $app->post('/prepare/probe', function(Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	$row = $app['db.user.load']->load($req->get('email'));
-	if ($row['status'] != 'ok') {
-		throw new UserStatusError($row['status']);
-	}
+	checkUser($row);
 
 	Middleware::verifyUserMessage($req->get('email') . ':' . $req->get('date'), $row['secret'], $req->get('signature'));
 
@@ -221,9 +235,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 	$row = $app['db.user.load']->load($req->get('email'));
-	if ($row['status'] != 'ok') {
-		throw new UserStatusError($row['status']);
-	}
+	checkUser($row);
 
 	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probeHMAC']);
 	if ($check_uuid != $req->get('probe_uuid')) {
@@ -260,9 +272,9 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	checkParameters($req, array('probe_uuid','signature'));
 	$conn = $app['service.db'];
 
-	$row = $app['db.probe.load']->load($req->get('probe_uuid'));
-	checkProbe($row);
-	Middleware::verifyUserMessage($req->get('probe_uuid'),  $row['secret'], $req->get('signature'));
+	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	checkProbe($probe);
+	Middleware::verifyUserMessage($req->get('probe_uuid'),  $probe['secret'], $req->get('signature'));
 
 	$row = $app['db.url.load']->get_next();
 	if ($row == null) {
@@ -271,6 +283,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 			'error' => 'No queued URLs found'
 			), 404);
 	}
+	error_log("Got URL: " . $row['URL']);
 	$ret = array(
 		'success' => true,
 		'url' => $row['URL'],
@@ -280,6 +293,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 		"update tempURLs set lastPolled = now(), polledAttempts = polledAttempts + 1 where tempID = ?",
 		array($row['tempID'])
 		);
+	$app['db.probe.load']->updateReqSent($probe['uuid']);
 
 	return $app->json($ret, 200);
 });
@@ -323,6 +337,8 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		array($url['tempID'])
 		);
 
+	$app['db.probe.load']->updateRespRecv($probe['uuid']);
+
 	return $app->json(array('success' => true, 'status' => 'ok'));
 
 });
@@ -360,6 +376,7 @@ $app->post('/update/gcm', function(Request $req) use ($app) {
 });
 
 $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app) {
+	# Get information about an IP.  If {client_ip} is omitted, use request originating IP
 	checkParameters($req, array('probe_uuid','signature','date'));
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
@@ -375,6 +392,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$ip = $req->getClientIp();
 	}
 
+	# run a whois query for the IP address
 	$cmd = "/usr/bin/whois '" . escapeshellarg($ip) . "'";
 
 	$fp = popen($cmd, 'r');
@@ -386,6 +404,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$line = fgets($fp);
 		$parts = explode(":",chop($line));
 		if ($parts[0] == "descr") {
+			# save the value of the last descr tag, seems to work in most cases
 			$descr = trim($parts[1]);
 		}
 	}
@@ -398,5 +417,87 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));
 })
 ->value('client_ip',''); # make client_ip arg optional
+
+
+#--------- Administrator Functions
+
+$app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
+	checkParameters($req, array('email','date','signature'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	checkAdministrator($user);
+
+	$conn = $app['service.db'];
+
+	# if status has been supplied, only list users with that status
+	if ($status) {
+		$rs = $conn->query("select email, fullName, createdAt, status from users where status = ?",
+			array($status));
+	} else {
+		$rs = $conn->query("select email, fullName, createdAt, status from users");
+	}
+
+	$out = array();
+	while ($row = $rs->fetch_assoc()) {
+		$out[] = $row;
+	}
+
+	return $app->json(array("success"=>true,"users"=>$out));
+})
+->value('status','');
+
+$app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
+	# Set the status of a user
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+
+	Middleware::verifyUserMessage($user . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
+	checkAdmin($adminuser);
+
+	$conn = $app['service.db'];
+	$conn->query("UPDATE users set status = ? where email = ?",
+		array($req->get('status'), $user));
+
+	if ($conn->affected_rows == 0) {
+		throw new UserLookupError();
+	}
+
+	return $app->json(array('success' => true, "status" => $req->get('status'), "email" => $user));
+});
+
+$app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
+	# Set the status of a probe
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($uuid . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
+	checkAdmin($adminuser);
+
+	if (!($req->get('status') == "enabled" || $req->get('status') == 'disabled')) {
+		return $app->json(array(
+			"success"=> false,
+			"error"=> "Unknown status: " . $req->get('status')
+		), 500);
+	}
+
+	$conn = $app['service.db'];
+	$conn->query("UPDATE probes set enabled = ? where uuid = ?",
+		array($req->get('status') == "enabled" ? 1 : 0, $uuid));
+
+	if ($conn->affected_rows == 0) {
+		throw new ProbeLookupError();
+	}
+
+	return $app->json(array('success'=> true, "status"=> $req->get('status'), "email"=> $user));
+});
+
 
 $app->run();
