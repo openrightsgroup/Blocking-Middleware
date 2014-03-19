@@ -276,6 +276,9 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	checkProbe($probe);
 	Middleware::verifyUserMessage($req->get('probe_uuid'),  $probe['secret'], $req->get('signature'));
 	
+	# create an ISP record if it doesn't already exist
+	$app['db.isp.load']->create($req->get('network_name')); 
+	# Get the ISP details
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
 	$row = $app['db.url.load']->get_next($isp['id']);
