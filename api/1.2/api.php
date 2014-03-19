@@ -29,6 +29,9 @@ $app['db.probe.load'] = function($app) {
 $app['db.url.load'] = function($app) {
 	return new UrlLoader($app['service.db']);
 };
+$app['db.isp.load'] = function($app) {
+	return new IspLoader($app['service.db']);
+};
 
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
@@ -64,10 +67,8 @@ function checkAdministrator($user) {
 $app->error(function(APIException $e, $code) {
 	switch(get_class($e)) {
 		case "ProbeLookupError":
-			$code = 404;
-			$message = "No matches in DB, please contact ORG support";
-			break;
 		case "UserLookupError":
+		case "IspLookupError":
 			$code = 404;
 			$message = "No matches in DB, please contact ORG support";
 			break;
@@ -269,14 +270,15 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 });
 
 $app->get('/request/httpt', function(Request $req) use ($app) {
-	checkParameters($req, array('probe_uuid','signature'));
-	$conn = $app['service.db'];
+	checkParameters($req, array('probe_uuid','signature','network_name'));
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
 	Middleware::verifyUserMessage($req->get('probe_uuid'),  $probe['secret'], $req->get('signature'));
+	
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
-	$row = $app['db.url.load']->get_next();
+	$row = $app['db.url.load']->get_next($isp['id']);
 	if ($row == null) {
 		return $app->json(array(
 			'success' => false,
@@ -289,11 +291,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 		'url' => $row['URL'],
 		'hash' => $row['hash']
 		);
-	$conn->query(
-		"update tempURLs set lastPolled = now(), polledAttempts = polledAttempts + 1 where tempID = ?",
-		array($row['tempID'])
-		);
-	$app['db.probe.load']->updateReqSent($probe['uuid']);
+	//$app['db.probe.load']->updateReqSent($probe['uuid']);
 
 	return $app->json($ret, 200);
 });
@@ -323,6 +321,8 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		$req->get('signature')
 	);
 
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
+
 	$conn = $app['service.db'];
 	$conn->query(
 		"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
@@ -335,6 +335,10 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 	$conn->query(
 		"update tempURLs set polledSuccess = polledSuccess + 1 where tempID = ?",
 		array($url['tempID'])
+		);
+	$conn->query(
+		"update queue set results=results+1 where urlID = ? and IspID = ?",
+		array($url['tempID'], $isp['id'])
 		);
 
 	$app['db.probe.load']->updateRespRecv($probe['uuid']);

@@ -31,3 +31,6 @@ class UrlLookupError extends APIException {
 }
 
 class IpLookupError extends APIException {}
+
+class IspLookupError extends APIException{}
+

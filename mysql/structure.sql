@@ -105,6 +105,29 @@ CREATE TABLE `requests` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `isps`;
+
+CREATE TABLE `isps` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `queue`;
+
+CREATE TABLE `queue` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ispID` int(10) unsigned NOT NULL,
+  `urlID` int(10) unsigned NOT NULL,
+  `lastSent` datetime DEFAULT NULL,
+  `results` int(10) unsigned DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `queue_unq` (`ispID`,`urlID`),
+  KEY `cvr` (`ispID`,`results`,`lastSent`,`urlID`,`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
