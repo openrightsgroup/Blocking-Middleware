@@ -54,7 +54,7 @@ CREATE TABLE `tempURLs` (
   `polledAttempts` int(11) unsigned default '0',
   `polledSuccess` int(11) unsigned default '0',
   PRIMARY KEY  (`tempID`),
-  UNIQUE KEY `tempurl_url` (`URL`(767))
+  UNIQUE KEY `tempurl_url` (`URL`(255))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Table structure for table `users` */
@@ -92,7 +92,7 @@ CREATE TABLE `results` (
   `network_name` varchar(32) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `requests`;
 
@@ -103,7 +103,7 @@ CREATE TABLE `requests` (
   `submission_info` text,
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
