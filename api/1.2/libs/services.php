@@ -104,7 +104,7 @@ class UrlLoader {
 		*/
 
 		$result = $this->conn->query(
-			"select URL, urlID, queue.id from tempURLs
+			"select URL, urlID, queue.id, hash from tempURLs
 			inner join queue on queue.urlID = tempURLs.tempID
 			where queue.ispID = ? and (lastSent < date_sub(now(), interval 1 day) or lastSent is null)
 			order by queue.results, queue.lastSent
