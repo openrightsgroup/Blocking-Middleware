@@ -35,9 +35,11 @@ $app['db.isp.load'] = function($app) {
 
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
+	$keys = $req->request->keys() + $req->query->keys();
 	foreach($params as $requiredParam) {
-		if (!$req->get($requiredParam)) {
+		if (!in_array($requiredParam, $keys)) {
 			# throw if any are missing
+			error_log("Missing parameter: $requiredParam");
 			throw new InputError();
 		}
 	}
@@ -68,6 +70,7 @@ $app->error(function(APIException $e, $code) {
 	switch(get_class($e)) {
 		case "ProbeLookupError":
 		case "UserLookupError":
+		case "UrlLookupError":
 		case "IspLookupError":
 			$code = 404;
 			$message = "No matches in DB, please contact ORG support";
