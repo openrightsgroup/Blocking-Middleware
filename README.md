@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/openrightsgroup/blocking-middleware.png?label=ready&title=Ready)](https://waffle.io/openrightsgroup/blocking-middleware)
 Middleware
 ==========
 
