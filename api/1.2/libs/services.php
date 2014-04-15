@@ -67,7 +67,7 @@ class UrlLoader {
 
 	function load($url) {
 		$result = $this->conn->query(
-			"select * from tempURLs where URL=?",
+			"select * from urls where URL=?",
 			array($url)
 			);
 		if ($result->num_rows == 0) {
@@ -78,7 +78,7 @@ class UrlLoader {
 	}
 
 	function get_next_old() {
-		$result = $this->conn->query("select tempID,URL,hash from tempURLs where lastPolled is null or lastPolled < date_sub(now(), interval 12 hour) ORDER BY lastPolled ASC,polledAttempts DESC LIMIT 1", array());
+		$result = $this->conn->query("select urlID,URL,hash from urls where lastPolled is null or lastPolled < date_sub(now(), interval 12 hour) ORDER BY lastPolled ASC,polledAttempts DESC LIMIT 1", array());
 		if ($result->num_rows == 0) {
 			return null;
 		}
@@ -104,8 +104,8 @@ class UrlLoader {
 		*/
 
 		$result = $this->conn->query(
-			"select URL, urlID, queue.id, hash from tempURLs
-			inner join queue on queue.urlID = tempURLs.tempID
+			"select URL, urls.urlID, queue.id, hash from urls
+			inner join queue on queue.urlID = urls.urlID
 			where queue.ispID = ? and (lastSent < date_sub(now(), interval 1 day) or lastSent is null)
 			order by queue.results, queue.lastSent
 			limit 1",
@@ -128,7 +128,7 @@ class UrlLoader {
 
 		# update the poll counter on  the URL record
 		$this->conn->query(
-			"update tempURLs set lastPolled = now(), polledAttempts = polledAttempts + 1 where tempID = ?",
+			"update urls set lastPolled = now(), polledAttempts = polledAttempts + 1 where urlID = ?",
 			array($row['urlID'])
 			);
 

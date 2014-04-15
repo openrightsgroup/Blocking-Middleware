@@ -128,6 +128,24 @@ CREATE TABLE `queue` (
   KEY `cvr` (`ispID`,`results`,`lastSent`,`urlID`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+
+DROP TABLE IF EXISTS `urls`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `urls` (
+  `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `URL` varchar(2048) NOT NULL,
+  `hash` varchar(32) DEFAULT NULL,
+  `source` enum('social','user','canary','probe') DEFAULT NULL,
+  `lastPolled` datetime DEFAULT NULL,
+  `inserted` datetime NOT NULL,
+  `polledAttempts` int(10) unsigned DEFAULT '0',
+  `polledSuccess` int(10) unsigned DEFAULT '0',
+  PRIMARY KEY (`urlID`),
+  UNIQUE KEY `urls_url` (`URL`(767))
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;

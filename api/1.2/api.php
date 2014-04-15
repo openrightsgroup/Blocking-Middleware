@@ -139,7 +139,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# 767 characters
 
 	$conn->query(
-		"insert ignore into tempURLs(URL, hash, lastPolled) values (?,?,now())",
+		"insert ignore into urls(URL, hash, lastPolled, inserted) values (?,?,now(), now())",
 		array($req->get('url'), md5($req->get('url')))
 		);
 	# Because of the unique index (and the insert ignore) we have to query
@@ -149,7 +149,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$conn->query(
 		"insert into requests(urlID, userID, submission_info, created)
 			values (?,?,?,now())",
-		array($url['tempID'], $row['id'], $req->get('additional_data'))
+		array($url['urlID'], $row['id'], $req->get('additional_data'))
 		);
 	$request_id = $conn->insert_id;
 
@@ -333,18 +333,18 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 	$conn->query(
 		"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
 		array(
-			$url['tempID'],$probe['id'], $req->get('config'),$req->get('ip_network'),
+			$url['urlID'],$probe['id'], $req->get('config'),$req->get('ip_network'),
 			$req->get('status'),$req->get('http_status'), $req->get('network_name')
 		)
 	);
 
 	$conn->query(
-		"update tempURLs set polledSuccess = polledSuccess + 1 where tempID = ?",
-		array($url['tempID'])
+		"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
+		array($url['urlID'])
 		);
 	$conn->query(
 		"update queue set results=results+1 where urlID = ? and IspID = ?",
-		array($url['tempID'], $isp['id'])
+		array($url['urlID'], $isp['id'])
 		);
 
 	$app['db.probe.load']->updateRespRecv($probe['uuid']);

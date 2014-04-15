@@ -14,7 +14,7 @@ $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 $result = $conn->query("select id, name from isps", array());
 while ($isp = $result->fetch_assoc()) {
-	$conn->query("insert ignore into queue (urlID, ispID) select tempID, ? from tempURLs",
+	$conn->query("insert ignore into queue (urlID, ispID) select urlID, ? from urls",
 		array($isp['id'])
 		);
 	print "Added {$conn->affected_rows} rows for isp: {$isp['name']}\n";
