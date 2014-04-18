@@ -134,7 +134,7 @@ DROP TABLE IF EXISTS `urls`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `urls` (
   `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `URL` varchar(2048) NOT NULL,
+  `URL` varchar(2048) NOT NULL COLLATE latin1_bin,
   `hash` varchar(32) DEFAULT NULL,
   `source` enum('social','user','canary','probe') DEFAULT NULL,
   `lastPolled` datetime DEFAULT NULL,

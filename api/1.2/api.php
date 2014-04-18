@@ -35,7 +35,7 @@ $app['db.isp.load'] = function($app) {
 
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
-	$keys = $req->request->keys() + $req->query->keys();
+	$keys = array_merge($req->request->keys(), $req->query->keys());
 	foreach($params as $requiredParam) {
 		if (!in_array($requiredParam, $keys)) {
 			# throw if any are missing
