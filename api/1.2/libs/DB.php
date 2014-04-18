@@ -9,7 +9,15 @@
 
 	define("GOOGLE_API_KEY", "GOOGLE_KEY");
 	
-	date_default_timezone_set('Europe/London');
+	date_default_timezone_set('UTC');
+	/* PHPs date functions are unfortunate.  Now that we're in daylight savings
+	the timestamps that are being passed as message auth tokens are in UTC.  PHP's
+	strtotime function uses the local time zone (now BST) to parse the timestamps, 
+	putting them an hour out.
+
+	Since all our message timestamps are UTC, we set the default here.  Unfortunately,
+	the database will use local time.  Something to keep in mind when interpreting results!
+	*/
 	
 	$memcache = new Memcache;
 	$memcache->addServer('127.0.0.1', 11211);

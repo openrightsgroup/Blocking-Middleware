@@ -108,6 +108,7 @@ $app->error(function(APIException $e, $code) {
 			$message = "An error occurred gathering IP information";
 			break;
 	};
+	error_log("Error response: $message");
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
 		);
