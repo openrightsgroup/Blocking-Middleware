@@ -144,6 +144,18 @@ CREATE TABLE `urls` (
   PRIMARY KEY (`urlID`),
   UNIQUE KEY `urls_url` (`URL`(767))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+CREATE TABLE `isp_aliases` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ispID` int(10) unsigned DEFAULT NULL,
+  `alias` varchar(255) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `isp_aliases_alias` (`alias`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
