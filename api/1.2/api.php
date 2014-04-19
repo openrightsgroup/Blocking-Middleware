@@ -68,6 +68,10 @@ function checkAdministrator($user) {
 
 $app->error(function(APIException $e, $code) {
 	switch(get_class($e)) {
+		case "ConfigLoadError":
+			$code = 404;
+			$message = "Config version or format not found";
+			break;
 		case "ProbeLookupError":
 		case "UserLookupError":
 		case "UrlLookupError":
@@ -108,7 +112,7 @@ $app->error(function(APIException $e, $code) {
 			$message = "An error occurred gathering IP information";
 			break;
 	};
-	error_log("Error response: $message");
+	error_log("Error response: $code, $message");
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
 		);
@@ -355,16 +359,35 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 });
 
 $app->get('/config/{version}', function (Request $req, $version) use ($app) {
+	error_log("Version: $version");
 	if (!$version) {
 		throw new InputError();
 	}
-	if ($version != 'latest' || !is_numeric($version)) {
+	if ($version != 'latest' && !is_numeric($version)) {
 		throw new InputError();
 	}
+	$format = $req->get('format');
+	if (!$format) {
+		$format = "json";
+	}
+	if ($format != "json") {
+		/* support XML as well eventually */
+		throw new InputError();
+	}
+
 		
 	// fetch and return config here
+
+	$configfile = __DIR__ . "/../../config/" . $version . "." . $format;
+	error_log("Config file: $configfile");
+
+	$content = file_get_contents($configfile);
+	if (!$content) {
+		throw new ConfigLoadError();
+	}
+		
 	
-	return "";
+	return $content;
 });
 
 $app->post('/update/gcm', function(Request $req) use ($app) {
@@ -423,6 +446,15 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 
 	if (!$descr) {
 		throw new IpLookupError();
+	}
+
+	/* use standardised name from the database if possible */
+	try {
+		$isp = $app['db.isp.load']->load($descr);
+		$descr = $isp['name'];
+	}
+	catch (IspLookupError $e) {
+		# do nothing
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));

@@ -143,8 +143,8 @@ class IspLoader {
 
 	function load($ispname) {
 		$result = $this->conn->query(
-			"select * from isps where name = ?",
-			array($ispname)
+			"select isps.* from isps left join isp_aliases on isp_aliases.ispID = isps.id where name = ? or alias = ?",
+			array($ispname,$ispname)
 			);
 		if (!$result) {
 			throw new IspLookupError();
