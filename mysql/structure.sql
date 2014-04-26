@@ -121,11 +121,12 @@ CREATE TABLE `queue` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ispID` int(10) unsigned NOT NULL,
   `urlID` int(10) unsigned NOT NULL,
+  `priority` smallint(5) unsigned not null default 5,
   `lastSent` datetime DEFAULT NULL,
   `results` int(10) unsigned DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `queue_unq` (`ispID`,`urlID`),
-  KEY `cvr` (`ispID`,`results`,`lastSent`,`urlID`,`id`)
+  KEY `cvr` (`ispID`,`priority`,`results`,`lastSent`,`urlID`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 

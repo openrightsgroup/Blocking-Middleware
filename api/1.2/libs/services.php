@@ -107,7 +107,7 @@ class UrlLoader {
 			"select URL, urls.urlID, queue.id, hash from urls
 			inner join queue on queue.urlID = urls.urlID
 			where queue.ispID = ? and (lastSent < date_sub(now(), interval 1 day) or lastSent is null)
-			order by queue.results, queue.lastSent
+			order by queue.priority,queue.results, queue.lastSent
 			limit 1",
 			array($ispid)
 			);
