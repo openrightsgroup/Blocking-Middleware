@@ -155,7 +155,12 @@ CREATE TABLE `isp_aliases` (
   UNIQUE KEY `isp_aliases_alias` (`alias`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-
+CREATE TABLE `isp_cache` (
+  `ip` varchar(16) NOT NULL,
+  `network` varchar(32) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY `unq` (`ip`,`network`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
 /*!40101 SET character_set_client = @saved_cs_client */;
 

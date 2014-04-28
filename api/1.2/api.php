@@ -32,6 +32,9 @@ $app['db.url.load'] = function($app) {
 $app['db.isp.load'] = function($app) {
 	return new IspLoader($app['service.db']);
 };
+$app['service.ip.query'] = function($app) {
+	return new IpLookupService($app['service.db']);
+};
 
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
@@ -425,28 +428,8 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	} else { 
 		$ip = $req->getClientIp();
 	}
-
-	# run a whois query for the IP address
-	$cmd = "/usr/bin/whois '" . escapeshellarg($ip) . "'";
-
-	$fp = popen($cmd, 'r');
-	if (!$fp) {
-		throw new IpLookupError();
-	}
-	$descr = '';
-	while (!feof($fp)) {
-		$line = fgets($fp);
-		$parts = explode(":",chop($line));
-		if ($parts[0] == "descr") {
-			# save the value of the last descr tag, seems to work in most cases
-			$descr = trim($parts[1]);
-		}
-	}
-	fclose($fp);
-
-	if (!$descr) {
-		throw new IpLookupError();
-	}
+	
+	$descr = $app['service.ip.query']->lookup($ip);
 
 	/* use standardised name from the database if possible */
 	try {

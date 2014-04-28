@@ -164,3 +164,69 @@ class IspLoader {
 	}
 }
 
+class IpLookupService {
+	function __construct($conn) {
+		$this->conn = $conn;
+	}
+
+	function check_cache($ip) {
+		error_log("Checking cache for $ip");
+		$result = $this->conn->query(
+			"select network from isp_cache where ip = ? and 
+			created >= date_sub(current_date, interval 7 day)",
+			array($ip)
+			);
+		if (!$result) {
+			return null;
+		}
+		$row = $result->fetch_assoc();
+		if (!$row) {
+			return null;
+		}
+		return $row['network'];
+	}
+
+	function write_cache($ip, $network) {
+		error_log("Writing cache entry for $ip, $network");
+		$this->conn->query(
+			"insert into isp_cache(ip, network, created) 
+			values (?, ?, now())
+			on duplicate key update created = current_date",
+		array($ip, $network)
+		);
+		error_log("Cache write complete");
+	}
+
+	function lookup($ip) {
+		# run a whois query for the IP address
+
+		$descr = $this->check_cache($ip);
+		if ($descr == null) {
+			error_log("Cache miss for $ip");
+			$cmd = "/usr/bin/whois '" . escapeshellarg($ip) . "'";
+
+			$fp = popen($cmd, 'r');
+			if (!$fp) {
+				throw new IpLookupError();
+			}
+			$descr = '';
+			while (!feof($fp)) {
+				$line = fgets($fp);
+				$parts = explode(":",chop($line));
+				if ($parts[0] == "descr") {
+					# save the value of the last descr tag, seems to work in most cases
+					$descr = trim($parts[1]);
+				}
+			}
+			fclose($fp);
+
+			if (!$descr) {
+				throw new IpLookupError();
+			}
+			$this->write_cache($ip, $descr);
+		} else {
+			error_log("Cache hit");
+		}
+		return $descr;
+	}
+}
