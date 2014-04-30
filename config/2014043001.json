@@ -27,7 +27,7 @@
         }
     ],
     "org-block-rules": "0.2.1",
-    "version": "2014042701",
+    "version": "2014043001",
     "self-test": {
         "must-allow": [
             "http://www.bbc.co.uk",
