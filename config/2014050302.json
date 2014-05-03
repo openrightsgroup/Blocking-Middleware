@@ -1,0 +1,54 @@
+{
+    "rules": [
+        {
+            "isp": "T-Mobile",
+            "match": [
+                "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/",
+                "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html"
+            ]
+        },
+        {
+            "isp": "Vodafone",
+            "match": [
+                "re:url:^http://online\\.vodafone\\.co\\.uk/dispatch/Portal/ContentControlServlet\\?type=restricted"
+            ]
+        },
+        {
+            "isp": "BT",
+            "match": [
+                "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
+            ]
+        },
+        {
+            "isp": "TalkTalk",
+            "match": [
+                "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
+            ]
+        },
+        {
+            "isp": "Plusnet",
+            "match": [
+                "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml"
+            ]
+        },
+        {
+            "isp": "AAISP",
+            "match": [
+            ]
+        }
+    ],
+    "org-block-rules": "0.2.1",
+    "version": "2014050102",
+    "self-test": {
+        "must-allow": [
+            "http://www.bbc.co.uk",
+            "http://www.yahoo.com",
+            "http://www.blocked.org.uk"
+        ],
+        "must-block": [
+            "http://www.pornhub.com",
+            "http://www.youporn.com",
+            "http://www.xvideos.com"
+        ]
+    }
+}
