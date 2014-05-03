@@ -89,7 +89,7 @@ CREATE TABLE `results` (
   `ip_network` varchar(16) DEFAULT NULL,
   `status` varchar(8) DEFAULT NULL,
   `http_status` int(11) DEFAULT NULL,
-  `network_name` varchar(32) DEFAULT NULL,
+  `network_name` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -149,7 +149,7 @@ CREATE TABLE `urls` (
 CREATE TABLE `isp_aliases` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ispID` int(10) unsigned DEFAULT NULL,
-  `alias` varchar(255) DEFAULT NULL,
+  `alias` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `isp_aliases_alias` (`alias`)
@@ -157,7 +157,7 @@ CREATE TABLE `isp_aliases` (
 
 CREATE TABLE `isp_cache` (
   `ip` varchar(16) NOT NULL,
-  `network` varchar(32) NOT NULL,
+  `network` varchar(64) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY `unq` (`ip`,`network`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

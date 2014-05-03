@@ -146,10 +146,10 @@ class IspLoader {
 			"select isps.* from isps left join isp_aliases on isp_aliases.ispID = isps.id where name = ? or alias = ?",
 			array($ispname,$ispname)
 			);
-		if (!$result) {
+		$row = $result->fetch_assoc();
+		if (!$row) {
 			throw new IspLookupError();
 		}
-		$row = $result->fetch_assoc();
 		return $row;
 	}
 
@@ -198,27 +198,42 @@ class IpLookupService {
 	}
 
 	function lookup($ip) {
-		# run a whois query for the IP address
+		# run a DNS query for the IP address
 
 		$descr = $this->check_cache($ip);
 		if ($descr == null) {
 			error_log("Cache miss for $ip");
-			$cmd = "/usr/bin/whois '" . escapeshellarg($ip) . "'";
 
-			$fp = popen($cmd, 'r');
-			if (!$fp) {
-				throw new IpLookupError();
-			}
-			$descr = '';
-			while (!feof($fp)) {
-				$line = fgets($fp);
-				$parts = explode(":",chop($line));
-				if ($parts[0] == "descr") {
-					# save the value of the last descr tag, seems to work in most cases
-					$descr = trim($parts[1]);
+			if (strpos($ip, ".") !== false) {
+				# ipv4 address
+
+				$parts = array_reverse(explode(".", $ip));
+				$hostname = implode(".", $parts) . '.origin.asn.cymru.com';
+				error_log("Hostname: $hostname");
+
+				$record = dns_get_record($hostname, DNS_TXT);
+				if (!$record) {
+					throw new IpLookupError();
 				}
+				error_log("TXT: " .  $record[0]['txt']);
+				list($as, $junk) = explode(' ', $record[0]['txt'], 2);
+
+				error_log("AS: $as");
+
+				$ashost = "AS{$as}.asn.cymru.com";
+				$record2 = dns_get_record($ashost, DNS_TXT);
+				if (!$record) {
+					throw new IpLookupError();
+				}
+
+				error_log("TXT: " .  $record2[0]['txt']);
+				if (!preg_match('/ \| [A-Z0-9\-_]+ (\- )?([^\|]*?)$/', $record2[0]['txt'], &$matches)) {
+					throw new IpLookupError();
+				}
+				$descr = $matches[2];
+				error_log("Descr: $descr");
+
 			}
-			fclose($fp);
 
 			if (!$descr) {
 				throw new IpLookupError();
@@ -227,6 +242,7 @@ class IpLookupService {
 		} else {
 			error_log("Cache hit");
 		}
+		error_log("Descr: $descr");
 		return $descr;
 	}
 }
