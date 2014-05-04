@@ -131,8 +131,6 @@ CREATE TABLE `queue` (
 
 
 DROP TABLE IF EXISTS `urls`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `urls` (
   `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `URL` varchar(2048) NOT NULL COLLATE latin1_bin,
@@ -146,6 +144,7 @@ CREATE TABLE `urls` (
   UNIQUE KEY `urls_url` (`URL`(767))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `isp_aliases`;
 CREATE TABLE `isp_aliases` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ispID` int(10) unsigned DEFAULT NULL,
@@ -155,12 +154,22 @@ CREATE TABLE `isp_aliases` (
   UNIQUE KEY `isp_aliases_alias` (`alias`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `isp_cache`;
 CREATE TABLE `isp_cache` (
   `ip` varchar(16) NOT NULL,
   `network` varchar(64) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY `unq` (`ip`,`network`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `modx_copy`;
+CREATE TABLE `modx_copy` (
+  `id` int(10) unsigned NOT NULL,
+  `last_id` int(10) unsigned NOT NULL,
+  `last_checked` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 /*!40101 SET character_set_client = @saved_cs_client */;
 
