@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>Web Submit</title>
+<script src="jquery-1.11.0.js"></script>
+</head>
+<body>
+
+<form id="foo">
+URL: <input name="url" />
+<input type="submit" value="Submit" />
+</form>
+
+<div id="result">
+</div>
+
+<script>
+$(document).ready(function(){
+	$('#foo').submit(function(event) {
+		$.post(
+			"example-js-submit-helper.php",
+			$('#foo').serialize(),
+			function(data, status, xhr) {
+				$('#result').text(data);
+				}
+			);
+				
+
+		event.preventDefault();
+	})
+});
+
+</script>
+</body>
+</html>

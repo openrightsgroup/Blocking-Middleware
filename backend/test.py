@@ -37,7 +37,7 @@ logging.basicConfig(
 
 class TestClient:
 	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users']
-	PREFIX='/api/1.2/'
+	PREFIX='/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
@@ -59,14 +59,14 @@ class TestClient:
 		return getattr(self, mode)()
 
 	def user(self):
-		rq = requests.post('http://' + self.host +":"+self.port+ self.prefix+'register/user',
+		rq = requests.post('https://' + self.host +":"+self.port+ self.prefix+'register/user',
 			data={'email': self.opts['--email'],'password': self.opts['--password']}
 			)
 		return rq.status_code, rq.content
 
 	def user_status(self):
                 ts = self.timestamp()
-		rq = requests.get('http://' + self.host+":"+self.port + self.prefix+'status/user',
+		rq = requests.get('https://' + self.host+":"+self.port + self.prefix+'status/user',
 			params={
 				'email': self.opts['--email'],
                                 'date': ts,
@@ -77,7 +77,7 @@ class TestClient:
 
         def prepare_probe(self):
                 ts = self.timestamp()
-		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'prepare/probe',
+		rq = requests.post('https://' + self.host+":"+self.port + self.prefix+'prepare/probe',
 			data={
 				'email': self.opts['--email'],
                                 'date': ts,
@@ -89,7 +89,7 @@ class TestClient:
         def register_probe(self):
                 uuid = hashlib.md5(self.opts['--probeseed'] + '-' + self.opts['--probehmac']).hexdigest()
 		logging.info("Sending UUID: %s", uuid)
-		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'register/probe',
+		rq = requests.post('https://' + self.host+":"+self.port + self.prefix+'register/probe',
 			data={
 				'email': self.opts['--email'],
                                 'probe_seed': self.opts['--probeseed'],
@@ -100,7 +100,7 @@ class TestClient:
 		return rq.status_code, rq.content
                 
 	def update_gcm(self):
-		rq = requests.post('http://' + self.host+":"+self.port + self.prefix+'update/gcm',
+		rq = requests.post('https://' + self.host+":"+self.port + self.prefix+'update/gcm',
 			data={
                                 'probe_uuid': opts['--probeuuid'],
                                 'gcm_type': 8,
@@ -114,7 +114,7 @@ class TestClient:
                 
 
 	def submit(self):
-		rq = requests.post('http://' + self.host+":"+self.port + self.prefix + 'submit/url',
+		rq = requests.post('https://' + self.host+":"+self.port + self.prefix + 'submit/url',
 		data = {
 			'email': opts['--email'],
 			'url': opts['--url'],
@@ -125,7 +125,7 @@ class TestClient:
 
 	def ip(self):
 		ts = self.timestamp()
-		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
+		rq = requests.get('https://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
 			('/'+opts['--ip'] if '--ip' in opts else ''),
 			params = {
 				'date': ts,
@@ -137,7 +137,7 @@ class TestClient:
 
 	def list_users(self):
 		ts = self.timestamp()
-		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'list/users' + \
+		rq = requests.get('https://' + self.host+":"+self.port + self.prefix + 'list/users' + \
 		    ('/'+opts['--status'] if '--status' in opts else ''),
 		    params = {
 			    'date': ts,
