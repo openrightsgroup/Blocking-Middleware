@@ -485,7 +485,7 @@ $app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
 	$adminuser = $app['db.user.load']->load($req->get('email'));
 
 	Middleware::verifyUserMessage($user . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdmin($adminuser);
+	checkAdministrator($adminuser);
 
 	$conn = $app['service.db'];
 	$conn->query("UPDATE users set status = ? where email = ?",
@@ -506,7 +506,7 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 
 	$adminuser = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($uuid . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdmin($adminuser);
+	checkAdministrator($adminuser);
 
 	if (!($req->get('status') == "enabled" || $req->get('status') == 'disabled')) {
 		return $app->json(array(
@@ -526,5 +526,24 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 	return $app->json(array('success'=> true, "status"=> $req->get('status'), "email"=> $user));
 });
 
+$app->get('/status/url', function (Request $req) use ($app) {
+	checkParameters($req, array('url','email','signature'));
+
+	$url = $req->get('url');
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($url, $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+
+	$result = $conn->query("select network_name, created, status from results inner join urls using(urlid) where url = ?",
+		array($url));
+
+	$output = array();
+	while ($row = $result->fetch_assoc()) {
+		$output[] = $row;
+	}
+
+	return $app->json(array('success' => true, "url" => $url, "results" => $output));
+});
 
 $app->run();

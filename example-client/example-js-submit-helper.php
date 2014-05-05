@@ -6,16 +6,7 @@ Wrapper around the API which submits URLs against an anonymous
 account.
 */
 
-
-$API = "https://api.bowdlerize.co.uk/1.2"; // proper URL
-$USER = 'anonweb@blocked.org.uk';
-$SECRET = 'SECRETKEY';
-
-function createSignatureHash($message, $secret) {
-	/* Use hmac functions to return signature for message string */
-	return hash_hmac('sha512', $message, $secret);
-}
-
+include "credentials.php";
 
 $data = array('email' => $USER, 'url' => $_POST['url'], 'additional_data' => http_build_query($_POST));
 $data['signature'] = createSignatureHash($_POST['url'], $SECRET);
