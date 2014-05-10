@@ -565,11 +565,11 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 	$result = $conn->query("select count(distinct urlid) from results",array());
 	$row = $result->fetch_row();
-	$stats['urls_tested'] = $row[1];
+	$stats['urls_tested'] = $row[0];
 
 	$result = $conn->query("select count(distinct urlid) from results where status = 'blocked'", array());
 	$row = $result->fetch_row();
-	$stats['blocked_sites_detected'] = $row[2];
+	$stats['blocked_sites_detected'] = $row[0];
 
 	return $app->json(array('success' => true, "stats" => $stats));
 });
