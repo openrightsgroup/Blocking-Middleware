@@ -26,7 +26,7 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
         'probeseed=', 
         'probehmac=',
         'probeuuid=',
-
+		'https',
         'info=',
 	])
 opts = dict(optlist)
@@ -37,10 +37,11 @@ logging.basicConfig(
 
 class TestClient:
 	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats']
-	PREFIX='/api/1.2/'
+	PREFIX='/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
+		self.proto = 'https' if '--https' in options else 'http'
 		self.host = options.get('--host','localhost')
 		self.port = options.get('--port','80')
 		self.secret = options.get('--secret','')
@@ -148,7 +149,7 @@ class TestClient:
 		return rq.status_code, rq.content
 
 	def get_url(self, endpoint):
-		return 'http://' + self.host+":"+self.port + self.prefix  + endpoint
+		return self.proto + '://' + self.host+":"+self.port + self.prefix  + endpoint
 
 	def stats(self):
 		ts = self.timestamp()

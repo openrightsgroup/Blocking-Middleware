@@ -554,18 +554,22 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 	$result = $conn->query("
-	select count(distinct urls.urlid), count(distinct results.urlid), 
-		count(distinct case when status = 'blocked' then urlid else null end)
-		from urls left join results using (urlID)
+	select count(*) from urls 
 		", array());
 
 	$row = $result->fetch_row();
 
 	$stats = array(
 		'urls_reported' => $row[0],
-		'urls_tested' => $row[1],
-		'blocked_sites_detected' => $row[2],
 		);
+
+	$result = $conn->query("select count(distinct urlid) from results",array());
+	$row = $result->fetch_row();
+	$stats['urls_tested'] = $row[1];
+
+	$result = $conn->query("select count(distinct urlid from results where status = 'blocked'", array());
+	$row = $result->fetch_row();
+	$stats['blocked_sites_detected'] = $row[2];
 
 	return $app->json(array('success' => true, "stats" => $stats));
 });
