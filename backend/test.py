@@ -36,8 +36,8 @@ logging.basicConfig(
 	)
 
 class TestClient:
-	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users']
-	PREFIX='/1.2/'
+	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats']
+	PREFIX='/api/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
@@ -146,6 +146,21 @@ class TestClient:
 		    }
 		)
 		return rq.status_code, rq.content
+
+	def get_url(self, endpoint):
+		return 'http://' + self.host+":"+self.port + self.prefix  + endpoint
+
+	def stats(self):
+		ts = self.timestamp()
+		rq = requests.get(self.get_url('status/stats'),
+			params = {
+				'date': ts,
+				'signature': self.sign(ts),
+				'email': opts.get('--email')
+			}
+		)
+		return rq.status_code, rq.content
+
 
 	def sign(self, *args):
                 msg = ':'.join([str(x) for x in args])
