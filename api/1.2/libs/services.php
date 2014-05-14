@@ -246,3 +246,36 @@ class IpLookupService {
 		return $descr;
 	}
 }
+
+class ResultProcessorService {
+	function __construct($conn, $url_loader, $probe_loader, $isp_loader) {
+		$this->conn = $conn;
+		$this->url_loader = $url_loader;
+		$this->probe_loader = $probe_loader;
+		$this->isp_loader = $isp_loader;
+	}
+
+	function process_result($result, $probe) {
+		$isp = $this->isp_loader->load($result['network_name']);
+		$url = $this->url_loader->load($result['url']);
+
+		$this->conn->query(
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
+			array(
+				$url['urlID'],$probe['id'], $result['config'],$result['ip_network'],
+				$result['status'],$result['http_status'], $result['network_name']
+			)
+		);
+
+		$this->conn->query(
+			"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
+			array($url['urlID'])
+			);
+		$this->conn->query(
+			"update queue set results=results+1 where urlID = ? and IspID = ?",
+			array($url['urlID'], $isp['id'])
+			);
+
+		$this->probe_loader->updateRespRecv($probe['uuid']);
+	}
+}

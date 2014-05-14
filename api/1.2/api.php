@@ -3,6 +3,7 @@
 require_once __DIR__."/../../backend/silex/vendor/autoload.php";
 
 include_once "libs/DB.php";
+include_once "libs/amqp.php";
 include_once "libs/pki.php";
 include_once "libs/password.php";
 include_once "libs/exceptions.php";
@@ -20,6 +21,10 @@ $app['service.db'] = $app->share(function() {
 	return new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 });
 
+$app['service.amqp'] = $app->share(function() {
+	return amqp_connect();
+});
+
 $app['db.user.load'] = function($app) {
 	return new UserLoader($app['service.db']);
 };
@@ -34,6 +39,15 @@ $app['db.isp.load'] = function($app) {
 };
 $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
+};
+
+$app['service.result.process'] = function($app) {
+	return new ResultProcessorService(
+		$app['service.db'],
+		$app['db.url.load'],
+		$app['db.probe.load'],
+		$app['db.isp.load']
+		);
 };
 
 function checkParameters($req, $params) {
@@ -70,7 +84,8 @@ function checkAdministrator($user) {
 }
 
 $app->error(function(APIException $e, $code) {
-	switch(get_class($e)) {
+	$error_class = get_class($e);
+	switch($error_class) {
 		case "ConfigLoadError":
 			$code = 404;
 			$message = "Config version or format not found";
@@ -115,7 +130,7 @@ $app->error(function(APIException $e, $code) {
 			$message = "An error occurred gathering IP information";
 			break;
 	};
-	error_log("Error response: $code, $message");
+	error_log("Error response: $code, $message, $error_class");
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
 		);
@@ -161,7 +176,14 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		);
 	$request_id = $conn->insert_id;
 
-	return $app->json(array('success' => true, 'uuid' => $request_id), 201);
+	$msgbody = json_encode(array('url'=>$req->get('url'), 'hash'=>md5($req->get('url'))));
+	
+	$ch = $app['service.amqp'];
+	$ex = new AMQPExchange($ch);
+	$ex->setName('org.blocked');
+	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+
+	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($req->get('url'))), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
@@ -318,7 +340,6 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
-	$url = $app['db.url.load']->load($req->get('url'));
 
 	Middleware::checkMessageTimestamp($req->get('date'));
 
@@ -335,27 +356,16 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		$req->get('signature')
 	);
 
-	$isp = $app['db.isp.load']->load($req->get('network_name'));
-
-	$conn = $app['service.db'];
-	$conn->query(
-		"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
-		array(
-			$url['urlID'],$probe['id'], $req->get('config'),$req->get('ip_network'),
-			$req->get('status'),$req->get('http_status'), $req->get('network_name')
-		)
-	);
-
-	$conn->query(
-		"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
-		array($url['urlID'])
-		);
-	$conn->query(
-		"update queue set results=results+1 where urlID = ? and IspID = ?",
-		array($url['urlID'], $isp['id'])
+	$result = array(
+		'config' => $req->get('config'),
+		'ip_network' => $req->get('ip_network'),
+		'network_name' => $req->get('network_name'),
+		'status' => $req->get('status'),
+		'http_status' => $req->get('http_status'),
+		'url' => $req->get('url')
 		);
 
-	$app['db.probe.load']->updateRespRecv($probe['uuid']);
+	$app['service.result.process']->process_result($result, $probe);
 
 	return $app->json(array('success' => true, 'status' => 'ok'));
 
