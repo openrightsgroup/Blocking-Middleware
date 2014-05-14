@@ -91,7 +91,8 @@ CREATE TABLE `results` (
   `http_status` int(11) DEFAULT NULL,
   `network_name` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `result_idx` (`urlID`,`network_name`,`status`,`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `requests`;

@@ -539,21 +539,47 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
 
-	$url = $req->get('url');
 	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($url, $user['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
+	error_log("URL: " . $req->get('url'));
+	$url = $app['db.url.load']->load($req->get('url'));
 
 	$conn = $app['service.db'];
 
-	$result = $conn->query("select network_name, created, status from results inner join urls using(urlid) where url = ?",
-		array($url));
-
+	# build a results array for each ISP
+	$result = $conn->query("select name from isps order by name",array());
 	$output = array();
-	while ($row = $result->fetch_assoc()) {
-		$output[] = $row;
+
+	# this can be driven from a status table or cached if we need better efficiency
+	while ($isp = $result->fetch_assoc()) {
+		$out = array('network_name' => $isp['name']);
+
+		# get latest status and result
+
+		$result2 = $conn->query("select status, created from results where urlid = ? and network_name = ? order by created desc limit 1",
+			array($url['urlID'], $isp['name']));
+		$row = $result2->fetch_row();
+		if (!$row) {
+			# no results for this ISP/URL combination
+			continue;
+		}
+		$out['status'] = $row[0];
+		$out['status_timestamp'] = $row[1];
+
+		# get last blocked time
+		$result2 = $conn->query("
+			select created from results where urlid = ? and network_name = ? 
+			and status = 'blocked'
+			order by created desc limit 1",
+			array($url['urlID'], $isp['name']));
+		$row = $result2->fetch_row();
+
+		$out['last_blocked_timestamp'] = $row[0];
+
+		$output[] = $out;
 	}
 
-	return $app->json(array('success' => true, "url" => $url, "results" => $output));
+	return $app->json(array('success' => true, "url" => $url['URL'], "results" => $output));
 });
 
 $app->get('/status/stats', function( Request $req) use ($app) {
