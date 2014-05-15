@@ -1,0 +1,26 @@
+<?php
+
+include_once __DIR__ . "/../api/1.2/libs/DB.php";
+include_once __DIR__ . "/../api/1.2/libs/amqp.php";
+
+$ch = amqp_connect();
+$q = new AMQPQueue($ch);
+$q->setName('heartbeat');
+
+$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+
+function process_result($msg, $queue) {
+	global $conn;
+
+	$data = (array)json_decode($msg->getBody());
+	$queue->ack($msg->getDeliveryTag());
+
+	error_log("Got heartbeat: {$data['probe_uuid']} {$data['date']}");
+
+	$conn->query("update probes set lastSeen = ? where uuid = ?", 
+		array($data['date'], $data['probe_uuid'])
+	);
+	$conn->commit();
+}
+
+$q->consume("process_result");

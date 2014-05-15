@@ -19,12 +19,12 @@ $ex->setType('topic');
 $ex->setFlags(AMQP_DURABLE);
 $ex->declare();
 
-function createqueue($ch, $name,  $key) {
+function createqueue($ch, $name,  $key, $exchange = 'org.blocked') {
 	$q = new AMQPQueue($ch);
 	$q->setName($name);
 	$q->setFlags(AMQP_DURABLE);
 	$q->declare();
-	$q->bind('org.blocked', $key);
+	$q->bind($exchange, $key);
 }
 
 $result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
@@ -37,4 +37,5 @@ while ($isp = $result->fetch_assoc()) {
 }
 
 createqueue($ch, "results",  "results.#");
+createqueue($ch, "heartbeat",  "probe.heartbeat.#");
 
