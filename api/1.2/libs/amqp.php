@@ -24,3 +24,10 @@ function get_queue_name($ispname) {
 
 	return strtolower(str_replace(" ","_",$ispname));
 }
+function create_queue($ch, $name,  $key, $exchange = 'org.blocked') {
+	$q = new AMQPQueue($ch);
+	$q->setName($name);
+	$q->setFlags(AMQP_DURABLE);
+	$q->declare();
+	$q->bind($exchange, $key);
+}

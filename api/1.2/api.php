@@ -477,6 +477,9 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	catch (IspLookupError $e) {
 		error_log("Caught failed lookup");
 		$descr = $app['db.isp.load']->create($descr);
+
+		$ch = $app['service.amqp'];
+		create_queue($ch, 'url.' . get_queue_name($descr) . '.org', 'url.*');
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));
