@@ -162,7 +162,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# 767 characters
 
 	$conn->query(
-		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,NULL, now())",
+		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
 		array($req->get('url'), md5($req->get('url')), $req->get('source'))
 		);
 	# Because of the unique index (and the insert ignore) we have to query
@@ -320,6 +320,8 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	$q->setName('url.' . get_queue_name($isp['name']) . '.org');
 	$q->setFlags(AMQP_PASSIVE);
 	try {
+		# passive gives us an error if the queue does not exist,
+		# but doesn't create it
 		$q->declare();
 	} catch (AMQPQueueException $e) {
 		return $app->json(array(
@@ -355,7 +357,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 		$ret['url'] = $urls[0]['url'];
 		$ret['hash'] = $urls[0]['hash'];
 	}
-	#$app['db.probe.load']->updateReqSent($probe['uuid']);
+	$app['db.probe.load']->updateReqSent($probe['uuid']);
 
 	return $app->json($ret, 200);
 });

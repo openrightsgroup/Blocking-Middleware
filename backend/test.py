@@ -39,7 +39,7 @@ logging.basicConfig(
 
 class TestClient:
 	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats','get']
-	PREFIX='/api/1.2/'
+	PREFIX='/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
@@ -141,7 +141,7 @@ class TestClient:
 
 	def ip(self):
 		ts = self.timestamp()
-		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
+		rq = requests.get(self.proto + '://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
 			('/'+opts['--ip'] if '--ip' in opts else ''),
 			params = {
 				'date': ts,

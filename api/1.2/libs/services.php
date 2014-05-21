@@ -77,63 +77,6 @@ class UrlLoader {
 		return $row;
 	}
 
-	function get_next_old() {
-		$result = $this->conn->query("select urlID,URL,hash from urls where lastPolled is null or lastPolled < date_sub(now(), interval 12 hour) ORDER BY lastPolled ASC,polledAttempts DESC LIMIT 1", array());
-		if ($result->num_rows == 0) {
-			return null;
-		}
-		$row = $result->fetch_assoc();
-		return $row;
-	}
-
-	function get_next($ispid) {
-		/*
-		The main queue query.  This prioritises URLs to check in order of results received, 
-		aiming to gain multiple opinions of a URL's status on a given ISP as quickly as possible.
-		The URL list cycles once per day.
-
-		It is possible for the same probe to handle a single URL on multiple successive days.
-		Trying to control which probe gets which URLs can be done, but it's a trade-off between 
-		fine-grained control and queue management expense.  This would involve a lumpy left-join or
-		burning through results until we find one that hasn't been sent to the probe before.
-
-		This won't scale wonderfully, but it's a start.
-
-		The main query does at least have a covering index, so it's a bit less expensive to start 
-		with (no filesort!).
-		*/
-
-		$result = $this->conn->query(
-			"select URL, urls.urlID, queue.id, hash from urls
-			inner join queue on queue.urlID = urls.urlID
-			where queue.ispID = ? and (lastSent < date_sub(now(), interval 1 day) or lastSent is null)
-			order by queue.priority,queue.results, queue.lastSent
-			limit 1",
-			array($ispid)
-			);
-
-		if ($result->num_rows == 0) {
-			# return null when we don't have any queued URLs to return.
-			return null;
-		}
-
-		# get the row
-		$row = $result->fetch_assoc();
-
-		# update the lastSent timestamp to keep queue entries rolling around
-		$this->conn->query(
-			"update queue set lastSent = now() where id = ?",
-			array($row['id'])
-			);
-
-		# update the poll counter on  the URL record
-		$this->conn->query(
-			"update urls set lastPolled = now(), polledAttempts = polledAttempts + 1 where urlID = ?",
-			array($row['urlID'])
-			);
-
-		return $row;
-	}
 }
 
 class IspLoader {
@@ -280,10 +223,6 @@ class ResultProcessorService {
 		$this->conn->query(
 			"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
 			array($url['urlID'])
-			);
-		$this->conn->query(
-			"update queue set results=results+1 where urlID = ? and IspID = ?",
-			array($url['urlID'], $isp['id'])
 			);
 
 		$this->probe_loader->updateRespRecv($probe['uuid']);
