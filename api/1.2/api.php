@@ -309,25 +309,53 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	checkProbe($probe);
 	Middleware::verifyUserMessage($req->get('probe_uuid'),  $probe['secret'], $req->get('signature'));
 	
-	# create an ISP record if it doesn't already exist
-	$app['db.isp.load']->create($req->get('network_name')); 
 	# Get the ISP details
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
-	$row = $app['db.url.load']->get_next($isp['id']);
-	if ($row == null) {
+	$ch = $app['service.amqp'];
+
+	$q = new AMQPQueue($ch);
+	# TODO: decide how to choose public vs. private queue,
+	# but use org for now
+	$q->setName('url.' . get_queue_name($isp['name']) . '.org');
+	$q->setFlags(AMQP_PASSIVE);
+	try {
+		$q->declare();
+	} catch (AMQPQueueException $e) {
+		return $app->json(array(
+			'success' => false,
+			'error' => "Queue for {$isp['name']} does not exist",
+		), 404);
+	}
+
+	$batch = (int)$req->get('batchsize', 1);
+	$urls = array();
+	for ($i = 0; $i < $batch; $i++) {
+		$msg = $q->get();
+		if ($msg === false) {
+			break;
+		}
+		$q->ack($msg->getDeliveryTag());
+		$urls[] = (array)json_decode($msg->getBody());
+	}
+
+	if (count($urls) == 0) {
 		return $app->json(array(
 			'success' => false,
 			'error' => 'No queued URLs found'
 			), 404);
 	}
-	error_log("Got URL: " . $row['URL']);
+	error_log("Got URL: " . $urls[0]['url']);
 	$ret = array(
 		'success' => true,
-		'url' => $row['URL'],
-		'hash' => $row['hash']
 		);
-	//$app['db.probe.load']->updateReqSent($probe['uuid']);
+	if ($batch > 1) {
+		$ret['urls'] = $urls;
+	} else {
+		$ret['url'] = $urls[0]['url'];
+		$ret['hash'] = $urls[0]['hash'];
+	}
+	#$app['db.probe.load']->updateReqSent($probe['uuid']);
 
 	return $app->json($ret, 200);
 });

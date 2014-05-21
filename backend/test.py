@@ -20,6 +20,8 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'ip=',
 	'status=',
         'fuzzdate',
+	'network=',
+	'batchsize=',
 	'new',
 
         # probe registration
@@ -36,8 +38,8 @@ logging.basicConfig(
 	)
 
 class TestClient:
-	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats']
-	PREFIX='/1.2/'
+	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats','get']
+	PREFIX='/api/1.2/'
 
 	def __init__(self, options):
 		self.opts = options
@@ -58,6 +60,9 @@ class TestClient:
 	def run(self, mode):
 		assert mode in self.MODES
 		return getattr(self, mode)()
+
+
+			
 
 	def user(self):
 		rq = requests.post('https://' + self.host +":"+self.port+ self.prefix+'register/user',
@@ -113,6 +118,16 @@ class TestClient:
 
                 return rq.status_code, rq.content
                 
+	def get(self):
+		rq = requests.get(self.get_url('request/httpt'),
+			params = {
+				'probe_uuid': self.opts['--probeuuid'],
+				'batchsize': self.opts.get('--batchsize',1),
+				'network_name': self.opts['--network'],
+				'signature': self.sign(self.opts['--probeuuid']),
+			})
+		return rq.status_code, rq.content
+
 
 	def submit(self):
 		rq = requests.post('https://' + self.host+":"+self.port + self.prefix + 'submit/url',

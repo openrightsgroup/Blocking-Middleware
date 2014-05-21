@@ -18,3 +18,9 @@ function amqp_connect() {
 	$amqp->connect();
 	return new AMQPChannel($amqp);
 }
+
+function get_queue_name($ispname) {
+	// there's probably a better place for this than here
+
+	return strtolower(str_replace(" ","_",$ispname));
+}
