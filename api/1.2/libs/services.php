@@ -154,13 +154,23 @@ class IspLoader {
 	}
 
 	function create($name) {
+		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
 		$result = $this->conn->query(
 			"insert ignore into isps(name,created) values (?, now())",
-			array($name)
+			array($title)
 			);
 		if (!$result) {
 			throw new DatabaseError();
 		}
+		$ispid = $this->conn->insert_id;
+		$this->conn->query("insert into isp_aliases(ispid, alias, created)
+			values (?, ?, now())",
+			array($ispid, $name)
+		);
+		if (!$result) {
+			throw new DatabaseError();
+		}
+		return $title;
 	}
 }
 

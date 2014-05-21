@@ -476,7 +476,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	}
 	catch (IspLookupError $e) {
 		error_log("Caught failed lookup");
-		$app['db.isp.load']->create($descr);
+		$descr = $app['db.isp.load']->create($descr);
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));

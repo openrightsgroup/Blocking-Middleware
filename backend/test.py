@@ -141,7 +141,7 @@ class TestClient:
 
 	def ip(self):
 		ts = self.timestamp()
-		rq = requests.get('https://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
+		rq = requests.get('http://' + self.host+":"+self.port + self.prefix + 'status/ip' + \
 			('/'+opts['--ip'] if '--ip' in opts else ''),
 			params = {
 				'date': ts,
