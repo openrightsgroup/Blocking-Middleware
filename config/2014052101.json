@@ -1,0 +1,79 @@
+{
+    "rules": [
+        {
+            "isp": "T-Mobile",
+            "match": [
+                "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/",
+                "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html"
+            ]
+        },
+        {
+            "isp": "EE",
+            "match": [
+                "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html",
+                "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html"
+            ]
+        },
+        {
+            "isp": "Vodafone",
+            "match": [
+                "re:url:^http://online\\.vodafone\\.co\\.uk/dispatch/Portal/ContentControlServlet\\?type=restricted"
+            ]
+        },
+        {
+            "isp": "BT",
+            "match": [
+                "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
+            ]
+        },
+        {
+            "isp": "TalkTalk",
+            "match": [
+                "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
+            ]
+        },
+        {
+            "isp": "Plusnet",
+            "match": [
+                "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml"
+            ]
+        },
+        {
+            "isp": "Three",
+            "match": [
+                "re:url:^http://mobile\\.three\\.co\\.uk/pc/Live/pcreator/live/100004/pin/blocked\\?"
+            ]
+        },
+        {
+            "isp": "AAISP",
+            "match": [
+            ]
+        },
+		{
+			"isp": "VirginMobile",
+			"match": [
+				"re:url:http://m\\.virginmedia\\.com/MiscPages/AdultWarning\\.aspx"
+			]
+		},
+		{
+			"isp": "O2",
+			"match": [
+				"re:url:http://assets\\.o2\\.co\\.uk/18plusaccess/"
+			]
+		}
+    ],
+    "org-block-rules": "0.2.1",
+    "version": "2014052101",
+    "self-test": {
+        "must-allow": [
+            "http://www.bbc.co.uk",
+            "http://www.yahoo.com",
+            "http://www.blocked.org.uk"
+        ],
+        "must-block": [
+            "http://www.pornhub.com",
+            "http://www.youporn.com",
+            "http://www.xvideos.com"
+        ]
+    }
+}
