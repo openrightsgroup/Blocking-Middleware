@@ -76,7 +76,8 @@ CREATE TABLE `users` (
   `publicKey` text,
   `secret` varchar(128),
   `createdAt` timestamp NULL default CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY email(`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `results`;
