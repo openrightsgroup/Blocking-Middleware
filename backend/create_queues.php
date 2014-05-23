@@ -25,15 +25,6 @@ function createqueue($ch, $name,  $key, $exchange = 'org.blocked') {
 	$q->setFlags(AMQP_DURABLE);
 	$q->declare();
 	$q->bind($exchange, $key);
-	if ($key == "url.org") {
-		# temporary fix to remove old binding
-		try {
-			$q->unbind($exchange, "url.*");
-		}
-		catch (AMQPException $e) {
-			return false;
-		}
-	}
 }
 
 $result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
@@ -43,11 +34,7 @@ while ($isp = $result->fetch_assoc()) {
 	}
 	print "Creating queue: " . $isp['name'] . "\n";
 	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
-	if (!createqueue($ch, 'url.'.$isp['name'].'.org',  'url.org') ) {
-		print "Reconnecting ...\n";
-		$ch->close();
-		$ch = amqp_connect();
-	}
+	createqueue($ch, 'url.'.$isp['name'].'.org',  'url.org');
 }
 
 createqueue($ch, "results",  "results.#");
