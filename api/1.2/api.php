@@ -314,31 +314,52 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 
 	$ch = $app['service.amqp'];
 
-	$q = new AMQPQueue($ch);
-	# TODO: decide how to choose public vs. private queue,
-	# but use org for now
-	$q->setName('url.' . get_queue_name($isp['name']) . '.org');
-	$q->setFlags(AMQP_PASSIVE);
-	try {
-		# passive gives us an error if the queue does not exist,
-		# but doesn't create it
-		$q->declare();
-	} catch (AMQPQueueException $e) {
-		return $app->json(array(
-			'success' => false,
-			'error' => "Queue for {$isp['name']} does not exist",
-		), 404);
+	if ($probe['isPublic'] == 0) {
+		# ORG probes can use the ORG queue and fall back on the public queue
+		# when the ORG queue is empty
+		$queuelist = array('org','public');
+	} else {
+		# public probes can only use the week-behind public queue
+		$queuelist = array('public');
 	}
 
+	$msgcount = 0;
 	$batch = (int)$req->get('batchsize', 1);
 	$urls = array();
-	for ($i = 0; $i < $batch; $i++) {
-		$msg = $q->get();
-		if ($msg === false) {
+
+	foreach ($queuelist as $queuesuffix) {
+		$q = new AMQPQueue($ch);
+
+		$queuename = 'url.' . get_queue_name($isp['name']) . '.' . $queuesuffix;
+		error_log("Reading from: {$queuename}");
+		$q->setName($queuename);
+		$q->setFlags(AMQP_PASSIVE);
+		try {
+			# passive gives us an error if the queue does not exist,
+			# but doesn't create it
+			$q->declare();
+		} catch (AMQPQueueException $e) {
+			return $app->json(array(
+				'success' => false,
+				'error' => "Queue for {$isp['name']} does not exist",
+			), 404);
+		}
+
+		while ($msgcount < $batch) {
+			$msg = $q->get();
+			if ($msg === false) {
+				# move onto the next queue
+				break;
+			}
+			$q->ack($msg->getDeliveryTag());
+			$urls[] = (array)json_decode($msg->getBody());
+			$msgcount ++;
+		}
+		if ($msgcount == $batch) {
+			# move onto next queue unless we've already got the right number
+			# of messages
 			break;
 		}
-		$q->ack($msg->getDeliveryTag());
-		$urls[] = (array)json_decode($msg->getBody());
 	}
 
 	if (count($urls) == 0) {
@@ -347,6 +368,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 			'error' => 'No queued URLs found'
 			), 404);
 	}
+
 	error_log("Got URL: " . $urls[0]['url']);
 	$ret = array(
 		'success' => true,
@@ -357,7 +379,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 		$ret['url'] = $urls[0]['url'];
 		$ret['hash'] = $urls[0]['hash'];
 	}
-	$app['db.probe.load']->updateReqSent($probe['uuid']);
+	$app['db.probe.load']->updateReqSent($probe['uuid'], $msgcount);
 
 	return $app->json($ret, 200);
 });
@@ -481,7 +503,8 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$descr = $app['db.isp.load']->create($descr);
 
 		$ch = $app['service.amqp'];
-		create_queue($ch, 'url.' . get_queue_name($descr) . '.org', 'url.*');
+		create_queue($ch, 'url.' . get_queue_name($descr) . '.org', 'url.org');
+		create_queue($ch, 'url.' . get_queue_name($descr) . '.public', 'url.public');
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));

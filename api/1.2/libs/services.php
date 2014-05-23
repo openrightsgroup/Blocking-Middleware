@@ -36,11 +36,11 @@ class ProbeLoader {
 		return $row;
 	}
 
-	function updateReqSent($probe_uuid) {
+	function updateReqSent($probe_uuid, $count=1) {
 		# increment the requests sent counter on the probe record
 		$result = $this->conn->query(
-			"update probes set probeReqSent=probeReqSent+1,lastSeen=now() where uuid=?",
-			array($probe_uuid)
+			"update probes set probeReqSent=probeReqSent+?,lastSeen=now() where uuid=?",
+			array($count, $probe_uuid)
 			);
 		if ($this->conn->affected_rows != 1) {
 			throw new ProbeLookupError();

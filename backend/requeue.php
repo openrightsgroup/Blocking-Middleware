@@ -8,6 +8,7 @@ $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 define('MAXQ', 750);
 define('MINQ', 250);
 
+
 $ch = amqp_connect();
 
 if (($fp = popen("/usr/sbin/rabbitmqctl list_queues","r")) == NULL) {
@@ -39,6 +40,7 @@ while ($line = fgets($fp)) {
 			try {
 				$q->unbind("org.blocked","url.public");
 			} catch (AMQPQueueException $e ) {
+				$ch->close();
 				$ch = amqp_connect();
 			}
 		}
@@ -58,7 +60,7 @@ $ex->declare();
 		
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled is null or lastpolled < date_sub(now(), interval 7 day)) and 
-	source in ('user','alexa') order by lastpolled limit 500", array());
+	source in ('user','alexa') order by lastpolled limit 100", array());
 
 $c = 0;
 print "Sending URLs ...\n";

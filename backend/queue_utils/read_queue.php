@@ -1,8 +1,7 @@
 <?php
 
 $dir = dirname(__FILE__);
-include "$dir/../api/1.2/libs/DB.php";
-include "$dir/../api/1.2/libs/amqp.php";
+include "$dir/../../api/1.2/libs/amqp.php";
 
 $ch = amqp_connect();
 

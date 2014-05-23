@@ -45,6 +45,7 @@ while ($isp = $result->fetch_assoc()) {
 	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
 	if (!createqueue($ch, 'url.'.$isp['name'].'.org',  'url.org') ) {
 		print "Reconnecting ...\n";
+		$ch->close();
 		$ch = amqp_connect();
 	}
 }
