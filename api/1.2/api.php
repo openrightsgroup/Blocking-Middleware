@@ -163,7 +163,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$conn->query(
 		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-		array($req->get('url'), md5($req->get('url')), $req->get('source'))
+		array($req->get('url'), md5($req->get('url')), $req->get('source','user'))
 		);
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
