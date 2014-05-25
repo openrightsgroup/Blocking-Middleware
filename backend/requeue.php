@@ -40,7 +40,6 @@ while ($line = fgets($fp)) {
 			try {
 				$q->unbind("org.blocked","url.public");
 			} catch (AMQPQueueException $e ) {
-				$ch->close();
 				$ch = amqp_connect();
 			}
 		}
