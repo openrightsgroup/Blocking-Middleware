@@ -35,3 +35,5 @@ class IpLookupError extends APIException {}
 class IspLookupError extends APIException{}
 class ConfigLoadError extends APIException{}
 
+class BadUrlError extends APIException{}
+

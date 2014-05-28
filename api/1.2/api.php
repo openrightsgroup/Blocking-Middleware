@@ -8,6 +8,7 @@ include_once "libs/pki.php";
 include_once "libs/password.php";
 include_once "libs/exceptions.php";
 include_once "libs/services.php";
+include_once "libs/url.php";
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -57,7 +58,11 @@ function checkParameters($req, $params) {
 		if (!in_array($requiredParam, $keys)) {
 			# throw if any are missing
 			error_log("Missing parameter: $requiredParam");
-			throw new InputError();
+			throw new InputError("Missing parameter: $requiredParam");
+		}
+
+		if (trim($req->get($requiredParam)) == '') {
+			throw new InputError("$requiredParam requires a value");
 		}
 	}
 }
@@ -99,7 +104,7 @@ $app->error(function(APIException $e, $code) {
 			break;
 		case "InputError":
 			$code = 400;
-			$message = "One or more required parameters missing or invalid";
+			$message = "One or more required parameters missing or invalid: " . $e->getMessage();
 			break;
 		case "DatabaseError":
 			$code = 500;
@@ -128,6 +133,9 @@ $app->error(function(APIException $e, $code) {
 		case 'IpLookupError':
 			$code = 500;
 			$message = "An error occurred gathering IP information";
+		case 'BadUrlError':
+			$code = 400;
+			$message = $e->getMessage();
 			break;
 	};
 	error_log("Error response: $code, $message, $error_class");
@@ -149,7 +157,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	/* Add a URL for testing */
 	$conn = $app['service.db'];
 
-	checkParameters($req, array('email','signature'));
+	checkParameters($req, array('email','signature','url'));
 
 	$row = $app['db.user.load']->load($req->get('email'));
 	checkUser($row);
@@ -158,16 +166,22 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		$req->get('signature')
 	);
 
+	if (trim($req->get('url')) == '') {
+		throw new InputError();
+	}
+
+	$url = normalize_url($req->get('url'));
+
 	# there is some badness here - URL is uniquely indexed to only the first 
 	# 767 characters
 
 	$conn->query(
 		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-		array($req->get('url'), md5($req->get('url')), $req->get('source','user'))
+		array($url, md5($url), $req->get('source','user'))
 		);
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
-	$url = $app['db.url.load']->load($req->get('url'));
+	$url = $app['db.url.load']->load($url);
 
 	$conn->query(
 		"insert into requests(urlID, userID, submission_info, created)
@@ -176,14 +190,14 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		);
 	$request_id = $conn->insert_id;
 
-	$msgbody = json_encode(array('url'=>$req->get('url'), 'hash'=>md5($req->get('url'))));
+	$msgbody = json_encode(array('url'=>$url, 'hash'=>md5($url)));
 	
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
 	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
 
-	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($req->get('url'))), 201);
+	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($url)), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
@@ -512,7 +526,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 ->value('client_ip',''); # make client_ip arg optional
 
 
-#--------- Administrator Functions
+#--------- End  Administrator Functions
 
 $app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
 	checkParameters($req, array('email','date','signature'));
@@ -592,13 +606,18 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 	return $app->json(array('success'=> true, "status"=> $req->get('status'), "email"=> $user));
 });
 
+/*  -------^---^---^---- End Administrator functions ... */
+
 $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
-	error_log("URL: " . $req->get('url'));
-	$url = $app['db.url.load']->load($req->get('url'));
+	#Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
+
+	$urltext = normalize_url($req->get('url'));
+
+	error_log("URL: " . $req->get('url') . "; " . $urltext);
+	$url = $app['db.url.load']->load($urltext);
 
 	$conn = $app['service.db'];
 
