@@ -6,7 +6,7 @@ function normalize_url($url) {
 
 	$parts = parse_url($url);
 
-	error_log("Got URL parts: " . print_r($parts, true));
+	#error_log("Got URL parts: " . print_r($parts, true));
 	if ($parts === false) {
 		throw new BadUrlError("Invalid URL");
 	}
