@@ -170,18 +170,18 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		throw new InputError();
 	}
 
-	$url = normalize_url($req->get('url'));
+	$urltext = normalize_url($req->get('url'));
 
 	# there is some badness here - URL is uniquely indexed to only the first 
 	# 767 characters
 
 	$conn->query(
 		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-		array($url, md5($url), $req->get('source','user'))
+		array($url, md5($urltext), $req->get('source','user'))
 		);
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
-	$url = $app['db.url.load']->load($url);
+	$url = $app['db.url.load']->load($urltext);
 
 	$conn->query(
 		"insert into requests(urlID, userID, submission_info, created)
@@ -190,14 +190,14 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		);
 	$request_id = $conn->insert_id;
 
-	$msgbody = json_encode(array('url'=>$url, 'hash'=>md5($url)));
+	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
 	
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
 	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
 
-	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($url)), 201);
+	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($urltext)), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
