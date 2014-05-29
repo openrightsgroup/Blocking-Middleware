@@ -612,7 +612,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
-	#Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
 
 	$urltext = normalize_url($req->get('url'));
 
