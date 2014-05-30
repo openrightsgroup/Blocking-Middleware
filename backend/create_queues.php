@@ -34,6 +34,7 @@ while ($isp = $result->fetch_assoc()) {
 	}
 	print "Creating queue: " . $isp['name'] . "\n";
 	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
+	createqueue($ch, 'url.'.$isp['name'].'.ooni',  'url.public');
 	createqueue($ch, 'url.'.$isp['name'].'.org',  'url.org');
 }
 

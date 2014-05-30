@@ -328,13 +328,19 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 
 	$ch = $app['service.amqp'];
 
-	if ($probe['isPublic'] == 0) {
-		# ORG probes can use the ORG queue and fall back on the public queue
-		# when the ORG queue is empty
-		$queuelist = array('org','public');
+	error_log("Probe type: {$probe['type']}");
+	if ($probe['type'] == 'raspi') {
+		error_log("Selecting ooni queue");
+		$queuelist = array('ooni');
 	} else {
-		# public probes can only use the week-behind public queue
-		$queuelist = array('public');
+		if ($probe['isPublic'] == 0) {
+			# ORG probes can use the ORG queue and fall back on the public queue
+			# when the ORG queue is empty
+			$queuelist = array('org','public');
+		} else {
+			# public probes can only use the week-behind public queue
+			$queuelist = array('public');
+		}
 	}
 
 	$msgcount = 0;
@@ -519,6 +525,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$ch = $app['service.amqp'];
 		create_queue($ch, 'url.' . get_queue_name($descr) . '.org', 'url.org');
 		create_queue($ch, 'url.' . get_queue_name($descr) . '.public', 'url.public');
+		create_queue($ch, 'url.' . get_queue_name($descr) . '.ooni', 'url.public');
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));
@@ -526,7 +533,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 ->value('client_ip',''); # make client_ip arg optional
 
 
-#--------- End  Administrator Functions
+#--------- Begin  Administrator Functions
 
 $app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
 	checkParameters($req, array('email','date','signature'));
