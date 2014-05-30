@@ -23,7 +23,7 @@ $queues = 0;
 
 while ($line = fgets($fp)) {
 	$results = array();
-	if (preg_match("/(url\..*\.public)\t(\d+)/", $line, &$matches)) {
+	if (preg_match("/(url\..*\.(ooni|public))\t(\d+)/", $line, &$matches)) {
 		print "Checking: " . $matches[1] . ": ". $matches[2] . "\n";
 		$queues ++;
 		if ($matches[2] < MINQ) {
