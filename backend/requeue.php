@@ -24,15 +24,15 @@ $queues = 0;
 while ($line = fgets($fp)) {
 	$results = array();
 	if (preg_match("/(url\..*\.(ooni|public))\t(\d+)/", $line, &$matches)) {
-		print "Checking: " . $matches[1] . ": ". $matches[2] . "\n";
+		print "Checking: " . $matches[1] . ": ". $matches[3] . "\n";
 		$queues ++;
-		if ($matches[2] < MINQ) {
+		if ($matches[3] < MINQ) {
 			print "Subscribing...\n";
 			$q = new AMQPQueue($ch);
 			$q->setName($matches[1]);
 			$q->bind("org.blocked","url.public");
 		}
-		if ($matches[2] > MAXQ) {
+		if ($matches[3] > MAXQ) {
 			print "UnSubscribing...\n";
 			$unsub++;
 			$q = new AMQPQueue($ch);
