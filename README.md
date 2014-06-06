@@ -90,6 +90,7 @@ We reused the following software components to make this:
 - The [Silex](https://github.com/silexphp/Silex) PHP micro-framework to develop websites based on Symfony2 components (MIT license).
 - The [MySQL community edition](https://www.mysql.com/products/community/) database (GPLv2 license).
 - The [Vagrant](https://github.com/mitchellh/vagrant) tool for building and distributing development environments (MIT license).
+- [php-amqp](http://pecl.php.net/package/amqp) from pecl (PHP license).
 
 Thanks!
 
