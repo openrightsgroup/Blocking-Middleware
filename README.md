@@ -80,3 +80,17 @@ If you need help with any of these steps or you don't understand the terms being
 10. A member of the middleware team will merge your pull request and this will close the issue automatically if you've tagged it correctly. If they need any more information or have questions about your changes they will start a conversation with you on the pull request's thread.
 
 We hope you enjoy contributing. Thanks in advance for your hard work!
+
+Credits
+-------
+We reused the following software components to make this:
+
+- @ircmaxell's [password compatibility library](https://github.com/ircmaxell/password_compat) (MIT license).
+- The [Symfony2](https://github.com/symfony/symfony) PHP web development framework (MIT license).
+- The [Silex](https://github.com/silexphp/Silex) PHP micro-framework to develop websites based on Symfony2 components (MIT license).
+- The [MySQL community edition](https://www.mysql.com/products/community/) database (GPLv2 license).
+- The [Vagrant](https://github.com/mitchellh/vagrant) tool for building and distributing development environments (MIT license).
+- [php-amqp](http://pecl.php.net/package/amqp) from pecl (PHP license).
+
+Thanks!
+
