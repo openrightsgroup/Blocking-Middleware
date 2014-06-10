@@ -38,7 +38,7 @@
             "isp": "Plusnet",
             "match": [
                 "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml",
-				"re:body:^<p> Error \\- site blocked</p>"
+				"re:body:^<p> Error \u2013 site blocked</p>"
             ]
         },
         {
