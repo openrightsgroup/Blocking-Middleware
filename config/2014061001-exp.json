@@ -67,7 +67,8 @@
 		{
 			"isp": "Sky",
 			"match": [
-				"re:url:http://block\\.nb\\.sky\\.com/\\?"
+				"re:url:http://block\\.nb\\.sky\\.com/\\?",
+				"re:url:http://blocked\\.nb\\.sky\\.com/\\?"
 			]
 		},
 		{
