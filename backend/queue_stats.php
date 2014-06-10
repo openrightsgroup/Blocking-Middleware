@@ -9,7 +9,7 @@ if (($fp = popen("/usr/sbin/rabbitmqctl list_queues","r")) == NULL) {
 	exit(1);
 }
 
-$dt = date('Y-m-d H:I:S');
+$dt = date('Y-m-d H:i:s');
 while ($line = fgets($fp)) {
 	$results = array();
 	if (preg_match("/(url\.(.*)\.(ooni|org|public))\t(\d+)/", $line, &$matches)) {
