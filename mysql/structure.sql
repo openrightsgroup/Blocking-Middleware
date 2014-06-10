@@ -21,7 +21,7 @@ CREATE TABLE `probes` (
   `type` enum('raspi','android','atlas','web') NOT NULL,
   `lastSeen` datetime default NULL,
   `gcmRegID` text,
-  `isPublic` tinyint(1) unsigned default '0',
+  `isPublic` tinyint(1) unsigned default '1',
   `countryCode` varchar(3) default NULL,
   `probeReqSent` int(11) unsigned default 0,
   `probeRespRecv` int(11) unsigned default 0,
