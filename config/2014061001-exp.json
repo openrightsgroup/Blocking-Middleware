@@ -79,7 +79,7 @@
 		}
     ],
     "org-block-rules": "0.2.1",
-    "version": "2014060301",
+    "version": "2014061001",
     "self-test": {
         "must-allow": [
             "http://www.bbc.co.uk",
