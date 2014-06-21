@@ -1,8 +1,8 @@
 <?php
 	$dbhost = 'localhost';
-	$dbuser = 'db_username';
-	$dbpass = 'db_password';
-	$dbname = 'DB_NAME';
+	$dbuser = 'root';
+	$dbpass = '';
+	$dbname = 'bowdlerize';
 
 	include_once "exceptions.php";
 	
@@ -53,10 +53,20 @@
 			// startpos is used to that we don't get confused by escaped data that contains
 			// the placeholder
 			while (($startpos = strpos($sql, '?', $startpos)) !== false) {
-				$esc = $this->escape_string($args[$n]) ;
-				$sql = substr_replace($sql, "'" .$esc . "'", $startpos, 1);
+                if (is_null($args[$n])) {
+                    // escape_string() seems to parse PHP NULL into 0, which breaks foreign key
+                    // constraints when inserted into a nullable FK target column on a child record.
+                    // (Or, worse: links the child record to the parent record with ID 0!)
+                    //
+                    // To avoid this just replace PHP NULL with the string 'NULL' instead.
+                    $esc = 'NULL';
+                } else {
+                    // OK to parse with escape_string()
+                    $esc = "'" . $this->escape_string($args[$n]) . "'";
+                }
+                $sql = substr_replace($sql, $esc, $startpos, 1);
 				$n++;
-				$startpos += strlen($esc)+2; // move startpos past the end of the escaped string
+				$startpos += strlen($esc);  // move startpos past the end of the escaped string
 			}
 			if ($n != count($args)) {
 				$c = count($args);

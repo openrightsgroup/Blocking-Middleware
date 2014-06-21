@@ -79,6 +79,25 @@ class UrlLoader {
 
 }
 
+class ContactLoader {
+	function __construct($conn) {
+		$this->conn = $conn;
+	}
+
+	function load($email) {
+		$result = $this->conn->query(
+			"select * from contacts where email=?",
+			array($email)
+			);
+		if ($result->num_rows == 0) {
+			throw new UrlLookupError();
+		}
+		$row = $result->fetch_assoc();
+		return $row;
+	}
+
+}
+
 class IspLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
