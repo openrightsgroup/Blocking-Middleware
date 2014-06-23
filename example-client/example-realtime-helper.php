@@ -1,10 +1,16 @@
 <?php
 
+header("Content-type: text/html;charset=UTF-8");
+header("Connection: close");
+ini_set("output_buffering", "off");
+ob_implicit_flush(1);
+ob_flush();
+
 include "credentials.php";
 
 $url = $_GET['url'];
 
-$streamurl = "http://localhost/api/1.2/stream/results?";
+$streamurl = "$API/stream/results?";
 
 $args = array(
 	"url" => $url,
@@ -54,28 +60,21 @@ while (!feof($fp)) {
 	$e = null;
 
 
-	$result = stream_select($r, $w, $e, 0);
-	if ($result === false) {
-		die("Error reading socket");
-	}
-	if ($result === 1) {
+	// Not sure how likely it is that we'll get a partial line ...*/
+	$buffer .= fgets($fp);
+	error_log("Read: $buffer");
 
-		// Not sure how likely it is that we'll get a partial line ...
-		$buffer .= fgets($fp);
-		error_log("Read: $buffer");
+	// check that we've got an entire json line
+	if (substr($buffer, -1, 1) == "\n") {
+		$data = (array)json_decode($buffer);
+		if (!isset($data['type'])) {
+			#error_log(implode(" ", array_keys($data)));
+			print "<div><span>{$data['network_name']}</span><span class=\"{$data['status']}\">{$data['status']}</span></div>\n\n";
+			ob_flush();
+		}
+		$buffer = "";
+	}	
 
-		// check that we've got an entire json line
-		if (substr($buffer, -1, 1) == "\n") {
-			$data = (array)json_decode($buffer);
-			if (!isset($data['type'])) {
-				#error_log(implode(" ", array_keys($data)));
-				print "<div><span>{$data['network_name']}</span><span class=\"{$data['status']}\">{$data['status']}</span></div>";
-				ob_flush();
-			}
-			$buffer = "";
-		}	
-
-	}
 }
 fclose($fp);
 ?>
