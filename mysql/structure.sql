@@ -154,6 +154,26 @@ CREATE TABLE `queue_length` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+DROP TABLE IF EXISTS `url_latest_status`;
+CREATE TABLE `url_latest_status` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(10) unsigned NOT NULL,
+  `network_name` varchar(64) NOT NULL,
+  `status` varchar(8) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `url_latest_unq` (`urlID`,`network_name`),
+  KEY `ts` (`created`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+CREATE TRIGGER status_upd_trig 
+AFTER INSERT ON results 
+FOR EACH ROW 
+INSERT INTO url_latest_status(urlID, network_name, status, created) 
+SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created 
+ON DUPLICATE KEY 
+UPDATE status = NEW.status, created = NEW.created;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
