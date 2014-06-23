@@ -6,7 +6,7 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-CREATE DATABASE /*!32312 IF NOT EXISTS*/`bowdlerize` /*!40100 DEFAULT CHARACTER SET utf8 */;
+
 
 /*Table structure for table `probes` */
 
@@ -33,30 +33,6 @@ CREATE TABLE `probes` (
   KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-/*Table structure for table `tempURLs` */
-
-DROP TABLE IF EXISTS `tempURLs`;
-
-CREATE TABLE `tempURLs` (
-  `tempID` int(11) unsigned NOT NULL auto_increment,
-  `URL` text,
-  `hash` varchar(32) default NULL,
-  `headers` text,
-  `content_type` text,
-  `code` int(11) unsigned default NULL,
-  `fullFidelityReq` tinyint(1) unsigned default '0',
-  `urgency` int(11) unsigned default '0',
-  `source` enum('social','user','canary','probe') default NULL,
-  `targetASN` int(11) unsigned default NULL,
-  `status` enum('pending','failed','ready','complete') default NULL,
-  `lastPolled` datetime default NULL,
-  `inserted` timestamp NULL default CURRENT_TIMESTAMP,
-  `polledAttempts` int(11) unsigned default '0',
-  `polledSuccess` int(11) unsigned default '0',
-  PRIMARY KEY  (`tempID`),
-  UNIQUE KEY `tempurl_url` (`URL`(255))
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
 /*Table structure for table `users` */
 
 DROP TABLE IF EXISTS `users`;
@@ -67,15 +43,16 @@ CREATE TABLE `users` (
   `password` varchar(255) default NULL,
   `preference` text,
   `fullName` varchar(60) default NULL,
-  `isPublic` tinyint(1) unsigned default '0',
+  `isPublic` tinyint(1) unsigned default '1',
   `countryCode` varchar(3) default NULL,
   `probeHMAC` varchar(32) default NULL,
-  `status` enum('pending','ok','suspended','banned') default 'pending',
+  `status` enum('pending','ok','suspended','banned') default 'ok',
   `pgpKey` text,
   `yubiKey` varchar(12) default NULL,
   `publicKey` text,
   `secret` varchar(128),
   `createdAt` timestamp NULL default CURRENT_TIMESTAMP,
+  `administrator` tinyint(4) DEFAULT '0',
   PRIMARY KEY  (`id`),
   UNIQUE KEY email(`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -92,6 +69,7 @@ CREATE TABLE `results` (
   `http_status` int(11) DEFAULT NULL,
   `network_name` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
+  `filter_level` varchar(16) DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `result_idx` (`urlID`,`network_name`,`status`,`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -102,10 +80,16 @@ CREATE TABLE `requests` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `urlID` int(11) NOT NULL,
   `userID` int(11) NOT NULL,
+  `contactID` int(11) DEFAULT NULL COMMENT 'Record in the contacts table that stores the contact details of the actor that made this request',
   `submission_info` text,
   `created` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+  `subscribereports` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact wishes to receive regular email updates about this URL',
+  `allowcontact` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact will accept communication from ORG about this request',
+  `information` text COMMENT 'Extra info about this request provided by the contact',
+  PRIMARY KEY (`id`),
+  KEY `fk_requests_contacts` (`contactID`),
+  CONSTRAINT `fk_requests_contacts` FOREIGN KEY (`contactID`) REFERENCES `contacts` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `isps`;
 
@@ -116,21 +100,6 @@ CREATE TABLE `isps` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `queue`;
-
-CREATE TABLE `queue` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `ispID` int(10) unsigned NOT NULL,
-  `urlID` int(10) unsigned NOT NULL,
-  `priority` smallint(5) unsigned not null default 5,
-  `lastSent` datetime DEFAULT NULL,
-  `results` int(10) unsigned DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `queue_unq` (`ispID`,`urlID`),
-  KEY `cvr` (`ispID`,`priority`,`results`,`lastSent`,`urlID`,`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
 
 DROP TABLE IF EXISTS `urls`;
 CREATE TABLE `urls` (
@@ -143,7 +112,8 @@ CREATE TABLE `urls` (
   `polledAttempts` int(10) unsigned DEFAULT '0',
   `polledSuccess` int(10) unsigned DEFAULT '0',
   PRIMARY KEY (`urlID`),
-  UNIQUE KEY `urls_url` (`URL`(767))
+  UNIQUE KEY `urls_url` (`URL`(767)),
+  KEY `source` (`source`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `isp_aliases`;
@@ -153,13 +123,15 @@ CREATE TABLE `isp_aliases` (
   `alias` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `isp_aliases_alias` (`alias`)
+  UNIQUE KEY `isp_aliases_alias` (`alias`),
+  KEY `ispID` (`ispID`),
+  CONSTRAINT `isp_aliases_ibfk_1` FOREIGN KEY (`ispID`) REFERENCES `isps` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `isp_cache`;
 CREATE TABLE `isp_cache` (
-  `ip` varchar(16) NOT NULL,
-  `network` varchar(64) NOT NULL,
+  `ip` varchar(128) NOT NULL,
+  `network` varchar(64) NOT NULL DEFAULT '',
   `created` datetime NOT NULL,
   PRIMARY KEY `unq` (`ip`,`network`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
