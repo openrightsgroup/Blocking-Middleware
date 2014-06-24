@@ -27,6 +27,9 @@
 	# admin functions
 	RewriteRule ^list/users api.php [NC,L,qsa]
 
+	# experimental
+	RewriteRule ^stream/results api.php [NC,L,qsa]
+
 </IfModule>
 DirectoryIndex index.php
 

@@ -721,6 +721,82 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 	return $app->json(array('success' => true, "stats" => $stats));
 });
 
+function result_callback($msg, $queue) {
+	print $msg->getBody() . "\n";
+	ob_flush();
+	$queue->ack($msg->getDeliveryTag());
+}
 
+$app->get('/stream/results', function (Request $req) use ($app) {
+	/* experimental endpoint that streams results from the AMQP public 
+	results queue using chunked encoding.  A blocking client socket
+	will be able to read single-line json statements giving the results for
+	each ISP in real time.  For best results, the call to /stream/results
+	should be made BEFORE submitting the URL to the API.
+	*/
+
+
+	// it's probably a bit rude to do this inside silex
+	ini_set("output_buffering", "off");
+	ob_implicit_flush(true);
+
+	checkParameters($req, array('email','signature','url','date'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+	Middleware::verifyUserMessage($req->get('url').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+
+	$timeout = (int)$req->get('timeout');
+	if ($timeout) {
+		if (!(5 <= $timeout && $timeout <= 30)) {
+			return $app->json(array(
+				"success" => false, 
+				"error" => "Invalid timeout value"
+			), 400);
+		}
+	} else {
+		$timeout = 15;
+	}
+	error_log("Timeout set to: $timeout");
+
+	list($amqpconn, $ch) = amqp_connect_full();
+	$amqpconn->setTimeout($timeout);
+
+	$url = $req->get('url');
+	$hash = md5($url);
+
+	try {
+		$q = new AMQPQueue($ch);
+		$q->setName("result." . $hash);
+
+		$q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
+		$q->declare();
+		$q->bind("org.results", "results.*." . $hash);
+
+		$tag = $hash . "-" . time();
+		print json_encode(array(
+			"type" => "status", 
+			"tag" => $tag,
+			"hash" => $hash,
+			"url" => $url, 
+			));
+		print "\n";
+		ob_flush();
+		$q->consume("result_callback", AMQP_NOPARAM, $tag);
+	} catch (AMQPQueueException $e) {
+		return $app->json(array(
+			"success" => false, 
+			"type" => "error",
+			"msg" => $e->getMessage()
+		), 500);
+	} catch (AMQPConnectionException $e) {
+		$q->cancel($tag);
+	};
+
+
+	return $app->json(array('success' => true, "type" => "close", "tag" => $tag));
+
+});
 
 $app->run();
