@@ -1,13 +1,11 @@
 <?php
-	$dbhost = 'localhost';
-	$dbuser = 'root';
-	$dbpass = '';
-	$dbname = 'bowdlerize';
+
+include_once "config.php";
+
 
 	include_once "exceptions.php";
 	
 
-	define("GOOGLE_API_KEY", "GOOGLE_KEY");
 	
 	date_default_timezone_set('UTC');
 	/* PHPs date functions are unfortunate.  Now that we're in daylight savings

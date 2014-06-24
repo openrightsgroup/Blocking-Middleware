@@ -1,18 +1,15 @@
 <?php
 
-$AMQP_HOST = 'localhost';
-$AMQP_USER = 'guest';
-$AMQP_PASS = 'guest';
-$AMQP_VHOST= '/';
+include_once "config.php";
 
 function amqp_connect_full() {
 	// returns an open AMQP connection and channel
 	global $AMQP_HOST, $AMQP_USER, $AMQP_PASS, $AMQP_VHOST;
 
 	$amqp = new AMQPConnection(array(
-		'host'=>'localhost',
-		'user'=>'guest', 
-		'password'=>'guest',
+		'host'=>$AMQP_HOST,
+		'login'=>$AMQP_USER,
+		'password'=>$AMQP_PASS,
 		'vhost' => $AMQP_VHOST,
 	));
 	$amqp->connect();
