@@ -91,6 +91,20 @@ CREATE TABLE `requests` (
   CONSTRAINT `fk_requests_contacts` FOREIGN KEY (`contactID`) REFERENCES `contacts` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `contacts`;
+
+CREATE TABLE `contacts` (
+  `id` INT(10) NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(128) NOT NULL COMMENT 'Contact\'s email address',
+  `verified` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Set when the contact\'s email address has been verified, either by verifying a request, or by the double opt-in mechanism for the main ORG mailing list',
+  `joinlist` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Set when the contact has subscribed to ORG\'s mailing list',
+  `fullName` VARCHAR(60) NULL DEFAULT NULL COMMENT 'Contact\'s given name (so we can address messages personally)',
+  `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Time this record was created',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id` ASC),
+  UNIQUE KEY `email_UNIQUE` (`email` ASC)
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8 COMMENT = 'Contains information about how to get in touch with an actor' /* comment truncated */ /* (who may have made one or more requests or be running one or more probes)*/;
+
 DROP TABLE IF EXISTS `isps`;
 
 CREATE TABLE `isps` (
@@ -146,7 +160,7 @@ CREATE TABLE `modx_copy` (
 
 DROP TABLE IF EXISTS `queue_length`;
 CREATE TABLE `queue_length` (
-  `created` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `created` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
   `isp` varchar(64) NOT NULL DEFAULT '',
   `type` varchar(8) NOT NULL DEFAULT '',
   `length` int(10) unsigned DEFAULT NULL,

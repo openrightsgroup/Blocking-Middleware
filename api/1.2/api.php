@@ -32,6 +32,9 @@ $app['db.user.load'] = function($app) {
 $app['db.probe.load'] = function($app) {
 	return new ProbeLoader($app['service.db']);
 };
+$app['db.contact.load'] = function($app) {
+	return new ContactLoader($app['service.db']);
+};
 $app['db.url.load'] = function($app) {
 	return new UrlLoader($app['service.db']);
 };
@@ -170,24 +173,50 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		throw new InputError();
 	}
 
+    if ($req->request->has('contactemail')) {
+        # Visitor provided a contact address; store it as a contact.
+        # joinlist flag is cleared unless set explicitly in request.
+        #
+        # If contact exists, don't duplicate record, but update joinlist flag
+        # and fullname unless they would be cleared
+        $conn->query(
+            "INSERT INTO contacts
+            SET
+                email=?,
+                joinlist=?,
+                fullName=?
+            ON DUPLICATE KEY UPDATE
+                joinlist=IF(joinlist=false, VALUES(joinlist), joinlist),
+                fullName=IF(VALUES(fullName)='', fullName, VALUES(fullName));
+            ",
+            array($req->get('contactemail'), $req->get('joinlist', false), $req->get('fullname'))
+        );
+        # Grab the contact ID to insert into the requests table below
+        $contact = $app['db.contact.load']->load($req->get('contactemail'));
+    }
+    else {
+        $contact = NULL;
+    }
+
 	$urltext = normalize_url($req->get('url'));
 
 	# there is some badness here - URL is uniquely indexed to only the first 
 	# 767 characters
 
 	$conn->query(
-		"insert ignore into urls(URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-		array($urltext, md5($urltext), $req->get('source','user'))
-		);
+        "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
+        array($urltext, md5($urltext), $req->get('source','user'))
+    );
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
 	$url = $app['db.url.load']->load($urltext);
 
-	$conn->query(
-		"insert into requests(urlID, userID, submission_info, created)
-			values (?,?,?,now())",
-		array($url['urlID'], $row['id'], $req->get('additional_data'))
-		);
+    $conn->query(
+        "insert into requests (urlID, userID, contactID, submission_info, subscribereports, allowcontact, information, created)
+            values (?,?,?,?,?,?,?,now())",
+        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('subscribereports', false), $req->get('allowcontact', false), $req->get('information'))
+    );
+
 	$request_id = $conn->insert_id;
 
 	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
