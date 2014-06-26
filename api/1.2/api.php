@@ -173,7 +173,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		throw new InputError();
 	}
 
-    if ($req->request->has('contactemail')) {
+    if (!empty($req->request('contactemail')) {
         # Visitor provided a contact address; store it as a contact.
         # joinlist flag is cleared unless set explicitly in request.
         #
