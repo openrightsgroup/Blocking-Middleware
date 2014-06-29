@@ -231,7 +231,19 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 				created=VALUES(created)",
 			array($url['urlID'], $contact['id'], $req->get('subscribereports', false) )
 		);
-		# TODO: verify by email
+
+		# create verification token for email subscribe
+		# needs an update because we're using the row ID as a salt of sorts
+
+		# should probably handle duplicated tokens here (just because it's possible)
+		$conn->query("update url_subscriptions set token = concat('A',md5(concat(id, '-', urlID, '-', contactID,'-',?)))
+			where urlID = ? and contactID = ?",
+			array(Middleware::generateSharedSecret(10), $url['urlID'], $contact['id'])
+			);
+
+
+
+		# TODO: send verify email
 	}
 
 	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));

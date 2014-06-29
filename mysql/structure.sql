@@ -211,8 +211,9 @@ CREATE TABLE `url_subscriptions` (
   `subscribereports` tinyint(1) DEFAULT '0',
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `url_contact` (`urlID`,`contactID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `url_contact` (`urlID`,`contactID`),
+  UNIQUE KEY `urlsub_token` (`token`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
