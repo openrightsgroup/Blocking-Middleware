@@ -215,6 +215,37 @@ CREATE TABLE `url_subscriptions` (
   UNIQUE KEY `urlsub_token` (`token`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `url_status_changes`;
+CREATE TABLE `url_status_changes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(10) unsigned DEFAULT NULL,
+  `network_name` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
+  `old_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+  `new_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+
+DELIMITER //
+CREATE PROCEDURE record_change(p_urlid int, p_network_name varchar(64), p_old_status varchar(16), p_newstatus varchar(16), p_created datetime) 
+MODIFIES SQL DATA  
+BEGIN 
+  IF p_old_status <> p_newstatus 
+  THEN 
+    INSERT INTO url_status_changes(urlid, network_name, old_status, new_status, created) 
+	VALUES (p_urlid, p_network_name, p_old_status, p_newstatus, p_created); 
+  END IF; 
+END;
+//
+DELIMITER ;
+
+CREATE TRIGGER record_change 
+BEFORE UPDATE ON url_latest_status 
+FOR EACH ROW 
+CALL record_change(NEW.urlID, NEW.network_name, OLD.status, NEW.status, NEW.created);
+
+
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
 FOR EACH ROW 
