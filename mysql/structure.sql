@@ -83,8 +83,6 @@ CREATE TABLE `requests` (
   `contactID` int(11) DEFAULT NULL COMMENT 'Record in the contacts table that stores the contact details of the actor that made this request',
   `submission_info` text,
   `created` datetime DEFAULT NULL,
-  `subscribereports` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact wishes to receive regular email updates about this URL',
-  `allowcontact` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact will accept communication from ORG about this request',
   `information` text COMMENT 'Extra info about this request provided by the contact',
   PRIMARY KEY (`id`),
   KEY `fk_requests_contacts` (`contactID`),
@@ -204,6 +202,17 @@ CREATE TABLE `isp_stats_cache` (
   PRIMARY KEY (`network_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `url_subscriptions`;
+CREATE TABLE `url_subscriptions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(10) unsigned NOT NULL,
+  `contactID` int(10) unsigned NOT NULL,
+  `subscribereports` tinyint(1) DEFAULT '0',
+  `allowcontact` tinyint(1) DEFAULT '0',
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `url_contact` (`urlID`,`contactID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
