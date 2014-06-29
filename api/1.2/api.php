@@ -173,7 +173,10 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		throw new InputError();
 	}
 
-    if ($req->request->has('contactemail')) {
+    # Work around parser error in empty() function for PHP versions < 5.5
+    $hasContactEmail = $req->get('contactemail');
+
+    if (!empty($hasContactEmail)) {
         # Visitor provided a contact address; store it as a contact.
         # joinlist flag is cleared unless set explicitly in request.
         #
