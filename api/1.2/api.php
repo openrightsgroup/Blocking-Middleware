@@ -215,22 +215,21 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$url = $app['db.url.load']->load($urltext);
 
     $conn->query(
-        "insert into requests (urlID, userID, contactID, submission_info, information, created)
-            values (?,?,?,?,?,now())",
-        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'))
+        "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
+            values (?,?,?,?,?,?,now())",
+        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
     );
 
 	$request_id = $conn->insert_id;
 
-	if ($contact != null && ($req->get('subscribereports',false) || $req->get('allowcontact',false))) {
+	if ($contact != null && $req->get('subscribereports',false) ) {
 		$conn->query(
-			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, allowcontact, created)
-			VALUES (?,?,?,?,NOW())
+			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, created)
+			VALUES (?,?,?,NOW())
 			ON DUPLICATE KEY UPDATE
 				subscribereports=VALUES(subscribereports), 
-				allowcontact=VALUES(allowcontact), 
 				created=VALUES(created)",
-			array($url['urlID'], $contact['id'], $req->get('subscribereports', false), $req->get('allowcontact', false) )
+			array($url['urlID'], $contact['id'], $req->get('subscribereports', false) )
 		);
 		# TODO: verify by email
 	}
