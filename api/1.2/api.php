@@ -657,35 +657,24 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 
-	# build a results array for each ISP
-	$result = $conn->query("select name from isps order by name",array());
+	# Fetch results from status summary table, left joining to get last blocked time
+	$result = $conn->query("select l.network_name, l.status, l.created, max(r.created) 
+		from url_latest_status l 
+		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
+		where l.urlID = ?
+		group by l.network_name",
+		array($url['urlID']));
+
 	$output = array();
 
-	# this can be driven from a status table or cached if we need better efficiency
-	while ($isp = $result->fetch_assoc()) {
-		$out = array('network_name' => $isp['name']);
+	while ($row = $result->fetch_row()) {
+		$out = array('network_name' => $row[0]);
 
 		# get latest status and result
 
-		$result2 = $conn->query("select status, created from results where urlid = ? and network_name = ? order by created desc limit 1",
-			array($url['urlID'], $isp['name']));
-		$row = $result2->fetch_row();
-		if (!$row) {
-			# no results for this ISP/URL combination
-			continue;
-		}
-		$out['status'] = $row[0];
-		$out['status_timestamp'] = $row[1];
-
-		# get last blocked time
-		$result2 = $conn->query("
-			select created from results where urlid = ? and network_name = ? 
-			and status = 'blocked'
-			order by created desc limit 1",
-			array($url['urlID'], $isp['name']));
-		$row = $result2->fetch_row();
-
-		$out['last_blocked_timestamp'] = $row[0];
+		$out['status'] = $row[1];
+		$out['status_timestamp'] = $row[2];
+		$out['last_blocked_timestamp'] = $row[3];
 
 		$output[] = $out;
 	}
