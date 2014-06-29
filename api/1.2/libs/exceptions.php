@@ -37,3 +37,5 @@ class ConfigLoadError extends APIException{}
 
 class BadUrlError extends APIException{}
 
+class TokenLookupError extends APIException {}
+class InvalidTokenError extends APIException {}

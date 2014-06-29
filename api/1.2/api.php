@@ -102,12 +102,17 @@ $app->error(function(APIException $e, $code) {
 		case "UserLookupError":
 		case "UrlLookupError":
 		case "IspLookupError":
+		case "TokenLookupError":
 			$code = 404;
 			$message = "No matches in DB, please contact ORG support";
 			break;
 		case "InputError":
 			$code = 400;
 			$message = "One or more required parameters missing or invalid: " . $e->getMessage();
+			break;
+		case "InvalidTokenError":
+			$code = 400;
+			$message = "The supplied verification token is not in a valid format";
 			break;
 		case "DatabaseError":
 			$code = 500;
@@ -832,6 +837,33 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 
 
 	return $app->json(array('success' => true, "type" => "close", "tag" => $tag));
+
+});
+
+$app->post('/verify/email', function (Request $req) use ($app) {
+	checkParameters($req, array('email','signature','token','date'));
+	$user = $app['db.user.load']->load($req->get('email'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+	Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+	if (substr($req->get('token'), 0, 1) == 'A') {
+		# URL subscription token
+
+		$conn->query("update url_subscriptions set verified = 1, token = null 
+			where verified = 0 and token = ?",
+			array($req->get('token'))
+		);
+
+		if ($conn->affected_rows != 1) {
+			throw new TokenLookupError();
+		}
+	} else {
+		throw new InvalidTokenError();
+	}
+
+	return $app->json(array('success' => true, 'verified' => true));
 
 });
 
