@@ -688,27 +688,17 @@ $app->get('/status/url', function (Request $req) use ($app) {
 $app->get('/status/stats', function( Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	#$user = $app['db.user.load']->load($req->get('email'));
+	#Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
-	$result = $conn->query("
-	select count(*) from urls 
-		", array());
 
-	$row = $result->fetch_row();
-
-	$stats = array(
-		'urls_reported' => $row[0],
-		);
-
-	$result = $conn->query("select count(distinct urlid) from results",array());
-	$row = $result->fetch_row();
-	$stats['urls_tested'] = $row[0];
-
-	$result = $conn->query("select count(distinct urlid) from results where status = 'blocked'", array());
-	$row = $result->fetch_row();
-	$stats['blocked_sites_detected'] = $row[0];
+	$rs = $conn->query("select name, value from stats_cache", array());
+	$stats = array();
+	while($row = $rs->fetch_row()) {
+		error_log($row[0]);
+		$stats[$row[0]] = (int)$row[1];
+	}
 
 	return $app->json(array('success' => true, "stats" => $stats));
 });

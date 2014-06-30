@@ -180,6 +180,14 @@ CREATE TABLE `url_latest_status` (
   KEY `ts` (`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `stats_cache`;
+CREATE TABLE `stats_cache` (
+  `name` varchar(32) NOT NULL DEFAULT '',
+  `value` int(10) unsigned DEFAULT NULL,
+  `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
 FOR EACH ROW 
@@ -187,7 +195,6 @@ INSERT INTO url_latest_status(urlID, network_name, status, created)
 SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created 
 ON DUPLICATE KEY 
 UPDATE status = NEW.status, created = NEW.created;
-
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
