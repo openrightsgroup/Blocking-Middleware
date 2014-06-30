@@ -18,6 +18,11 @@ function normalize_url($url) {
 	}
 	$parts = parse_url($url);
 
+	if (@$parts['path'] == '/') {
+		# if the url is a bare-domain with a trailing '/', remove the trailing slash
+		$url = rtrim($url, '/');
+	}
+
 	if (!isset($parts['host'])) {
 		throw new BadUrlError("No host");
 	}
