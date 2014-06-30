@@ -688,8 +688,8 @@ $app->get('/status/url', function (Request $req) use ($app) {
 $app->get('/status/stats', function( Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	#$user = $app['db.user.load']->load($req->get('email'));
-	#Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
 
