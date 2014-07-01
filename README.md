@@ -1,7 +1,8 @@
 Blocked.org.uk Middleware
 =========================
 
-[API Specification](https://wiki.openrightsgroup.org/wiki/Censorship_Monitoring_Project_API) 
+[API Specification](https://wiki.openrightsgroup.org/wiki/Censorship_Monitoring_Project_API)
+
 [Database Specification](https://wiki.openrightsgroup.org/wiki/Censorship_Monitoring_Project_DB)
 
 Using the Vagrant VM Image
