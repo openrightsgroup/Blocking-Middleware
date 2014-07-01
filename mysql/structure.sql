@@ -210,6 +210,9 @@ CREATE TABLE `url_subscriptions` (
   `contactID` int(10) unsigned NOT NULL,
   `subscribereports` tinyint(1) DEFAULT '0',
   `created` datetime DEFAULT NULL,
+  `token` varchar(36) DEFAULT NULL,
+  `verified` tinyint(1) DEFAULT '0',
+  `last_notification` datetime DEFAULT NULL,  
   PRIMARY KEY (`id`),
   UNIQUE KEY `url_contact` (`urlID`,`contactID`),
   UNIQUE KEY `urlsub_token` (`token`)
@@ -223,8 +226,10 @@ CREATE TABLE `url_status_changes` (
   `old_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
   `new_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
   `created` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+  `notified` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY (`created`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 
 DELIMITER //
