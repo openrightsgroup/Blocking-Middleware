@@ -697,7 +697,6 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 	$rs = $conn->query("select name, value from stats_cache", array());
 	$stats = array();
 	while($row = $rs->fetch_row()) {
-		error_log($row[0]);
 		$stats[$row[0]] = (int)$row[1];
 	}
 
