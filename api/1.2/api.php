@@ -746,7 +746,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 	list($amqpconn, $ch) = amqp_connect_full();
 	$amqpconn->setTimeout($timeout);
 
-	$url = $req->get('url');
+	$url = normalize_url($req->get('url'));
 	$hash = md5($url);
 
 	try {
