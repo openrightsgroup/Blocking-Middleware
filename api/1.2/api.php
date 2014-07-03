@@ -215,18 +215,25 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
         array($urltext, md5($urltext), $req->get('source','user'))
     );
+	if ($conn->affected_rows) {
+		# we really did insert it, so make sure it queues
+		$newurl = true;
+	} else {
+		$newurl = false;
+	}
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
 	$url = $app['db.url.load']->load($urltext);
 
+	# always record the request, even if we didn't queue it
     $conn->query(
         "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
             values (?,?,?,?,?,?,now())",
         array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
     );
-
 	$request_id = $conn->insert_id;
 
+<<<<<<< HEAD
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$conn->query(
 			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, created)
@@ -251,14 +258,37 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		# TODO: send verify email
 	}
 
-	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
-	
-	$ch = $app['service.amqp'];
-	$ex = new AMQPExchange($ch);
-	$ex->setName('org.blocked');
-	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+	# test the lastPolled date - 
+	# TODO: use DB transaction to avoid (highly unlikely, but still there) race on lastPolled
+	error_log("Last polled: " . $url['lastPolled']);
 
-	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($urltext)), 201);
+	# if it was last tested more than a day ago, send it to the queue
+	if ($newurl || (time() - strtotime($url['lastPolled']) > 86400)) {
+		if (!$newurl) {
+			# only update the URL if it isn't new (this avoids an unnecessary DB write)
+			$app['db.url.load']->updateLastPolled($url['urlID']);
+		}
+		$queued = true;
+
+		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
+		
+		$ch = $app['service.amqp'];
+		$ex = new AMQPExchange($ch);
+		$ex->setName('org.blocked');
+		$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+
+	} else {
+		$queued = false;
+	}
+
+	# return request details, with queue status for the frontend
+
+	return $app->json(array(
+		'success' => true, 
+		'uuid' => $request_id, 
+		'hash' => md5($urltext),
+		'queued' => $queued
+	), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {

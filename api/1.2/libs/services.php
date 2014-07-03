@@ -89,6 +89,15 @@ class UrlLoader {
 		return $out;
 	}
 
+	function updateLastPolled($urlid) {
+		$this->conn->query("update urls set lastPolled=now() where urlID=?",
+			array($urlid));
+		if ($this->conn->affected_rows != 1) {
+			throw new UrlLookupError();
+		}
+	}
+		
+
 }
 
 class ContactLoader {
