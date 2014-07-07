@@ -43,6 +43,11 @@ function process_result($msg, $queue) {
 	}
 
 	var_dump($data);
+	#workaround for unicode encoding bug
+	if (is_null($data['url'])) {
+		return true;
+	}
+	
 
 	Middleware::verifyUserMessage(
 		implode(":", array(
