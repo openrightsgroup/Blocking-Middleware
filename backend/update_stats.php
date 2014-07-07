@@ -53,7 +53,15 @@ if ($argv[1] == 'counters') {
 	
 	while ($row) {
 		$last = $row['network_name'];
-		$out= array();
+		$out = array(
+			'ok' => 0,
+			'blocked' => 0,
+			'error' => 0,
+			'dnsfail' => 0,
+			'timeout' => 0
+			);
+
+		
 		# primitive grouping by ISP
 		do {
 			if (!in_array($row['status'], array('ok','blocked','timeout','error','dnsfail'))) {
@@ -64,15 +72,17 @@ if ($argv[1] == 'counters') {
 			$row = $rs->fetch_assoc();
 		} while ($row && $row['network_name'] == $last);
 
+		print_r($out);
+
 		$conn->query("replace into isp_stats_cache(network_name, ok, blocked, timeout, error, dnsfail, total)
 		values (?,?,?,?,?,?,?)", 
 		array($last, 
-			@$out['ok'] or 0,
-			@$out['blocked'] or 0,
-			@$out['timeout'] or 0,
-			@$out['error'] or 0,
-			@$out['dnsfail'] or 0,
-			@$out['total'] or 0
+			$out['ok'],
+			$out['blocked'],
+			$out['timeout'],
+			$out['error'],
+			$out['dnsfail'],
+			$out['total']
 			)
 		);
 
