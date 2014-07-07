@@ -189,6 +189,20 @@ CREATE TABLE `stats_cache` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `isp_stats_cache`;
+CREATE TABLE `isp_stats_cache` (
+  `network_name` varchar(64) NOT NULL,
+  `ok` int(10) unsigned NOT NULL DEFAULT '0',
+  `blocked` int(10) unsigned NOT NULL DEFAULT '0',
+  `timeout` int(10) unsigned NOT NULL DEFAULT '0',
+  `error` int(10) unsigned NOT NULL DEFAULT '0',
+  `dnsfail` int(10) unsigned NOT NULL DEFAULT '0',
+  `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `total` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`network_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
 FOR EACH ROW 

@@ -703,6 +703,33 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 	return $app->json(array('success' => true, "stats" => $stats));
 });
 
+
+$app->get('/status/isp-stats', function(Request $req) use ($app) {
+	function mkint($v) {
+		return (int)$v;
+	}
+
+	checkParameters($req, array('email','signature','date'));
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+
+	$rs = $conn->query("select network_name, ok, blocked, timeout, error, dnsfail, total
+	from isp_stats_cache
+	order by network_name", array());
+
+	$output = array();
+	while ($row = $rs->fetch_assoc()) {
+		$net = $row['network_name'];
+		unset($row['network_name']);
+		$output[$net] = array_map("mkint", $row);
+	}
+
+
+	return $app->json(array('success' => true, 'isp-stats' => $output));
+});
+
 function result_callback($msg, $queue) {
 	print $msg->getBody() . "\n";
 	ob_flush();
