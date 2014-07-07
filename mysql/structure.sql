@@ -183,7 +183,7 @@ CREATE TABLE `url_latest_status` (
 
 DROP TABLE IF EXISTS `stats_cache`;
 CREATE TABLE `stats_cache` (
-  `name` varchar(32) NOT NULL DEFAULT '',
+  `name` varchar(64) NOT NULL DEFAULT '',
   `value` int(10) unsigned DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`)
