@@ -120,8 +120,8 @@ class IspLoader {
 		// TODO: tidy up module dependency
 		$queue_name = get_queue_name($title);
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created, queue_name) values (?, now(), ?)",
-			array($title, $queue_name)
+			"insert ignore into isps(name,created, queue_name,description) values (?, now(), ?,?)",
+			array($title, $queue_name, $title)
 			);
 		if (!$result) {
 			throw new DatabaseError();

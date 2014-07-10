@@ -662,7 +662,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $conn->query("select l.network_name, l.status, l.created, max(r.created) 
+	$result = $conn->query("select isps.description, l.status, l.created, max(r.created) 
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
@@ -716,14 +716,15 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 
-	$rs = $conn->query("select network_name, ok, blocked, timeout, error, dnsfail, total
+	$rs = $conn->query("select isps.description, ok, blocked, timeout, error, dnsfail, total
 	from isp_stats_cache
-	order by network_name", array());
+	inner join isps on isps.name = isp_stats_cache.network_name
+	order by isps.description", array());
 
 	$output = array();
 	while ($row = $rs->fetch_assoc()) {
-		$net = $row['network_name'];
-		unset($row['network_name']);
+		$net = $row['description'];
+		unset($row['description']);
 		$output[$net] = array_map("mkint", $row);
 	}
 
