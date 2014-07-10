@@ -110,6 +110,7 @@ DROP TABLE IF EXISTS `isps`;
 CREATE TABLE `isps` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
+  `queue_name` varchar(64) NULL,
   `created` datetime DEFAULT NULL,
   `show_results` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),

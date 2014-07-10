@@ -27,15 +27,15 @@ function createqueue($ch, $name,  $key, $exchange = 'org.blocked') {
 	$q->bind($exchange, $key);
 }
 
-$result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
+$result = $conn->query("select name, queue_name from isps where queue_name is not null", array());
 while ($isp = $result->fetch_assoc()) {
 	if (strpos($isp['name'], ',') !== false) {
 		continue;
 	}
-	print "Creating queue: " . $isp['name'] . "\n";
-	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
-	createqueue($ch, 'url.'.$isp['name'].'.ooni',  'url.public');
-	createqueue($ch, 'url.'.$isp['name'].'.org',  'url.org');
+	print "Creating queue: " . $isp['queue_name'] . "\n";
+	createqueue($ch, 'url.'.$isp['queue_name'].'.public',  'url.public');
+	createqueue($ch, 'url.'.$isp['queue_name'].'.ooni',  'url.public');
+	createqueue($ch, 'url.'.$isp['queue_name'].'.org',  'url.org');
 }
 
 createqueue($ch, "results",  "results.#");

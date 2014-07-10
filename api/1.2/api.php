@@ -382,7 +382,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	foreach ($queuelist as $queuesuffix) {
 		$q = new AMQPQueue($ch);
 
-		$queuename = 'url.' . get_queue_name($isp['name']) . '.' . $queuesuffix;
+		$queuename = 'url.' . $isp['queue_name'] . '.' . $queuesuffix;
 		error_log("Reading from: {$queuename}");
 		$q->setName($queuename);
 		$q->setFlags(AMQP_PASSIVE);
@@ -552,12 +552,13 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	}
 	catch (IspLookupError $e) {
 		error_log("Caught failed lookup");
-		$descr = $app['db.isp.load']->create($descr);
+		$queue_name =  get_queue_name($descr);
+		$isp = $app['db.isp.load']->create($descr);
 
 		$ch = $app['service.amqp'];
-		create_queue($ch, 'url.' . get_queue_name($descr) . '.org', 'url.org');
-		create_queue($ch, 'url.' . get_queue_name($descr) . '.public', 'url.public');
-		create_queue($ch, 'url.' . get_queue_name($descr) . '.ooni', 'url.public');
+		create_queue($ch, 'url.' . $isp['queue_name'] . '.org', 'url.org');
+		create_queue($ch, 'url.' . $isp['queue_name'] . '.public', 'url.public');
+		create_queue($ch, 'url.' . $isp['queue_name'] . '.ooni', 'url.public');
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));

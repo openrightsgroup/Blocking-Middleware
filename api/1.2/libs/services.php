@@ -117,9 +117,11 @@ class IspLoader {
 
 	function create($name) {
 		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
+		// TODO: tidy up module dependency
+		$queue_name = get_queue_name($title);
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created) values (?, now())",
-			array($title)
+			"insert ignore into isps(name,created, queue_name) values (?, now(), ?)",
+			array($title, $queue_name)
 			);
 		if (!$result) {
 			throw new DatabaseError();
@@ -132,7 +134,7 @@ class IspLoader {
 		if (!$result) {
 			throw new DatabaseError();
 		}
-		return $title;
+		return array('name' => $title, 'queue_name' => $queue_name);
 	}
 }
 
