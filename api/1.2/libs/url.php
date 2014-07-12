@@ -4,7 +4,8 @@ include_once("exceptions.php");
 
 function normalize_url($url) {
 
-	$parts = parse_url(trim($url));
+	$url = trim($url);
+	$parts = parse_url($url);
 
 	#error_log("Got URL parts: " . print_r($parts, true));
 	if ($parts === false) {
