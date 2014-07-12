@@ -28,4 +28,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #  ansible.playbook = 'ansible/ansible.yml'
   #end
 
+  # shell script for updating the VM from a fresh checkout
+  config.vm.provision "shell", path: "Vagrant-provision.sh"
+
 end
