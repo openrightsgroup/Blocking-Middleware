@@ -15,8 +15,8 @@ function normalize_url($url) {
 	if (!isset($parts['scheme'])) {
 		# trim off any :/ characters from URL
 		$url = "http://" . ltrim($url, ':/');
+		$parts = parse_url($url);
 	}
-	$parts = parse_url($url);
 
 	if (@$parts['path'] == '/') {
 		# if the url is a bare-domain with a trailing '/', remove the trailing slash
