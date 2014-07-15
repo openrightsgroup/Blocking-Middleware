@@ -851,14 +851,36 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 	if (substr($req->get('token'), 0, 1) == 'A') {
 		# URL subscription token
 
-		$conn->query("update url_subscriptions set verified = 1, token = null 
-			where verified = 0 and token = ?",
-			array($req->get('token'))
-		);
+		$conn->autocommit(FALSE);
+		$conn->query("BEGIN",array());
+		try {
+			$result = $conn->query("select contactID from url_subscriptions 
+				where token = ?",
+				array($req->get('token'))
+			);
+			$row = $result->fetch_array();
+			if (!$row) {
+				throw new TokenLookupError();
+			}
+			$conn->query("update contacts set verified = 1 where id = ?",
+				array($row[0])
+			);
+			$conn->query("update url_subscriptions set verified = 1, token = null 
+				where verified = 0 and token = ?",
+				array($req->get('token'))
+			);
 
-		if ($conn->affected_rows != 1) {
-			throw new TokenLookupError();
-		}
+			if ($conn->affected_rows != 1) {
+				throw new TokenLookupError();
+			}
+			$conn->commit();
+			$conn->autocommit(TRUE);
+		} catch (Exception $err) {
+			error_log("Rolling back");
+			$conn->rollback();
+			$conn->autocommit(TRUE);
+			throw $err;
+		} 
 	} else {
 		throw new InvalidTokenError();
 	}
