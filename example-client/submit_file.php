@@ -18,12 +18,12 @@ $SLEEP_INTERVAL = 30;
 require_once "credentials.php";
 
 if (count($argv) < 3) {
-	die "Two arguments required: <filename> and <source>";
+	die("Two arguments required: <filename> and <source>\n");
 }
 
 $fp = fopen($argv[1],'r');
 if (!$fp) {
-	die "Unable to open file: ${argv[1]}";
+	die("Unable to open file: ${argv[1]}\n");
 }
 
 
