@@ -45,7 +45,8 @@ if ($argv[1] == 'counters') {
 	$rs = $conn->query("select network_name, status, count(*) ct
 	from url_latest_status
 	inner join isps on (isps.name = network_name)
-	where show_results = 1
+	inner join urls using (urlID)
+	where show_results = 1 and source = 'alexa'
 	group by network_name, status
 	order by network_name, status", array());
 
