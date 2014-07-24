@@ -10,22 +10,22 @@ if(count($argv) == 1) {
 
 if ($argv[1] == 'counters') {
 
-	$result = $conn->query(" select count(*) from urls", array());
+	$result = $conn->query(" select count(*) from urls where source = 'alexa'", array());
 	$row = $result->fetch_row();
 
 	$stats = array(
 		'urls_reported' => $row[0],
 		);
 
-	$result = $conn->query("select count(distinct urlid) from results",array());
+	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where source = 'alexa'",array());
 	$row = $result->fetch_row();
 	$stats['urls_tested'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results where status = 'blocked'", array());
+	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where status = 'blocked' and source='alexa'", array());
 	$row = $result->fetch_row();
 	$stats['blocked_sites_detected'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results where status = 'blocked' and filter_level in ('','default')", array());
+	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where status = 'blocked' and filter_level in ('','default') and source='alexa'", array());
 	$row = $result->fetch_row();
 	$stats['blocked_sites_detected_default_filter'] = $row[0];
 
