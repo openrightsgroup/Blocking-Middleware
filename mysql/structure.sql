@@ -70,6 +70,7 @@ CREATE TABLE `results` (
   `network_name` varchar(64) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   `filter_level` varchar(16) DEFAULT '',
+  `category` varchar(64) DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `result_idx` (`urlID`,`network_name`,`status`,`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

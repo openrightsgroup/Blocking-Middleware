@@ -230,14 +230,17 @@ class ResultProcessorService {
 	}
 
 	function process_result($result, $probe) {
+		# make sure that the named network exists
 		$isp = $this->isp_loader->load($result['network_name']);
 		$url = $this->url_loader->load($result['url']);
 
 		$this->conn->query(
-			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, created) 
+			values (?,?,?,?,?,?,?,?,now())",
 			array(
 				$url['urlID'],$probe['id'], $result['config'],$result['ip_network'],
-				$result['status'],$result['http_status'], $result['network_name']
+				$result['status'],$result['http_status'], $result['network_name'],
+				$result['category']
 			)
 		);
 

@@ -495,7 +495,8 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		'network_name' => $req->get('network_name'),
 		'status' => $req->get('status'),
 		'http_status' => $req->get('http_status'),
-		'url' => $req->get('url')
+		'url' => $req->get('url'),
+		'category' => $req->get('category'),
 		);
 
 	$app['service.result.process']->process_result($result, $probe);
