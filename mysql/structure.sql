@@ -83,7 +83,6 @@ CREATE TABLE `requests` (
   `contactID` int(11) DEFAULT NULL COMMENT 'Record in the contacts table that stores the contact details of the actor that made this request',
   `submission_info` text,
   `created` datetime DEFAULT NULL,
-  `subscribereports` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact wishes to receive regular email updates about this URL',
   `allowcontact` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Contact will accept communication from ORG about this request',
   `information` text COMMENT 'Extra info about this request provided by the contact',
   PRIMARY KEY (`id`),
@@ -203,6 +202,53 @@ CREATE TABLE `isp_stats_cache` (
   `total` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`network_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `url_subscriptions`;
+CREATE TABLE `url_subscriptions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(10) unsigned NOT NULL,
+  `contactID` int(10) unsigned NOT NULL,
+  `subscribereports` tinyint(1) DEFAULT '0',
+  `created` datetime DEFAULT NULL,
+  `token` varchar(36) DEFAULT NULL,
+  `verified` tinyint(1) DEFAULT '0',
+  `last_notification` datetime DEFAULT NULL,  
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `url_contact` (`urlID`,`contactID`),
+  UNIQUE KEY `urlsub_token` (`token`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `url_status_changes`;
+CREATE TABLE `url_status_changes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int(10) unsigned DEFAULT NULL,
+  `network_name` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
+  `old_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+  `new_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  `notified` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY (`created`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+DELIMITER //
+CREATE PROCEDURE record_change(p_urlid int, p_network_name varchar(64), p_old_status varchar(16), p_newstatus varchar(16), p_created datetime) 
+MODIFIES SQL DATA  
+BEGIN 
+  IF p_old_status <> p_newstatus 
+  THEN 
+    INSERT INTO url_status_changes(urlid, network_name, old_status, new_status, created) 
+	VALUES (p_urlid, p_network_name, p_old_status, p_newstatus, p_created); 
+  END IF; 
+END;
+//
+DELIMITER ;
+
+CREATE TRIGGER record_change 
+BEFORE UPDATE ON url_latest_status 
+FOR EACH ROW 
+CALL record_change(NEW.urlID, NEW.network_name, OLD.status, NEW.status, NEW.created);
 
 
 CREATE TRIGGER status_upd_trig 

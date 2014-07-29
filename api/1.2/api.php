@@ -102,12 +102,17 @@ $app->error(function(APIException $e, $code) {
 		case "UserLookupError":
 		case "UrlLookupError":
 		case "IspLookupError":
+		case "TokenLookupError":
 			$code = 404;
 			$message = "No matches in DB, please contact ORG support";
 			break;
 		case "InputError":
 			$code = 400;
 			$message = "One or more required parameters missing or invalid: " . $e->getMessage();
+			break;
+		case "InvalidTokenError":
+			$code = 400;
+			$message = "The supplied verification token is not in a valid format";
 			break;
 		case "DatabaseError":
 			$code = 500;
@@ -215,12 +220,36 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$url = $app['db.url.load']->load($urltext);
 
     $conn->query(
-        "insert into requests (urlID, userID, contactID, submission_info, subscribereports, allowcontact, information, created)
-            values (?,?,?,?,?,?,?,now())",
-        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('subscribereports', false), $req->get('allowcontact', false), $req->get('information'))
+        "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
+            values (?,?,?,?,?,?,now())",
+        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
     );
 
 	$request_id = $conn->insert_id;
+
+	if ($contact != null && $req->get('subscribereports',false) ) {
+		$conn->query(
+			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, created)
+			VALUES (?,?,?,NOW())
+			ON DUPLICATE KEY UPDATE
+				subscribereports=VALUES(subscribereports), 
+				created=VALUES(created)",
+			array($url['urlID'], $contact['id'], $req->get('subscribereports', false) )
+		);
+
+		# create verification token for email subscribe
+		# needs an update because we're using the row ID as a salt of sorts
+
+		# should probably handle duplicated tokens here (just because it's possible)
+		$conn->query("update url_subscriptions set token = concat('A',md5(concat(id, '-', urlID, '-', contactID,'-',?)))
+			where urlID = ? and contactID = ?",
+			array(Middleware::generateSharedSecret(10), $url['urlID'], $contact['id'])
+			);
+
+
+
+		# TODO: send verify email
+	}
 
 	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
 	
@@ -808,6 +837,55 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 
 
 	return $app->json(array('success' => true, "type" => "close", "tag" => $tag));
+
+});
+
+$app->post('/verify/email', function (Request $req) use ($app) {
+	checkParameters($req, array('email','signature','token','date'));
+	$user = $app['db.user.load']->load($req->get('email'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+	Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+	if (substr($req->get('token'), 0, 1) == 'A') {
+		# URL subscription token
+
+		$conn->autocommit(FALSE);
+		$conn->query("BEGIN",array());
+		try {
+			$result = $conn->query("select contactID from url_subscriptions 
+				where token = ?",
+				array($req->get('token'))
+			);
+			$row = $result->fetch_array();
+			if (!$row) {
+				throw new TokenLookupError();
+			}
+			$conn->query("update contacts set verified = 1 where id = ?",
+				array($row[0])
+			);
+			$conn->query("update url_subscriptions set verified = 1, token = null 
+				where verified = 0 and token = ?",
+				array($req->get('token'))
+			);
+
+			if ($conn->affected_rows != 1) {
+				throw new TokenLookupError();
+			}
+			$conn->commit();
+			$conn->autocommit(TRUE);
+		} catch (Exception $err) {
+			error_log("Rolling back");
+			$conn->rollback();
+			$conn->autocommit(TRUE);
+			throw $err;
+		} 
+	} else {
+		throw new InvalidTokenError();
+	}
+
+	return $app->json(array('success' => true, 'verified' => true));
 
 });
 
