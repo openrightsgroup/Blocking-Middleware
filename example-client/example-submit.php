@@ -66,6 +66,7 @@ INFORMATION <input type="textarea" name="information" /><br>
 			'header' => "Content-type: application/x-www-form-urlencoded\r\n",
 			'method' => 'POST',
 			'content' => $content,
+			'ignore_errors' => '1',
 		)
 	);
 
@@ -87,11 +88,11 @@ INFORMATION <input type="textarea" name="information" /><br>
 Submission result
 </h2>
 
-<div id="results">
+<div id="results"><pre>
 <?php
 var_dump($urldata);
 ?>
-</div>
+</pre></div>
 
 </body>
 </html>

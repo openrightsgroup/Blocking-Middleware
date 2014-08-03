@@ -27,7 +27,6 @@ PASSWORD: <input type="input" name="password" /><br>
         'email' => $_POST['email'],
         'password' => $_POST['password'],
     );
-	// Sign it using $USER's secret
 	$content = http_build_query($payload);
 
 
@@ -37,6 +36,7 @@ PASSWORD: <input type="input" name="password" /><br>
 			'header' => "Content-type: application/x-www-form-urlencoded\r\n",
 			'method' => 'POST',
 			'content' => $content,
+			'ignore_errors' => '1'
 		)
 	);
 
@@ -55,14 +55,14 @@ PASSWORD: <input type="input" name="password" /><br>
 <body>
 
 <h2>
-Regitration result
+Registration result
 </h2>
 
-<div id="results">
+<div id="results"><pre>
 <?php
-var_dump($urldata);
+	var_dump($urldata);
 ?>
-</div>
+</pre></div>
 
 </body>
 </html>

@@ -27,8 +27,17 @@ URL: <input type="input" name="url" />
 	);
 	$qs = http_build_query($args);
 
+	// build the request
+	$options = array(
+		'http' => array(
+			'method' => 'GET',
+			'ignore_errors' => '1',
+		)
+	);
 
-	$result = file_get_contents("$API/status/url?$qs");
+	// send it
+	$ctx = stream_context_create($options);
+	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
 
 	// get the JSON data back from the api
 	$urldata = json_decode($result);
@@ -46,17 +55,22 @@ Results for <?php echo $_POST['url'] ?>
 
 <div id="results">
 <?php
+if($urldata->success) {
+	echo "<table>";
+	echo "<tr><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</th><th>Category</th></tr>";
+	foreach($urldata->results as $result) {
 
-echo "<table>";
-echo "<tr><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</th><th>Category</th></tr>";
-foreach($urldata->results as $result) {
-
-print <<< END
-<tr><td>{$result->network_name}</td><td>{$result->status}</td><td>{$result->status_timestamp}</td><td>{$result->last_blocked_timestamp}</td><td>{$result->first_blocked_timestamp}</td><td>{$result->category}</td></tr>
+	print <<< END
+	<tr><td>{$result->network_name}</td><td>{$result->status}</td><td>{$result->status_timestamp}</td><td>{$result->last_blocked_timestamp}</td><td>{$result->first_blocked_timestamp}</td><td>{$result->category}</td></tr><
 END;
-}
+	}
 
-echo "</table>";
+	echo "</table>";
+} else {
+	echo "<pre>";
+	var_dump($urldata);
+	echo "</pre>";
+}
 
 ?>
 </div>

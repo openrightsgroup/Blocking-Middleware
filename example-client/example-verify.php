@@ -36,6 +36,7 @@ TOKEN: <input type="input" name="token" /><br>
 			'header' => "Content-type: application/x-www-form-urlencoded\r\n",
 			'method' => 'POST',
 			'content' => $content,
+			'ignore_errors' => '1',
 		)
 	);
 
@@ -57,11 +58,11 @@ TOKEN: <input type="input" name="token" /><br>
 Submission result
 </h2>
 
-<div id="results">
+<div id="results"><pre>
 <?php
 var_dump($urldata);
 ?>
-</div>
+</pre></div>
 
 </body>
 </html>
