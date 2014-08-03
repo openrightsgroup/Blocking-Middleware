@@ -2,10 +2,9 @@
 
 /*Sample credentials*/
 
-$API = "https://api.bowdlerize.co.uk/1.2"; // proper URL
-#$API = "http://localhost/api/1.2"; // local test URL
-$USER = 'web@blocked.org.uk';
-$SECRET = 'HHHHHHHHHHHHHHHH';
+$API = "http://localhost/1.2"; // local test URL
+$USER = 'example@blocked.org.uk';
+$SECRET = 'abcdefghijklmnopqrstuvwxyz123';
 
 function createSignatureHash($message, $secret) {
 	/* Use hmac functions to return signature for message string */
