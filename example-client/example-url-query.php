@@ -48,11 +48,11 @@ Results for <?php echo $_POST['url'] ?>
 <?php
 
 echo "<table>";
-echo "<tr><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</tr>";
+echo "<tr><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</th><th>Category</th></tr>";
 foreach($urldata->results as $result) {
 
 print <<< END
-<tr><td>{$result->network_name}</td><td>{$result->status}</td><td>{$result->status_timestamp}</td><td>{$result->last_blocked_timestamp}</td><td>{$result->first_blocked_timestamp}</td></tr>
+<tr><td>{$result->network_name}</td><td>{$result->status}</td><td>{$result->status_timestamp}</td><td>{$result->last_blocked_timestamp}</td><td>{$result->first_blocked_timestamp}</td><td>{$result->category}</td></tr>
 END;
 }
 
