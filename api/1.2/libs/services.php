@@ -240,7 +240,7 @@ class ResultProcessorService {
 			array(
 				$url['urlID'],$probe['id'], $result['config'],$result['ip_network'],
 				$result['status'],$result['http_status'], $result['network_name'],
-				$result['category']
+				@$result['category']
 			)
 		);
 
