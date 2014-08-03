@@ -178,6 +178,7 @@ CREATE TABLE `url_latest_status` (
   `network_name` varchar(64) NOT NULL,
   `status` varchar(8) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
+  `category` varchar(64) DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `url_latest_unq` (`urlID`,`network_name`),
   KEY `ts` (`created`)
@@ -255,10 +256,10 @@ CALL record_change(NEW.urlID, NEW.network_name, OLD.status, NEW.status, NEW.crea
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
 FOR EACH ROW 
-INSERT INTO url_latest_status(urlID, network_name, status, created) 
-SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created 
+INSERT INTO url_latest_status(urlID, network_name, status, created, category) 
+SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created, NEW.category
 ON DUPLICATE KEY 
-UPDATE status = NEW.status, created = NEW.created;
+UPDATE status = NEW.status, created = NEW.created, category = NEW.category;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
