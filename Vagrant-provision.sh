@@ -11,3 +11,8 @@ then
 	cp /vagrant/api/1.2/libs/config.example.php /vagrant/api/1.2/libs/config.php
 fi
 
+if [ ! -f /vagrant/example-client/credentials.php ]
+then
+	cp /vagrant/example-client/credentials.example.php /vagrant/example-client/credentials.php
+fi
+
