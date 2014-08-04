@@ -19,6 +19,7 @@ $options = array(
 		'header' => "Content-type: application/x-www-form-urlencoded\r\n",
 		'method' => 'POST',
 		'content' => $content,
+		'ignore_errors' => '1',
 	)
 );
 
