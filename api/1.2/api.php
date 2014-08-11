@@ -272,7 +272,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		$ch = $app['service.amqp'];
 		$ex = new AMQPExchange($ch);
 		$ex->setName('org.blocked');
-		$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+		$ex->publish($msgbody, 'check.org', AMQP_NOPARAM, array('priority'=>2));
 
 	} else {
 		$queued = false;
@@ -753,6 +753,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		'success' => true, 
 		"url" => $url['URL'], 
 		"results" => $output,
+		"url-status" => $url['status'],
 		"categories" => $categories,
 	));
 });

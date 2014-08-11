@@ -39,5 +39,6 @@ while ($isp = $result->fetch_assoc()) {
 }
 
 createqueue($ch, "results",  "results.#");
+createqueue($ch, "check",  "check.#");
 createqueue($ch, "heartbeat",  "probe.heartbeat.#");
 
