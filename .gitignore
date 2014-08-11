@@ -2,4 +2,6 @@
 *~
 *.swp
 config.php
+config.ini
 credentials.php
+robots-txt.sqlite

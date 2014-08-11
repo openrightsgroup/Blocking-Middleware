@@ -256,7 +256,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
-	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+	$ex->publish($msgbody, 'check.org', AMQP_NOPARAM, array('priority'=>2));
 
 	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($urltext)), 201);
 });
@@ -716,7 +716,10 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		$output[] = $out;
 	}
 
-	return $app->json(array('success' => true, "url" => $url['URL'], "results" => $output));
+	return $app->json(array('success' => true, 
+		"url" => $url['URL'], 
+		"url-status" => $url['status'],
+		"results" => $output));
 });
 
 $app->get('/status/stats', function( Request $req) use ($app) {
