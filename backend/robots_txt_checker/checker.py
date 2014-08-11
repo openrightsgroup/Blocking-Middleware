@@ -81,9 +81,10 @@ def main():
 	global cfg, amqpconn, conn, ch
 
 	# set up cache for robots.txt content
-	requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
 	cfg = ConfigParser.ConfigParser()
 	assert(len(cfg.read(['config.ini'])) == 1)
+
+	requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
 
 	# create MySQL connection
 	mysqlopts = dict(cfg.items('mysql'))

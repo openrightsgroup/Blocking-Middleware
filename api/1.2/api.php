@@ -164,6 +164,8 @@ $app->after(function(Request $request, Response $response) {
 $app->post('/submit/url', function(Request $req) use ($app) {
 	/* Add a URL for testing */
 	$conn = $app['service.db'];
+	
+	global $SUBMIT_ROUTING_KEY;
 
 	checkParameters($req, array('email','signature','url'));
 
@@ -256,7 +258,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
-	$ex->publish($msgbody, 'check.org', AMQP_NOPARAM, array('priority'=>2));
+	$ex->publish($msgbody, $SUBMIT_ROUTING_KEY, AMQP_NOPARAM, array('priority'=>2));
 
 	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($urltext)), 201);
 });
