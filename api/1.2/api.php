@@ -387,6 +387,13 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	# Get the ISP details
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
+	if (!$isp['queue_name']) {
+		return $app->json(array(
+			'success' => false,
+			'error' => 'No queue found'
+			), 404);
+	}
+
 	$ch = $app['service.amqp'];
 
 	error_log("Probe type: {$probe['type']}");
@@ -585,10 +592,6 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$queue_name =  get_queue_name($descr);
 		$isp = $app['db.isp.load']->create($descr);
 
-		$ch = $app['service.amqp'];
-		create_queue($ch, 'url.' . $isp['queue_name'] . '.org', 'url.org');
-		create_queue($ch, 'url.' . $isp['queue_name'] . '.public', 'url.public');
-		create_queue($ch, 'url.' . $isp['queue_name'] . '.ooni', 'url.public');
 	}
 
 	return $app->json(array('success'=>true,'ip'=>$ip, 'isp'=>$descr));
