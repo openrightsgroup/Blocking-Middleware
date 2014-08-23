@@ -119,7 +119,7 @@ class IspLoader {
 		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
 		// TODO: tidy up module dependency
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created, description) values (?, now(), ?,?)",
+			"insert ignore into isps(name,created, description) values (?, now(), ?)",
 			array($title, $title)
 			);
 		if (!$result) {

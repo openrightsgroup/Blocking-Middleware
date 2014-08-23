@@ -55,7 +55,7 @@ class TestClient:
         def timestamp(self):
                 if '--fuzzdate' in opts:
                         return datetime.datetime.now().replace(hour=1).strftime('%Y-%m-%d %H:%M:%S')
-                return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                return datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
 	def run(self, mode):
 		assert mode in self.MODES
