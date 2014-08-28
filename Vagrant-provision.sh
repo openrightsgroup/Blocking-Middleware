@@ -17,3 +17,4 @@ then
 	cp /vagrant/example-client/credentials.example.php /vagrant/example-client/credentials.php
 fi
 
+/usr/bin/php -f /vagrant/backend/create_queues.php
