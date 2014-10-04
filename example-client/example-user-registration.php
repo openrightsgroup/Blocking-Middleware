@@ -60,7 +60,12 @@ Registration result
 
 <div id="results"><pre>
 <?php
-	var_dump($urldata);
+	if($urldata != null)
+		var_dump($urldata);
+	else {
+		echo "<h3>An Error Occured (non-JSON response):</h3>";
+		var_dump($result);
+	}
 ?>
 </pre></div>
 

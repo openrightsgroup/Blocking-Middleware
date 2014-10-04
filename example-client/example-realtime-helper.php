@@ -16,7 +16,7 @@ $args = array(
 	"url" => $url,
 	"date" => date("Y-m-d H:i:s"),
 	"email" => $USER,
-	"timeout" => 10,
+	"timeout" => 5,
 );
 $args['signature'] = sign($SECRET, $args, array("url","date"));
 
@@ -26,30 +26,6 @@ if (!($fp = fopen($streamurl, "r"))) {
 	print "error";
 	die();
 }
-?>
-<html>
-<head>
-<style type="text/css">
-.ok {
-	background-color: #339933;
-	}
-.blocked {
-	background-color: #993333;
-	}
-.error {
-	background-color: #999933;
-	}
-div span {
-	display: inline-block;
-	width: 16em;
-	}
-</style>
-</head>
-<body>
-<h2>URL: <?php
-echo $url;
-?></h2>
-<?php
 
 ob_flush();
 $buffer = "";
@@ -68,18 +44,12 @@ while (!feof($fp)) {
 	if (substr($buffer, -1, 1) == "\n") {
 		$data = (array)json_decode($buffer);
 		if (!isset($data['type'])) {
-			#error_log(implode(" ", array_keys($data)));
-			print "<div><span>{$data['network_name']}</span><span class=\"{$data['status']}\">{$data['status']}</span></div>\n\n";
+			echo $buffer;
 			ob_flush();
 		}
 		$buffer = "";
-	}	
+	}
 
 }
 fclose($fp);
 ?>
-</body>
-</html>
-<?php
-
-
