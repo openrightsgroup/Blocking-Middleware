@@ -767,10 +767,37 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
-function result_callback($msg, $queue) {
-	print $msg->getBody() . "\n";
-	ob_flush();
-	$queue->ack($msg->getDeliveryTag());
+class StreamResultProcessor {
+	function __construct($conn) {
+		$this->conn = $conn;
+	}
+
+
+	function result_callback($msg, $queue) {
+		#print $msg->getBody() . "\n";
+		$data =(array)json_decode($msg->getBody());
+
+	# Fetch results from status summary table, left joining to get last blocked time
+	$result = $this->conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
+		from url_latest_status l 
+		inner join isps on isps.name = l.network_name
+		inner join urls on urls.urlID = l.urlID
+		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
+		where urls.url = ? and l.network_name = ?
+		group by l.network_name",
+		array($data['url'], $data['network_name']));
+
+		$row = $result->fetch_row();
+
+		$data['network_name'] = $row[0];
+		$data['status_timestamp'] = $row[2];
+		$data['last_blocked_timestamp'] = $row[3];
+
+		print json_encode($data) . "\n\n";
+
+		ob_flush();
+		$queue->ack($msg->getDeliveryTag());
+	}
 }
 
 $app->get('/stream/results', function (Request $req) use ($app) {
@@ -819,6 +846,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		$q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
 		$q->declare();
 		$q->bind("org.results", "results.*." . $hash);
+		
 
 		$tag = $hash . "-" . time();
 		print json_encode(array(
@@ -829,7 +857,36 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 			));
 		print "\n";
 		ob_flush();
-		$q->consume("result_callback", AMQP_NOPARAM, $tag);
+
+		$conn = $app['service.db'];
+		# Fetch results from status summary table, left joining to get last blocked time
+		$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
+		from url_latest_status l 
+		inner join urls on urls.urlid = l.urlid
+		inner join isps on isps.name = l.network_name
+		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
+		where urls.url = ? and isps.show_results = 1
+		group by l.network_name",
+		array($url));
+
+		while ($row = $result->fetch_row()) {
+			$out = array('network_name' => $row[0]);
+
+			# get latest status and result
+
+			$out['status'] = $row[1];
+			$out['status_timestamp'] = $row[2];
+			$out['last_blocked_timestamp'] = $row[3];
+			$out['first_blocked_timestamp'] = $row[4];
+			$out['category'] = $row[5];
+
+			print json_encode($out) . "\n";
+			ob_flush();
+
+		}
+
+		$processor = new StreamResultProcessor($app['service.db']);
+		$q->consume(array($processor,"result_callback"), AMQP_NOPARAM, $tag);
 	} catch (AMQPQueueException $e) {
 		return $app->json(array(
 			"success" => false, 
