@@ -77,6 +77,18 @@ class UrlLoader {
 		return $row;
 	}
 
+	function load_categories($urlID) {
+		$result = $this->conn->query(
+			"select display_name from categories
+			inner join url_categories on category_id = categories.id
+			where urlID = ?", array($urlID));
+		$out = array();
+		while ($row = $result->fetch_row()) {
+			$out[] = $row[0];
+		}
+		return $out;
+	}
+
 }
 
 class ContactLoader {

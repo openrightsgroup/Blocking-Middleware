@@ -719,7 +719,14 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		$output[] = $out;
 	}
 
-	return $app->json(array('success' => true, "url" => $url['URL'], "results" => $output));
+	$categories = $app['db.url.load']->load_categories($url['urlID']);
+
+	return $app->json(array(
+		'success' => true, 
+		"url" => $url['URL'], 
+		"results" => $output,
+		"categories" => $categories,
+	));
 });
 
 $app->get('/status/stats', function( Request $req) use ($app) {
