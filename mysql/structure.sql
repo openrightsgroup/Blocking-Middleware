@@ -123,7 +123,7 @@ CREATE TABLE `urls` (
   `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `URL` varchar(2048) NOT NULL COLLATE latin1_bin,
   `hash` varchar(32) DEFAULT NULL,
-  `source` enum('social','user','canary','probe','alexa') DEFAULT NULL,
+  `source` enum('social','user','canary','probe','alexa','dmoz') DEFAULT NULL,
   `lastPolled` datetime DEFAULT NULL,
   `inserted` datetime NOT NULL,
   `polledAttempts` int(10) unsigned DEFAULT '0',
@@ -260,6 +260,41 @@ INSERT INTO url_latest_status(urlID, network_name, status, created, category)
 SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created, NEW.category
 ON DUPLICATE KEY 
 UPDATE status = NEW.status, created = NEW.created, category = NEW.category;
+
+DROP TABLE IF EXISTS `categories`;
+CREATE TABLE `categories` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `display_name` varchar(255) DEFAULT NULL,
+  `name1` varchar(64) DEFAULT NULL,
+  `name2` varchar(64) DEFAULT NULL,
+  `name3` varchar(64) DEFAULT NULL,
+  `name4` varchar(255) DEFAULT NULL,
+  `name5` varchar(255) DEFAULT NULL,
+  `name6` varchar(255) DEFAULT NULL,
+  `name7` varchar(255) DEFAULT NULL,
+  `name8` varchar(255) DEFAULT NULL,
+  `name9` varchar(255) DEFAULT NULL,
+  `name10` varchar(255) DEFAULT NULL,
+  `org_category_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx1` (`display_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `url_categories`;
+CREATE TABLE `url_categories` (
+	  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	  `urlID` int(10) unsigned NOT NULL,
+	  `category_id` int(10) unsigned NOT NULL,
+	  PRIMARY KEY (`id`),
+	  UNIQUE KEY `urlID` (`urlID`,`category_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `org_categories`;
+CREATE TABLE `org_categories` (
+	  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	  `name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL,
+	  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
