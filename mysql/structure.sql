@@ -71,6 +71,7 @@ CREATE TABLE `results` (
   `created` datetime DEFAULT NULL,
   `filter_level` varchar(16) DEFAULT '',
   `category` varchar(64) DEFAULT '',
+  `blocktype` enum('PARENTAL','COPYRIGHT') default 'PARENTAL',
   PRIMARY KEY (`id`),
   KEY `result_idx` (`urlID`,`network_name`,`status`,`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -179,6 +180,7 @@ CREATE TABLE `url_latest_status` (
   `status` varchar(8) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   `category` varchar(64) DEFAULT '',
+  `blocktype` enum('PARENTAL','COPYRIGHT') default 'PARENTAL',
   PRIMARY KEY (`id`),
   UNIQUE KEY `url_latest_unq` (`urlID`,`network_name`),
   KEY `ts` (`created`)
