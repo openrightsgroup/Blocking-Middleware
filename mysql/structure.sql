@@ -71,7 +71,7 @@ CREATE TABLE `results` (
   `created` datetime DEFAULT NULL,
   `filter_level` varchar(16) DEFAULT '',
   `category` varchar(64) DEFAULT '',
-  `blocktype` enum('PARENTAL','COPYRIGHT') default 'PARENTAL',
+  `blocktype` enum('PARENTAL','COPYRIGHT') default NULL,
   PRIMARY KEY (`id`),
   KEY `result_idx` (`urlID`,`network_name`,`status`,`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -180,7 +180,7 @@ CREATE TABLE `url_latest_status` (
   `status` varchar(8) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
   `category` varchar(64) DEFAULT '',
-  `blocktype` enum('PARENTAL','COPYRIGHT') default 'PARENTAL',
+  `blocktype` enum('PARENTAL','COPYRIGHT') default NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `url_latest_unq` (`urlID`,`network_name`),
   KEY `ts` (`created`)
@@ -258,10 +258,10 @@ CALL record_change(NEW.urlID, NEW.network_name, OLD.status, NEW.status, NEW.crea
 CREATE TRIGGER status_upd_trig 
 AFTER INSERT ON results 
 FOR EACH ROW 
-INSERT INTO url_latest_status(urlID, network_name, status, created, category) 
-SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created, NEW.category
+INSERT INTO url_latest_status(urlID, network_name, status, created, category, blocktype) 
+SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created, NEW.category, NEW.blocktype
 ON DUPLICATE KEY 
-UPDATE status = NEW.status, created = NEW.created, category = NEW.category;
+UPDATE status = NEW.status, created = NEW.created, category = NEW.category, blocktype=NEW.blocktype;
 
 DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
