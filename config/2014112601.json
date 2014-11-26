@@ -29,7 +29,7 @@
             "match": [
                 "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html",
 				"re:body:^<p> Error \\- site blocked </p>",
-				"re:body:^<p> Error .*? site blocked </p>"
+				"re:body:^<p> Error .*? site blocked</p>"
             ],
             "category": "querystring:list"
         },
