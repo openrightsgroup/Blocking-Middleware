@@ -74,7 +74,8 @@ function process_result($msg, $queue) {
 		$forward = array(
 			'url' => $data['url'],
 			'network_name' => $data['network_name'],
-			'status' => $data['status']
+			'status' => $data['status'],
+			'blocktype' => $data['blocktype']
 		);
 		$ex->publish(json_encode($forward), 
 			$msg->getRoutingKey(), AMQP_NOPARAM);
