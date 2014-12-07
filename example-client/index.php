@@ -15,6 +15,7 @@
 			<?php
 			// Add page descriptions here
 			$example_descriptions = array(
+				"example-realtime.php" => "Submit a URL, retrieve results as they come in via ajax",
 				"example-user-registration.php" => "Register a new user",
 				"example-submit.php" => "Submit a URL to be tested against ISPs",
 				"example-url-query.php" => "Fetch results for a URL");
