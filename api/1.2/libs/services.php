@@ -124,8 +124,6 @@ class UrlLoader {
 			throw new UrlLookupError();
 		}
 	}
-		
-
 }
 
 class ContactLoader {

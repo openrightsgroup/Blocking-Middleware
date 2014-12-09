@@ -231,8 +231,8 @@ $app->post('/submit/url', function(Request $req) use ($app) {
             values (?,?,?,?,?,?,now())",
         array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
     );
-	$request_id = $conn->insert_id;
 
+	$request_id = $conn->insert_id;
 
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$conn->query(
@@ -258,10 +258,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		# TODO: send verify email
 	}
 
-	# test the lastPolled date - 
-	# TODO: use DB transaction to avoid (highly unlikely, but still there) race on lastPolled
-	error_log("Last polled: " . $url['lastPolled']);
-
+	# test the lastPolled date
 	# if it was last tested more than a day ago, send it to the queue
 
 	# beware shortcut logic - checkLastPolled is not evaluated for new urls
@@ -271,7 +268,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		$queued = true;
 
 		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
-		
+
 		$ch = $app['service.amqp'];
 		$ex = new AMQPExchange($ch);
 		$ex->setName('org.blocked');
@@ -284,8 +281,8 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# return request details, with queue status for the frontend
 
 	return $app->json(array(
-		'success' => true, 
-		'uuid' => $request_id, 
+		'success' => true,
+		'uuid' => $request_id,
 		'hash' => md5($urltext),
 		'queued' => $queued
 	), 201);
