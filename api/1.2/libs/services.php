@@ -78,7 +78,10 @@ class UrlLoader {
 	}
 
 	function checkLastPolled($urlid) {
-		$this->begin_transaction();
+		# save autocommit state
+		$automode = $this->conn->get_autocommit();
+		# set autocommit off to allow transaction
+		$this->conn->autocommit(false);
 		# test lastPolled date in the database
 		$result = $this->conn->query(
 			"select lastPolled, date_add(lastPolled, INTERVAL 1 DAY) < now()
@@ -96,7 +99,9 @@ class UrlLoader {
 			$ret = false;
 		}
 		# finish transaction with stored result.
-		$this->commit();
+		$this->conn->commit();
+		#restore autocommit mode
+		$this->conn->autocommit($automode);
 		return $ret;
 	}
 

@@ -43,6 +43,12 @@ include_once "config.php";
 			return $ret;
 		}
 
+		function get_autocommit() {
+			$result = $this->query("select @@autocommit",array());
+			$row = $result->fetch_row();
+			return $row[0];
+		}
+
 		function escape($sql, $args) {
 			// a sloppy positional escape function
 			// because I really hate having to type escape_string so many times
