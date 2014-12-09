@@ -233,7 +233,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
     );
 	$request_id = $conn->insert_id;
 
-<<<<<<< HEAD
+
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$conn->query(
 			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, created)
