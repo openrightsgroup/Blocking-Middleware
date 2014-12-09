@@ -263,11 +263,11 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	error_log("Last polled: " . $url['lastPolled']);
 
 	# if it was last tested more than a day ago, send it to the queue
-	if ($newurl || (time() - strtotime($url['lastPolled']) > 86400)) {
-		if (!$newurl) {
-			# only update the URL if it isn't new (this avoids an unnecessary DB write)
-			$app['db.url.load']->updateLastPolled($url['urlID']);
-		}
+
+	# beware shortcut logic - checkLastPolled is not evaluated for new urls
+	# checkLastPolled also updates the timestamp
+	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlID'])) {
+
 		$queued = true;
 
 		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));

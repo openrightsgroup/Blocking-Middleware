@@ -77,6 +77,29 @@ class UrlLoader {
 		return $row;
 	}
 
+	function checkLastPolled($urlid) {
+		$this->begin_transaction();
+		# test lastPolled date in the database
+		$result = $this->conn->query(
+			"select lastPolled, date_add(lastPolled, INTERVAL 1 DAY) < now()
+			from urls where urlID = ?",
+			array($urlid)
+			);
+		$row = $result->fetch_row();
+
+		# if it has never been tested, or the last test < today
+		if ($row[0] == null || $row[1] == 1) {
+			# update the lastPolled timer inside transaction
+			$this->updateLastPolled($urlid);
+			$ret = true;
+		} else {
+			$ret = false;
+		}
+		# finish transaction with stored result.
+		$this->commit();
+		return $ret;
+	}
+
 	function load_categories($urlID) {
 		$result = $this->conn->query(
 			"select display_name from categories
