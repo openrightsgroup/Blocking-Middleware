@@ -215,10 +215,17 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
         array($urltext, md5($urltext), $req->get('source','user'))
     );
+	if ($conn->affected_rows) {
+		# we really did insert it, so make sure it queues
+		$newurl = true;
+	} else {
+		$newurl = false;
+	}
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
 	$url = $app['db.url.load']->load($urltext);
 
+	# always record the request, even if we didn't queue it
     $conn->query(
         "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
             values (?,?,?,?,?,?,now())",
@@ -251,14 +258,34 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		# TODO: send verify email
 	}
 
-	$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
-	
-	$ch = $app['service.amqp'];
-	$ex = new AMQPExchange($ch);
-	$ex->setName('org.blocked');
-	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+	# test the lastPolled date
+	# if it was last tested more than a day ago, send it to the queue
 
-	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($urltext)), 201);
+	# beware shortcut logic - checkLastPolled is not evaluated for new urls
+	# checkLastPolled also updates the timestamp
+	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlID'])) {
+
+		$queued = true;
+
+		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
+
+		$ch = $app['service.amqp'];
+		$ex = new AMQPExchange($ch);
+		$ex->setName('org.blocked');
+		$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+
+	} else {
+		$queued = false;
+	}
+
+	# return request details, with queue status for the frontend
+
+	return $app->json(array(
+		'success' => true,
+		'uuid' => $request_id,
+		'hash' => md5($urltext),
+		'queued' => $queued
+	), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {

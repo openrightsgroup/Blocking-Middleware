@@ -77,6 +77,34 @@ class UrlLoader {
 		return $row;
 	}
 
+	function checkLastPolled($urlid) {
+		# save autocommit state
+		$automode = $this->conn->get_autocommit();
+		# set autocommit off to allow transaction
+		$this->conn->autocommit(false);
+		# test lastPolled date in the database
+		$result = $this->conn->query(
+			"select lastPolled, date_add(lastPolled, INTERVAL 1 DAY) < now()
+			from urls where urlID = ?",
+			array($urlid)
+			);
+		$row = $result->fetch_row();
+
+		# if it has never been tested, or the last test < today
+		if ($row[0] == null || $row[1] == 1) {
+			# update the lastPolled timer inside transaction
+			$this->updateLastPolled($urlid);
+			$ret = true;
+		} else {
+			$ret = false;
+		}
+		# finish transaction with stored result.
+		$this->conn->commit();
+		#restore autocommit mode
+		$this->conn->autocommit($automode);
+		return $ret;
+	}
+
 	function load_categories($urlID) {
 		$result = $this->conn->query(
 			"select display_name from categories
@@ -89,6 +117,13 @@ class UrlLoader {
 		return $out;
 	}
 
+	function updateLastPolled($urlid) {
+		$this->conn->query("update urls set lastPolled=now() where urlID=?",
+			array($urlid));
+		if ($this->conn->affected_rows != 1) {
+			throw new UrlLookupError();
+		}
+	}
 }
 
 class ContactLoader {
