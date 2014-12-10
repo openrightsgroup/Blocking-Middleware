@@ -1,6 +1,14 @@
 <?php
+/**
+ * This helper should be called via ajax. It will call the streaming results 
+ * API and forward the JSON rows through to the front end. This approach is 
+ * necessary due to cross-domain restrictions in browsers, and to avoid
+ * exposing the API credentials to the public.
+ */
 
-header("Content-type: text/html;charset=UTF-8");
+
+/* this isn't actually valid JSON - each row is a JSON result! */
+header("Content-type: application/json;charset=UTF-8");
 header("Connection: close");
 ini_set("output_buffering", "off");
 ob_implicit_flush(1);
@@ -18,7 +26,7 @@ $args = array(
 	"email" => $USER,
 	"timeout" => 5,
 );
-$args['signature'] = sign($SECRET, $args, array("url","date"));
+$args['signature'] = sign($SECRET, $args, array("url", "date"));
 
 $streamurl .= http_build_query($args);
 
@@ -42,14 +50,16 @@ while (!feof($fp)) {
 
 	// check that we've got an entire json line
 	if (substr($buffer, -1, 1) == "\n") {
-		$data = (array)json_decode($buffer);
-		if (!isset($data['type'])) {
-			echo $buffer;
-			ob_flush();
+		if (strlen($buffer) > 1) { // line is not empty
+			$data = (array) json_decode($buffer);
+			if (!isset($data['type'])) { // ignore non-result lines
+				echo $buffer;
+				ob_flush();
+			}
 		}
 		$buffer = "";
 	}
-
 }
 fclose($fp);
+
 ?>
