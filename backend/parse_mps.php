@@ -7,6 +7,7 @@ include "../api/1.2/libs/DB.php";
 // remember to update database with new enum value for data from this source
 // ALTER TABLE urls MODIFY COLUMN source ENUM('social','user','canary','probe','alexa','dmoz','nextmp');
 
+// Process You Next MP feed and save to url table
 
 class parseYourNextMP
 {
@@ -27,9 +28,9 @@ class parseYourNextMP
 	}
     }
     
+    // process an individual page of results
     public function parse($file_url)
     {
-        var_dump($file_url);
         // get the json file
         $file = file_get_contents($file_url);
         if ($file === false) {
@@ -40,10 +41,16 @@ class parseYourNextMP
         // decode file into json
         $json = json_decode($file);
         if ($json === false || is_null($json)) {
-            echo "Error decoding JSON";
+            echo "Error decoding JSON\n";
             return false;
         }
-var_dump($json->page);        
+
+        // if no results then quit
+        if (count($json->result) < 1) {
+            echo "No more results found\n";
+            return false;
+        }
+
         // loop each entry
         foreach ($json->result as $mp) {
             // homepage_url only seems to be present in 'versions' array of each MP
@@ -54,24 +61,22 @@ var_dump($json->page);
             $source = 'nextmp';
             $this->save_url($url, $source);
             
-            echo $mp->name . " - ". $mp->versions->homepage_url."<br>";
+//            echo $mp->name . " - ". $mp->versions->homepage_url."<br>";
         }
-        unset($file, $json);
         return true;
     }
     
-    
+    // process results, works out url of each page and calls parse()
     public function parse_all_pages($root)
     {
         $i = 1;
         $got_data = true;
-    //    while ($got_data != false) {
-        while ($i < 3) {
+        while ($got_data != false) {
             if ($i == 0) {
                 $file_url = $root;
             }
             else {
-                $file_url = $root ."&amp;page=".$i;
+                $file_url = $root ."&page=".$i;
             }
             echo "processing page ". $file_url ."\n";
             $got_data = $this->parse($file_url);
@@ -84,6 +89,7 @@ var_dump($json->page);
     }
     
     
+    // save a url to the db, if it already exists do nothing
     public function save_url($url, $source)
     {
         $this->_urls_processed++;
