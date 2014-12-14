@@ -10,15 +10,16 @@ include "../api/1.2/libs/DB.php";
 
 class parseYourNextMP
 {
-    protected $_file = "";
+    protected $_file_root = "";
     
     protected $_mysqli;
     
-    public function __construct($file) {
+    protected $_urls_processed = 0;
+    protected $_urls_added = 0;
+    
+    public function __construct() {
         
         global $dbuser, $dbpass, $dbhost, $dbname;
-		
-        $this->_file = $file;
         
 	$this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 	if ($this->_mysqli->connect_errno) {
@@ -26,10 +27,11 @@ class parseYourNextMP
 	}
     }
     
-    public function parse()
+    public function parse($file_url)
     {
+        var_dump($file_url);
         // get the json file
-        $file = file_get_contents($this->_file);
+        $file = file_get_contents($file_url);
         if ($file === false) {
             echo "Error Reading file\n";
             return false;
@@ -41,7 +43,7 @@ class parseYourNextMP
             echo "Error decoding JSON";
             return false;
         }
-        
+var_dump($json->page);        
         // loop each entry
         foreach ($json->result as $mp) {
             // homepage_url only seems to be present in 'versions' array of each MP
@@ -54,13 +56,37 @@ class parseYourNextMP
             
             echo $mp->name . " - ". $mp->versions->homepage_url."<br>";
         }
-        
+        unset($file, $json);
+        return true;
     }
     
+    
+    public function parse_all_pages($root)
+    {
+        $i = 1;
+        $got_data = true;
+    //    while ($got_data != false) {
+        while ($i < 3) {
+            if ($i == 0) {
+                $file_url = $root;
+            }
+            else {
+                $file_url = $root ."&amp;page=".$i;
+            }
+            echo "processing page ". $file_url ."\n";
+            $got_data = $this->parse($file_url);
+            
+            $i++;
+            flush();
+        }
+        
+        echo "Found ". $this->_urls_processed . " urls, added ". $this->_urls_added ." urls\n";
+    }
     
     
     public function save_url($url, $source)
     {
+        $this->_urls_processed++;
         try {
             $url = normalize_url($url);
             echo "save url ($url) ".$text."\n"; 
@@ -79,7 +105,7 @@ class parseYourNextMP
                 $res = $this->_mysqli->query($query, array( $url, md5($url), $source));
 
                 $urlID = $this->_mysqli->insert_id;
-
+                $this->_urls_added++;
         }
         else {
                 //already in urls table - should we mark as an mp?
@@ -102,7 +128,7 @@ else {
 
 
 echo "<pre>Reading: ". $file_loc ."\n";
-$parser = new parseYourNextMP($file_loc);
-$parser->parse();
+$parser = new parseYourNextMP();
+$parser->parse_all_pages($file_loc);
 
 
