@@ -17,10 +17,10 @@ include_once "config.php";
 	the database will use local time.  Something to keep in mind when interpreting results!
 	*/
 	
-	$memcache = new Memcache;
+/*	$memcache = new Memcache;
 	$memcache->addServer('127.0.0.1', 11211);
 	$MemcacheShard = 0;
-	
+*/	
 	$APIVersion = "1.2";
 	$Salt = "PASSWORD SALT";	
 
