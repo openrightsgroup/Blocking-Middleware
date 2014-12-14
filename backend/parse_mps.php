@@ -17,6 +17,7 @@ class parseYourNextMP
     
     protected $_urls_processed = 0;
     protected $_urls_added = 0;
+    protected $_urls_skipped = 0;
     
     public function __construct() {
         
@@ -85,7 +86,8 @@ class parseYourNextMP
             flush();
         }
         
-        echo "Found ". $this->_urls_processed . " urls, added ". $this->_urls_added ." urls\n";
+        echo "Found ". $this->_urls_processed . " urls, added ". $this->_urls_added ." urls,"
+           . " skipped ". $this->_urls_skipped ." urls because they were already in the db \n";
     }
     
     
@@ -117,6 +119,7 @@ class parseYourNextMP
                 //already in urls table - should we mark as an mp?
                 $row = $res->fetch_assoc();
                 $urlID = $row['urlID'];
+                $this->_urls_skipped++;
                 echo "url exists already - doing nothing\n";
         }
         
