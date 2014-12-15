@@ -10,6 +10,11 @@
 /* this isn't actually valid JSON - each row is a JSON result! */
 header("Content-type: application/json;charset=UTF-8");
 header("Connection: close");
+
+// Necessary on the live server to suppress caching so that
+// the results update in a timely fashion.
+while (@ob_end_clean());
+
 ini_set("output_buffering", "off");
 ob_implicit_flush(1);
 ob_flush();
