@@ -69,11 +69,10 @@ if ($argv[1] == 'counters') {
 		
 		# primitive grouping by ISP
 		do {
-			if (!in_array($row['status'], array('ok','blocked','timeout','error','dnsfail'))) {
-				continue;
+			if (in_array($row['status'], array('ok','blocked','timeout','error','dnsfail'))) {
+				$out[ $row['status'] ] = $row['ct'];
+				@$out['total'] += $row['ct'];
 			}
-			$out[ $row['status'] ] = $row['ct'];
-			@$out['total'] += $row['ct'];
 			$row = $rs->fetch_assoc();
 		} while ($row && $row['network_name'] == $last);
 
