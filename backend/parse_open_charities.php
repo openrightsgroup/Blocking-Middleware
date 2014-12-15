@@ -84,7 +84,7 @@ class SimpleOpenCharitiesParser
                 $this->_charities_processed++;
                 if (!is_null($data) && $data[self::WEBSITE_FIELD] != '') {
                     print "saving ". $data[self::WEBSITE_FIELD];
-                    $this->save_url($data[self::WEBSITE_FIELD], 'open_charities');
+                    $this->save_url($data[self::WEBSITE_FIELD], 'opencharities');
                 }
                 
                 $row++;
