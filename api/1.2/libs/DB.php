@@ -78,6 +78,28 @@ include_once "config.php";
 			}
 			return $sql;
 		}
+                
+                // save tags for a URL
+                public function save_tags($urlID, $tags, $source) 
+                {
+                    // wipe previous tags
+                    $this->clear_tags($urlID, $source);
+                    
+                    // loop each tag
+                    foreach($tags as $tag => $value) {
+                        echo $tag. " - " .$value ."\n";
+                        $query = "INSERT INTO tags (urlID, attribute, value, source) VALUES (?, ?, ?, ?)";
+                        $res = $this->query($query, array($urlID, $tag, $value, $source));
+                    }
+                }
+                
+                
+                // clear any tags for this url for this source
+                public function clear_tags($urlID, $source)
+                {
+                    $query = "DELETE FROM tags WHERE urlID=? AND source=?";
+                    $res = $this->query($query, array($urlID, $source));
+                }
 
 	}
 			

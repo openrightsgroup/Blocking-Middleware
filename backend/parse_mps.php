@@ -40,29 +40,37 @@ class parseYourNextMP
         }
         
         // decode file into json
-        $json = json_decode($file);
+        $json = json_decode($file, true);
         if ($json === false || is_null($json)) {
             echo "Error decoding JSON\n";
             return false;
         }
 
         // if no results then quit
-        if (count($json->result) < 1) {
+        if (count($json['result']) < 1) {
             echo "No more results found\n";
             return false;
         }
-
+        
         // loop each entry
-        foreach ($json->result as $mp) {
+        foreach ($json['result'] as $mp) {
             // homepage_url only seems to be present in 'versions' array of each MP
             // each version seems to be in date order newest first, so going to
             // assume that this is always true and just take first version in array
-            
-            $url = $mp->versions[0]->data->homepage_url;
+ 
+            $url = $mp['versions'][0]['data']['homepage_url'];
             $source = 'nextmp';
-            $this->save_url($url, $source);
+            $urlID = $this->save_url($url, $source);
             
-//            echo $mp->name . " - ". $mp->versions->homepage_url."<br>";
+            // prepare tags
+            //get JSON as array so can access integer keys
+            $tags = array();
+            $tags['mp:const'] = $mp['versions'][0]['data']['standing_in']['2015']['name'];
+            $tags['source'] = 'Your Next MP';
+            $tags['addr:country'] = 'uk';
+            
+            // save tags
+            $this->_mysqli->save_tags($urlID, $tags, $tags['source']);
         }
         return true;
     }
@@ -97,9 +105,9 @@ class parseYourNextMP
         $this->_urls_processed++;
         try {
             $url = normalize_url($url);
-            echo "save url ($url) ".$text."\n"; 
+            print "save url ($url) \n"; 
         } catch (BadUrlError $exc) {
-            echo "bad URL: ". $url ."\n";
+            print "bad URL: ". $url ."\n";
             return false;
         }
 

@@ -12,8 +12,6 @@ class SimpleOpenCharitiesParser
     const WEBSITE_FIELD = 5;
     const ADDRESS_FIELD = 4;
     
-    
-    
     protected $_stack = array();
     protected $_file = "";
 
@@ -45,7 +43,7 @@ class SimpleOpenCharitiesParser
         $this->_urls_processed++;
         try {
             $url = normalize_url($url);
-            echo "save url ($url) ".$text."\n"; 
+            echo "save url ($url) \n"; 
         } catch (BadUrlError $exc) {
             echo "bad URL: ". $url ."\n";
             return false;
@@ -70,7 +68,7 @@ class SimpleOpenCharitiesParser
                 $this->_urls_skipped++;
                 echo "url exists already - doing nothing\n";
         }
-        
+ 
         return $urlID;
     }
     
@@ -84,8 +82,27 @@ class SimpleOpenCharitiesParser
                 $this->_charities_processed++;
                 if (!is_null($data) && $data[self::WEBSITE_FIELD] != '') {
                     print "saving ". $data[self::WEBSITE_FIELD];
-                    $this->save_url($data[self::WEBSITE_FIELD], 'opencharities');
+                    $urlID = $this->save_url($data[self::WEBSITE_FIELD], 'opencharities');
                 }
+                
+                       
+                // prepare tags
+
+                // process address
+
+                var_dump($data[self::ADDRESS_FIELD]);
+                $address = explode(', ', $data[self::ADDRESS_FIELD]);
+
+                //get JSON as array so can access integer keys
+                $tags = array();
+                $tags['addr:postcode'] = end($address);
+                $tags['source'] = 'Open Charities';
+                $tags['addr:country'] = 'uk';
+
+                // save tags
+                $this->_mysqli->save_tags($urlID, $tags, $tags['source']);
+
+                
                 
                 $row++;
             }
