@@ -1,6 +1,7 @@
 <?php
 
 include "../api/1.2/libs/url.php";
+include "../api/1.2/libs/services.php";
 include "../api/1.2/libs/DB.php";
 
 
@@ -27,6 +28,7 @@ class parseYourNextMP
 	if ($this->_mysqli->connect_errno) {
 	    echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
 	}
+		$this->url_loader = new UrlLoader($this->_mysqli);
     }
     
     // process an individual page of results
@@ -70,7 +72,7 @@ class parseYourNextMP
             $tags['addr:country'] = 'uk';
             
             // save tags
-            $this->_mysqli->save_tags($urlID, $tags, $tags['source']);
+            $this->url_loader->save_tags($urlID, $tags, $tags['source']);
         }
         return true;
     }
@@ -111,27 +113,7 @@ class parseYourNextMP
             return false;
         }
 
-        //check if url already submitted
-        $query = "SELECT urlID,URL FROM urls WHERE URL=? LIMIT 1";
-        $res = $this->_mysqli->query($query, array($url));
-
-        //add to urls table if new to blocked
-        if ($res->num_rows < 1) {
-                $query = "INSERT INTO urls (URL,hash,source,inserted) VALUES (?,?,?,now())";
-                $res = $this->_mysqli->query($query, array( $url, md5($url), $source));
-
-                $urlID = $this->_mysqli->insert_id;
-                $this->_urls_added++;
-        }
-        else {
-                //already in urls table - should we mark as an mp?
-                $row = $res->fetch_assoc();
-                $urlID = $row['urlID'];
-                $this->_urls_skipped++;
-                echo "url exists already - doing nothing\n";
-        }
-        
-        return $urlID;
+		return $this->url_loader->insert($url, $source);
     }
     
 }

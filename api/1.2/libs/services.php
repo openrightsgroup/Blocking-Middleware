@@ -1,5 +1,7 @@
 <?php
 
+include_once "url.php";
+
 class UserLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
@@ -123,6 +125,67 @@ class UrlLoader {
 		if ($this->conn->affected_rows != 1) {
 			throw new UrlLookupError();
 		}
+	}
+
+	function insert($url, $source, $polled=false) {
+		# polled parameter indicates that URL has been sent to the
+		# queue, and should have lastPolled set to now().
+
+		$url = normalize_url($url);
+
+		# save autocommit state
+		$automode = $this->conn->get_autocommit();
+		# set autocommit off to allow transaction
+		$this->conn->autocommit(false);
+
+		//check if url already submitted
+		$query = "SELECT urlID,URL FROM urls WHERE URL=? LIMIT 1";
+		$res = $this->conn->query($query, array($url));
+
+		//add to urls table if new to blocked
+		if ($res->num_rows < 1) {
+				$query = "INSERT INTO urls (URL,hash,source,inserted,lastPolled) VALUES (?,?,?,now(),?)";
+				$res = $this->conn->query($query, array( $url, md5($url), $source, $polled ? date('Y-m-d h:i:s') : null ));
+
+				$urlID = $this->conn->insert_id;
+		}
+		else {
+				//already in urls table
+				$row = $res->fetch_assoc();
+				$urlID = $row['urlID'];
+		}
+
+		# finish transaction with stored result.
+		$this->conn->commit();
+		#restore autocommit mode
+		$this->conn->autocommit($automode);
+		
+		return $urlID;
+	}
+
+	// save tags for a URL
+	public function save_tags($urlID, $tags, $source) 
+	{
+		// wipe previous tags
+		$automode = $this->conn->get_autocommit();
+		$this->conn->autocommit(false);
+		$this->clear_tags($urlID, $source);
+		
+		// loop each tag
+		foreach($tags as $tag => $value) {
+			$query = "INSERT INTO tags (urlID, attribute, value, source) VALUES (?, ?, ?, ?)";
+			$res = $this->conn->query($query, array($urlID, $tag, $value, $source));
+		}
+		$this->conn->commit();
+		$this->conn->autocommit($automode);
+	}
+	
+	
+	// clear any tags for this url for this source
+	public function clear_tags($urlID, $source)
+	{
+		$query = "DELETE FROM tags WHERE urlID=? AND source=?";
+		$res = $this->conn->query($query, array($urlID, $source));
 	}
 }
 

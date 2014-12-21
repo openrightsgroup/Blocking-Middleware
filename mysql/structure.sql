@@ -305,7 +305,8 @@ CREATE TABLE `tags` (
 	  `attribute` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
 	  `value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
           `source` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
-	  PRIMARY KEY (`id`)
+	  PRIMARY KEY (`id`),
+	  UNIQUE KEY `tags_unq` (`urlID`,`source`,`attribute`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
