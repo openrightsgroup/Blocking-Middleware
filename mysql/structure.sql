@@ -129,7 +129,7 @@ CREATE TABLE `urls` (
   `inserted` datetime NOT NULL,
   `polledAttempts` int(10) unsigned DEFAULT '0',
   `polledSuccess` int(10) unsigned DEFAULT '0',
-  `status` enum('ok','disallowed-by-robots-txt') DEFAULT 'ok' NOT NULL,
+  `status` enum('ok','disallowed-by-robots-txt','disallowed-mime-type','disallowed-content-length') DEFAULT 'ok' NOT NULL,
   PRIMARY KEY (`urlID`),
   UNIQUE KEY `urls_url` (`URL`(767)),
   KEY `source` (`source`)
