@@ -20,6 +20,8 @@ $AMQP_USER = 'guest';
 $AMQP_PASS = 'guest';
 $AMQP_VHOST= '/';
 
+# $SUBMIT_ROUTING_KEY = 'check.org'; # submit via robots.txt checker
+$SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
 
 /* GCM creds */
 

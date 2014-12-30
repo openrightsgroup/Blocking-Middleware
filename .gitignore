@@ -2,5 +2,8 @@
 *~
 *.swp
 config.php
+config.ini
 credentials.php
 /nbproject/
+robots-txt.sqlite
+
