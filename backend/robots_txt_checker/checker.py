@@ -86,12 +86,14 @@ class BlockedRobotsTxtChecker(object):
 			req = requests.head(data['url'], headers=self.headers)
 			logging.info("Got mime: %s", req.headers['content-type'])
 			if not req.headers['content-type'].startswith('text/'):
+				logging.warn("Disallowed MIME: %s", req.headers['content-type'])
 				self.set_url_status(data['url'], 'disallowed-mime-type')
 				return True
 
 			logging.info("Got length: %s", req.headers.get('content-length',0))
-			if req.headers.get('content-length',0) > 262144: # yahoo homepage is 216k!
+			if int(req.headers.get('content-length',0)) > 262144: # yahoo homepage is 216k!
 				#TODO: should we test content of GET request when content-length is not available?
+				logging.warn("Content too large: %s", req.headers['content-length'])
 				self.set_url_status(data['url'], 'disallowed-content-length')
 				return True
 		except Exception,v:
