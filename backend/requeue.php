@@ -11,7 +11,7 @@ define('MINQ', 250);
 
 $ch = amqp_connect();
 
-if (($fp = popen("/usr/sbin/rabbitmqctl list_queues","r")) == NULL) {
+if (($fp = popen("/usr/sbin/rabbitmqctl list_queues name messages_ready","r")) == NULL) {
 	fwrite(stderr, "Unable to get Queue list\n");
 	exit(1);
 }
@@ -59,7 +59,7 @@ $ex->declare();
 		
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled is null or lastpolled < date_sub(now(), interval 7 day)) and 
-	source in ('user','alexa') order by lastpolled limit 100", array());
+	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
 
 $c = 0;
 print "Sending URLs ...\n";
