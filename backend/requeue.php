@@ -5,7 +5,7 @@ include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-define('MAXQ', 750);
+define('MAXQ', 2250);
 define('MINQ', 250);
 
 
@@ -58,11 +58,24 @@ $ex->setFlags(AMQP_PASSIVE);
 $ex->declare();
 		
 $result = $conn->query("select urlid, url, hash from urls 
-	where (lastpolled is null or lastpolled < date_sub(now(), interval 7 day)) and 
+	where (lastpolled is null ) and 
 	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
 
 $c = 0;
-print "Sending URLs ...\n";
+print "Sending URLs (untested)...\n";
+while ($row = $result->fetch_row()) {
+	$msg = array('url' => $row[1], 'hash' => $row[2]);
+	$ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
+	$conn->query("update urls set lastpolled = now() where urlid = ?", array($row[0]));
+	$c += 1;
+}
+
+$result = $conn->query("select urlid, url, hash from urls 
+	where (lastpolled < date_sub(now(), interval 7 day)) and 
+	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
+
+$c = 0;
+print "Sending URLs (untested)...\n";
 while ($row = $result->fetch_row()) {
 	$msg = array('url' => $row[1], 'hash' => $row[2]);
 	$ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
