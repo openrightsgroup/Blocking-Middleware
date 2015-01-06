@@ -74,8 +74,7 @@ $result = $conn->query("select urlid, url, hash from urls
 	where (lastpolled < date_sub(now(), interval 7 day)) and 
 	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
 
-$c = 0;
-print "Sending URLs (untested)...\n";
+print "Sending URLs (previously tested)...\n";
 while ($row = $result->fetch_row()) {
 	$msg = array('url' => $row[1], 'hash' => $row[2]);
 	$ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
