@@ -20,14 +20,15 @@ class parseYourNextMP
     protected $_urls_added = 0;
     protected $_urls_skipped = 0;
     
-    public function __construct() {
+    public function __construct()
+    {
         
         global $dbuser, $dbpass, $dbhost, $dbname;
         
-	$this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
-	if ($this->_mysqli->connect_errno) {
-	    echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
-	}
+        $this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+        if ($this->_mysqli->connect_errno) {
+            echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
+        }
 		$this->url_loader = new UrlLoader($this->_mysqli);
     }
     
@@ -70,6 +71,7 @@ class parseYourNextMP
             $tags['mp:const'] = $mp['versions'][0]['data']['standing_in']['2015']['name'];
             $tags['source'] = 'Your Next MP';
             $tags['addr:country'] = 'uk';
+            $tags['org:type'] = "Political";
             
             // save tags
             $this->url_loader->save_tags($urlID, $tags, $tags['source']);

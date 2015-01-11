@@ -27,6 +27,21 @@ using the base URL [http://localhost:8080/1.2/](http://localhost:8080/1.2/)
 
 The example client directory is accessible through the URL [http://localhost:8080/example-client/](http://localhost:8080/example-client/).
 
+Tagging of URLs
+---------------
+
+Multiple tags can be applied to each URL in the system so we can pull out the URLs by tag. Tags can be location, tpe of site, source of URL, etc.
+
+This is a list of the current tags:
+
+- addr:postcode - postcode
+- addr:country - country website is based in use two letter country code in lower case
+- source - name of source where URL came from, eg dmoz, Open Charities, Your Next MP, etc
+- mp:const - Constituency which the site is within
+- org:type - type of organisation the site belongs to
+- site:type - type of site - blog, social, etc
+- content:type - type of content
+
 Get involved!
 -------------
 

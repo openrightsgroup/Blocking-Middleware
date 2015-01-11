@@ -4,3 +4,5 @@
 config.php
 credentials.php
 /nbproject/
+/.idea/
+/example-data/

@@ -24,14 +24,14 @@ class SimpleOpenCharitiesParser
 
     public function __construct($file)
     {
-	global $dbuser, $dbpass, $dbhost, $dbname;
+	    global $dbuser, $dbpass, $dbhost, $dbname;
 		
         $this->_file = $file;
 
-	$this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
-	if ($this->_mysqli->connect_errno) {
-	    echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
-	}
+        $this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+        if ($this->_mysqli->connect_errno) {
+            echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
+        }
 
     }
 
@@ -98,6 +98,7 @@ class SimpleOpenCharitiesParser
                 $tags['addr:postcode'] = end($address);
                 $tags['source'] = 'Open Charities';
                 $tags['addr:country'] = 'uk';
+                $tags['org:type'] = "Charity and non-profit";
 
                 // save tags
                 $this->_mysqli->save_tags($urlID, $tags, $tags['source']);
