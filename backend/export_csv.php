@@ -5,7 +5,7 @@ include_once __DIR__ . "/../api/1.2/libs/DB.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 $conn->real_query(
-"select url, urls.inserted url_submitted, network_name, filter_level, status, results.created, http_status, config, results.category, results.blocktype from results inner join urls using (urlid)");
+"select url, urls.inserted url_submitted, network_name, filter_level, results.status, results.created, http_status, config, results.category, results.blocktype from results inner join urls using (urlid)");
 $result = $conn->use_result();
 
 if (count($argv) == 1) {
