@@ -641,7 +641,7 @@ $app->get('/recent/changes', function (Request $req) use ($app) {
 		$count = 10;
 	}
 	$rs = $conn->query("select 
-		url, old_status, new_status, created, network_name
+		url, old_status, new_status, created, network_name, url_status_changes.id
 		from url_status_changes
 		inner join urls using (urlID)
 		order by created desc limit " . (int)$count, array());

@@ -43,13 +43,17 @@ $res = (array)$result;
 ##$tm = strptime($res['created'], "%Y-%m-%d %H:%M:%S");
 $tm = strtotime($res['created']);
 $ts = strftime("%a, %e %b %Y %H:%M:%S %Z", $tm);
+$id = sha1($res['id']);
 
 print "<item>\n";
 print "<title>{$res['url']} on {$res['network_name']}</title>\n";
 print "<link>https://www.blocked.org.uk/results?url={$res['url']}</link>\n";
 print "<description>{$res['url']} on {$res['network_name']} has changed from {$res['old_status']} to {$res['new_status']} ({$res['created']})</description>\n";
-print "<pubDate>{$ts}</pubDate>";
+print "<pubDate>{$ts}</pubDate>\n";
+print "<guid>{$id}</guid>\n";
 print "</item>\n";
 }
 
-print "</channel></rss>";
+print "</channel>
+</rss>
+";
