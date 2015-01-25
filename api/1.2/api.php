@@ -627,6 +627,33 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 })
 ->value('client_ip',''); # make client_ip arg optional
 
+$app->get('/recent/changes', function (Request $req) use ($app) {
+	checkParameters($req, array('email','date','signature'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+	$count = $req->get('count');
+	if (!$count) {
+		$count = 10;
+	}
+	$rs = $conn->query("select 
+		url, old_status, new_status, created, network_name
+		from url_status_changes
+		inner join urls using (urlID)
+		order by created desc limit " . (int)$count, array());
+	$output = array();
+
+	while($row = $rs->fetch_assoc()) {
+		$output[] = $row;
+	}
+
+	return $app->json(array("success" => true, "results" => $output));
+
+});
 
 #--------- Begin  Administrator Functions
 
