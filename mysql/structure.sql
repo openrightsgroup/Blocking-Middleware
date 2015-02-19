@@ -300,14 +300,23 @@ CREATE TABLE `org_categories` (
 
 DROP TABLE IF EXISTS `tags`;
 CREATE TABLE `tags` (
-	  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-          `urlID` int (10) unsigned NOT NULL,
-	  `attribute` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
-	  `value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-          `source` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
-	  PRIMARY KEY (`id`),
-	  UNIQUE KEY `tags_unq` (`urlID`,`source`,`attribute`)
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `urlID` int (10) unsigned NOT NULL,
+  `attribute` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `source` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tags_unq` (`urlID`,`source`,`attribute`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+;
+
+DROP TABLE IF EXISTS `postcodes`;
+CREATE TABLE `postcodes` (
+  `postcode` char (10) NOT NULL,
+  `constituency` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`postcode`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

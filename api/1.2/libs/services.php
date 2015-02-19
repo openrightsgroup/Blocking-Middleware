@@ -361,3 +361,34 @@ class ResultProcessorService {
 		$this->probe_loader->updateRespRecv($probe['uuid']);
 	}
 }
+
+class PostcodeService {
+
+	function __construct($conn) {
+		$this->conn = $conn;
+	}
+
+	// normalize the postcode (CAPS and space) regex can also pull out each part of postcode (unused)
+	function normalize_postcode($postcode) {
+		preg_match('/^\s*(([A-Z]{1,2})[0-9][0-9A-Z]?)\s*(([0-9])[A-Z]{2})\s*$/', strtoupper($postcode), $matches);
+		return $matches[0];
+	}
+
+
+	// get constituency from postcode
+	function get_constituency($postcode) {
+		$query = "SELECT constituency FROM postcodes WHERE postcode = ? LIMIT 1";
+		$res = $this->conn->query($query, array ($this->normalize_postcode($postcode)));
+
+		// if a constituency is found return it
+		if (!$res) {
+			return null;
+		}
+		else {
+			$row = $res->fetch_assoc();
+			if ($row) {
+				return $row['constituency'];
+			}
+		}
+	}
+}

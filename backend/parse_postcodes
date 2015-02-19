@@ -1,0 +1,82 @@
+<?php
+
+/*
+ * Creates table with postcode and constituency
+ *
+ * pull raw csv from http://www.doogal.co.uk/PostcodeDownloads.php
+ *
+ * actual datafile is downloaded from here:
+ * http://www.doogal.co.uk/UKPostcodesCSV.php
+ *
+ */
+
+include "../api/1.2/libs/url.php";
+include "../api/1.2/libs/DB.php";
+include "../api/1.2/libs/services.php";
+
+class ParsePostcodes
+{
+	const POSTCODE_FIELD = 0;
+	const CONSTITUENCY_FIELD = 13;
+
+	protected $_postcodes_processed;
+
+	protected $_mysqli;
+	protected $_postcode_service;
+
+
+	public function __construct($file)
+	{
+		global $dbuser, $dbpass, $dbhost, $dbname;
+
+		$this->_file = $file;
+
+		$this->_postcode_service = new PostcodeService();
+
+		$this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+		if ($this->_mysqli->connect_errno) {
+			echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
+		}
+	}
+
+
+	// process postcodes
+	public function parse()
+	{
+		// clear all previous entries
+		$truncate_query = "TRUNCATE TABLE postcodes";
+		$this->_mysqli->query($truncate_query, array());
+
+		if (($handle = fopen($this->_file, "r")) !== FALSE) {
+			while (($data = fgetcsv($handle)) !== FALSE) {
+				$this->_postcodes_processed++;
+				if (!is_null($data) && $data[self::POSTCODE_FIELD] != '') {
+					// normalize postcode
+					$postcode = $this->_postcode_service->normalize_postcode($data[self::POSTCODE_FIELD]);
+					if (!empty($postcode)) {
+						print "saving ". $postcode ."\n";
+						$insert_query = "INSERT INTO postcodes (postcode, constituency) VALUES (?, ?)";
+						$res = $this->_mysqli->query($insert_query, array($postcode, $data[self::CONSTITUENCY_FIELD]));
+					}
+				}
+			}
+			fclose($handle);
+		}
+
+		// stats
+		echo $this->_postcodes_processed . " postcodes processed";
+	}
+}
+
+if (!@$argv[1]) {
+	print "Required parameter: <filename>\n";
+	exit(1);
+}
+
+$file = "output.csv";
+
+echo "<pre>Reading: ". $argv[1] ."\n";
+$parser = new ParsePostcodes($argv[1]);
+$parser->parse();
+
+

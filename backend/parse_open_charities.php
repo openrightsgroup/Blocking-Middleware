@@ -6,6 +6,7 @@
 
 include "../api/1.2/libs/url.php";
 include "../api/1.2/libs/DB.php";
+include "../api/1.2/libs/services.php";
 
 class SimpleOpenCharitiesParser
 {
@@ -21,17 +22,22 @@ class SimpleOpenCharitiesParser
 
     protected $_mysqli;
     protected $_counter;
+    protected $_postcode_service;
+    protected $_url_loader;
 
     public function __construct($file)
     {
 	    global $dbuser, $dbpass, $dbhost, $dbname;
 		
         $this->_file = $file;
-
         $this->_mysqli = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+
         if ($this->_mysqli->connect_errno) {
             echo "Failed to connect to MySQL: (" . $this->_mysqli->connect_errno . ") " . $this->_mysqli->connect_error;
         }
+
+        $this->_postcode_service = new PostcodeService($this->_mysqli);
+        $this->_url_loader = new UrlLoader($this->_mysqli);
 
     }
 
@@ -100,10 +106,12 @@ class SimpleOpenCharitiesParser
                 $tags['addr:country'] = 'uk';
                 $tags['org:type'] = "Charity and non-profit";
 
-                // save tags
-                $this->_mysqli->save_tags($urlID, $tags, $tags['source']);
+                //get constituency from postcode
+                $constituency = $this->_postcode_service->get_constituency(end($address));
+                $tags['mp:const'] = $constituency;
 
-                
+                // save tags
+                $this->_url_loader->save_tags($urlID, $tags, $tags['source']);
                 
                 $row++;
             }
