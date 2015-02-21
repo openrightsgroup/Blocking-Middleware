@@ -36,10 +36,20 @@ include_once "config.php";
 	class APIDB extends mysqli {
 
 		function query($sql, $args, $mode=MYSQLI_STORE_RESULT) {
-			$ret = parent::query($this->escape($sql, $args), $mode);
+			$this->set_charset("utf8");
+			$ret = $this->prepare($sql);
+
 			if (!$ret) {
 			 	throw new DatabaseError($this->error, $this->errno);
 			}
+
+			$ref_args = array();
+			$ref_args[] = str_repeat("s", count($args));
+			for($i=0; $i < count($args); $i++) {
+				$ref_args[] =& $args[$i];
+			}
+			call_user_func(array($ret,"bind_param"),$ref_args);
+
 			return $ret;
 		}
 

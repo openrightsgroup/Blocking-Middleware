@@ -210,19 +210,8 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$urltext = normalize_url($req->get('url'));
 
-	# there is some badness here - URL is uniquely indexed to only the first 
-	# 767 characters
+	$newurl = $app['db.url.load']->insert($urltext, $req->get('source','user'));
 
-	$conn->query(
-        "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-        array($urltext, md5($urltext), $req->get('source','user'))
-    );
-	if ($conn->affected_rows) {
-		# we really did insert it, so make sure it queues
-		$newurl = true;
-	} else {
-		$newurl = false;
-	}
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
 	$url = $app['db.url.load']->load($urltext);

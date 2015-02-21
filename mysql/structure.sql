@@ -122,8 +122,10 @@ CREATE TABLE `isps` (
 DROP TABLE IF EXISTS `urls`;
 CREATE TABLE `urls` (
   `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `URL` varchar(2048) NOT NULL COLLATE latin1_bin,
   `hash` varchar(32) DEFAULT NULL,
+  `domain` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `scheme` varchar(5) not null,
   `source` enum('social','user','canary','probe','alexa','dmoz') DEFAULT NULL,
   `lastPolled` datetime DEFAULT NULL,
   `inserted` datetime NOT NULL,
@@ -131,9 +133,9 @@ CREATE TABLE `urls` (
   `polledSuccess` int(10) unsigned DEFAULT '0',
   `status` enum('ok','disallowed-by-robots-txt','disallowed-mime-type','disallowed-content-length') DEFAULT 'ok' NOT NULL,
   PRIMARY KEY (`urlID`),
-  UNIQUE KEY `urls_url` (`URL`(767)),
+  UNIQUE KEY `urls_url` (`domain`,`path`,`scheme`),
   KEY `source` (`source`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `isp_aliases`;
 CREATE TABLE `isp_aliases` (
@@ -185,7 +187,7 @@ CREATE TABLE `url_latest_status` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `url_latest_unq` (`urlID`,`network_name`),
   KEY `ts` (`created`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `stats_cache`;
 CREATE TABLE `stats_cache` (
@@ -206,7 +208,7 @@ CREATE TABLE `isp_stats_cache` (
   `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `total` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`network_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `url_subscriptions`;
 CREATE TABLE `url_subscriptions` (
@@ -227,7 +229,7 @@ DROP TABLE IF EXISTS `url_status_changes`;
 CREATE TABLE `url_status_changes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `urlID` int(10) unsigned DEFAULT NULL,
-  `network_name` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
+  `network_name` varchar(64) CHARACTER SET utf8 DEFAULT NULL,
   `old_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
   `new_status` varchar(16) CHARACTER SET latin1 DEFAULT NULL,
   `created` datetime DEFAULT NULL,

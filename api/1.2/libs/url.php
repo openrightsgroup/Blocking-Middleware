@@ -19,6 +19,10 @@ function normalize_url($url) {
 		$parts = parse_url($url);
 	}
 
+	if (issset($parts['port'])) {
+		throw new BadUrlError("Only HTTP and HTTPS default ports allowed");
+	}
+
 	if (@$parts['path'] == '/') {
 		# if the url is a bare-domain with a trailing '/', remove the trailing slash
 		$url = rtrim($url, '/');

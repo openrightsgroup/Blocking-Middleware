@@ -65,15 +65,42 @@ class UrlLoader {
 		$this->conn = $conn;
 	}
 
+	static function parse($url) {
+		$parts = parse_url($url);
+		if (@$parts['query']) {
+			$path = $parts['path'] . '?' . $parts['query'];
+		} else {
+			$path = $parts['path'];
+		}
+		return array(mb_strtolower($parts['host']), $path, mb_strtolower($parts['scheme']));
+	}
+
+	function insert($urltext, $source) {
+		$urlparts = $this->parse($urltext);
+		$this->conn->query(
+			"insert ignore into urls (domain, path, scheme, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
+			array($urlparts[0], $urlparts[1], $urlparts[2], md5($urltext), $source)
+		);
+		if ($this->conn->affected_rows) {
+			# we really did insert it, so make sure it queues
+			$newurl = true;
+		} else {
+			$newurl = false;
+		}
+		return $newurl;
+	}
+
 	function load($url) {
+		$urlparts = $this->parse($url);
 		$result = $this->conn->query(
-			"select * from urls where URL=?",
-			array($url)
+			"select * from urls where domain=? and path=? and scheme=?",
+			$urlparts
 			);
 		if ($result->num_rows == 0) {
 			throw new UrlLookupError();
 		}
 		$row = $result->fetch_assoc();
+		$row['URL'] = $row['scheme'] . '://' . $row['domain'] . $row['path']
 		return $row;
 	}
 
