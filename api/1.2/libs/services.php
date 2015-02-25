@@ -67,10 +67,15 @@ class UrlLoader {
 
 	static function parse($url) {
 		$parts = parse_url($url);
+
+		if (!isset($parts['path'])) {
+			$parts['path'] = '';
+		}
+
 		if (@$parts['query']) {
-			$path = (@$parts['path'] ||'')  . '?' . $parts['query'];
+			$path = $parts['path'] . '?' . $parts['query'];
 		} else {
-			$path = @$parts['path'] || '';
+			$path = $parts['path'] ;
 		}
 		return array(($parts['host']), $path, ($parts['scheme']));
 	}
