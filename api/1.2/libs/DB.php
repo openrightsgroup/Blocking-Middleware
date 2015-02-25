@@ -43,7 +43,7 @@ include_once "config.php";
 			 	throw new DatabaseError($this->error, $this->errno);
 			}
 
-			return $ret();
+			return $ret;
 		}
 
 		function get_autocommit() {

@@ -25,7 +25,7 @@ function normalize_url($url) {
 
 	if (@$parts['path'] == '/') {
 		# if the url is a bare-domain with a trailing '/', remove the trailing slash
-		$url = rtrim($url, '/');
+		$parts['path'] = '';
 	}
 
 	if (!isset($parts['host'])) {
@@ -36,6 +36,7 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid scheme: " . $parts['scheme']);
 	}
 
-	return strtolower($parts['scheme']) . '://' . mb_strtolower($parts['host']) . $parts['path'] . (isset($parts['query']) ? '?'. $parts['query'] : '');
+	return strtolower($parts['scheme']) . '://' . mb_strtolower($parts['host']) . @$parts['path'] . (isset($parts['query']) ? '?'. $parts['query'] : '');
+	#return $url;
 
 }
