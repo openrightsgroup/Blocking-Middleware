@@ -37,26 +37,13 @@ include_once "config.php";
 
 		function query($sql, $args, $mode=MYSQLI_STORE_RESULT) {
 			$this->set_charset("utf8");
-			error_log("SQL: " . $sql);
-			$ret = $this->prepare($sql);
+			$ret = parent::query($this->escape($sql, $args), $mode);
 
 			if (!$ret) {
 			 	throw new DatabaseError($this->error, $this->errno);
 			}
 
-			if (count($args)) {
-				error_log("Have args: ". implode(',',$args));
-				$ref_args = array();
-				$ref_args[] = str_repeat("s", count($args));
-				for($i=0; $i < count($args); $i++) {
-					$ref_args[] =& $args[$i];
-				}
-				error_log("Args: " . implode(",", $ref_args));
-				call_user_func_array(array($ret,"bind_param"),$ref_args);
-			}
-			$ret->execute();
-
-			return $ret->get_result();
+			return $ret();
 		}
 
 		function get_autocommit() {
