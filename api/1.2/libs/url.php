@@ -19,7 +19,7 @@ function normalize_url($url) {
 		$parts = parse_url($url);
 	}
 
-	if (issset($parts['port'])) {
+	if (isset($parts['port'])) {
 		throw new BadUrlError("Only HTTP and HTTPS default ports allowed");
 	}
 
@@ -36,6 +36,6 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid scheme: " . $parts['scheme']);
 	}
 
-	return $url;
+	return strtolower($parts['scheme']) . '://' . mb_strtolower($parts['host']) . $parts['path'] . (isset($parts['query']) ? '?'. $parts['query'] : '');
 
 }

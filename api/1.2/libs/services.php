@@ -100,7 +100,7 @@ class UrlLoader {
 			throw new UrlLookupError();
 		}
 		$row = $result->fetch_assoc();
-		$row['URL'] = $row['scheme'] . '://' . $row['domain'] . $row['path']
+		$row['URL'] = $row['scheme'] . '://' . $row['domain'] . $row['path'];
 		return $row;
 	}
 
