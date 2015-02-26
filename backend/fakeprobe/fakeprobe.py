@@ -16,7 +16,7 @@ import amqplib.client_0_8 as amqp
 SIG_KEYS = ["probe_uuid", "url", "status", "date", "config"]
 
 logging.basicConfig(
-	level=logging.INFO,
+	level=logging.DEBUG,
 	format="%(asctime)s\t%(levelname)s\t%(message)s",
 	datefmt="[%Y-%m-%d %H:%M:%S]",
 	)
@@ -25,8 +25,18 @@ cfg = ConfigParser.ConfigParser()
 cfg.read(['fakeprobe.ini'])
 
 
-def sign(self, *args):
-	msg = ':'.join([str(x) if not isinstance(x, (str,unicode)) else x for x in args])
+def get_signature(args):
+	return sign(*[args[x] for x in SIG_KEYS])
+
+def sign(*args):
+	def cvt(value):
+		if isinstance(value,unicode):
+			return value.encode('utf8')
+		elif isinstance(value, str):
+			return value
+		else:
+			return str(value)
+	msg = ':'.join([cvt(x) for x in args])
 	logging.debug("Using signature string: %s", msg)
 	hm = hmac.new(cfg.get('probe','secret'), msg, hashlib.sha512)
 	return hm.hexdigest()
@@ -56,7 +66,7 @@ def recvmsg(msg):
 		'blocktype': '',
 	}
 	report['date'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-	report['signature'] = sign(report, SIG_KEYS)
+	report['signature'] = get_signature(report)
 
 	msgbody = json.dumps(report)
 	msgout = amqp.Message(msgbody)
