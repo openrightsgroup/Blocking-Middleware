@@ -7,6 +7,9 @@ class SignatureError extends APIException {
 }
 class InputError extends APIException {
 }
+
+class EncodingError extends InputError {}
+
 class DatabaseError extends APIException {
 }
 class ConflictError extends APIException {

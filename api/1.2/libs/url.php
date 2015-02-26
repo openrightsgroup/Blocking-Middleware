@@ -12,6 +12,9 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid URL");
 	}
 	
+	if (!in_array(mb_detect_encoding($url), array('UTF-8','ASCII'))) {
+		throw new EncodingError();
+	}
 
 	if (!isset($parts['scheme'])) {
 		# trim off any :/ characters from URL
@@ -36,7 +39,7 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid scheme: " . $parts['scheme']);
 	}
 
-	return strtolower($parts['scheme']) . '://' . mb_strtolower($parts['host']) . @$parts['path'] . (isset($parts['query']) ? '?'. $parts['query'] : '');
+	return strtolower($parts['scheme']) . '://' . mb_strtolower($parts['host'],'UTF-8') . @$parts['path'] . (isset($parts['query']) ? '?'. $parts['query'] : '');
 	#return $url;
 
 }
