@@ -36,6 +36,14 @@ This script was written in python to take advantage of the standard library's
 robots.txt parser.
 """
 
+def parse_url(url):
+	parts = urlparse.urlparse(url)
+	domain = parts.netloc.lower()
+	path = parts.path + (('?'+parts.query) if parts.query else '')
+
+	return (domain, path, scheme)
+	
+
 class BlockedRobotsTxtChecker(object):
 	def __init__(self, config, conn, ch):
 		self.config = config
@@ -50,7 +58,11 @@ class BlockedRobotsTxtChecker(object):
 
 	def set_url_status(self, url, status):
 		c = self.conn.cursor()
-		c.execute("""update urls set status = %s where url = %s""", [ status, url])
+		# we should consider passing urlIDs between the frontend and robotschecker
+		urlparts = parse_url(url)
+		updcount = c.execute("""update urls set status = %s where domain = %s and path = %s and scheme = %s""", [ status, urlparts[0], urlparts[1], urlparts[2]])
+		if updcount == 0:
+			logging.warn("URL record not updated: %s", url)
 		c.close()
 		self.conn.commit()
 
