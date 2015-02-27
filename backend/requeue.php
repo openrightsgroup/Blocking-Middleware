@@ -57,7 +57,7 @@ $ex->setType('topic');
 $ex->setFlags(AMQP_PASSIVE);
 $ex->declare();
 		
-$result = $conn->query("select urlid, url, hash from urls 
+$result = $conn->query("select urlid, url, hash from urls_compat urls 
 	where (lastpolled is null ) and 
 	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
 
@@ -70,7 +70,7 @@ while ($row = $result->fetch_row()) {
 	$c += 1;
 }
 
-$result = $conn->query("select urlid, url, hash from urls 
+$result = $conn->query("select urlid, url, hash from urls_compat urls 
 	where (lastpolled < date_sub(now(), interval 7 day)) and 
 	source not in ('social') and status = 'ok' order by lastpolled limit 100", array());
 

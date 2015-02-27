@@ -301,6 +301,11 @@ CREATE TABLE `org_categories` (
 	  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE VIEW urls_compat as
+select concat(scheme,'://',domain,path) as URL, urlID, hash, source, 
+lastPolled, inserted, polledAttempts, polledSuccess, status
+from urls;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;

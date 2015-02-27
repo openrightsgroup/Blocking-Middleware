@@ -18,7 +18,7 @@ if (@$argv[1] == '--all') {
 $end_date = date('Y-m-d');
 
 $result = $conn->query("select url, network_name, created, old_status, new_status
-from url_status_changes stat inner join urls using(urlID)
+from url_status_changes stat inner join urls_compat using(urlID)
 where stat.created >= date_sub(?, interval 1 day) and stat.created < ?
 order by created", array($start_date, $end_date));
 
