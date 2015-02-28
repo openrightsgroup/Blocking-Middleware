@@ -415,18 +415,13 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	$ch = $app['service.amqp'];
 
 	error_log("Probe type: {$probe['type']}");
-	if ($probe['type'] == 'raspi') {
-		error_log("Selecting ooni queue");
-		$queuelist = array('ooni');
+	if ($probe['isPublic'] == 0) {
+		# ORG probes can use the ORG queue and fall back on the public queue
+		# when the ORG queue is empty
+		$queuelist = array('org','public');
 	} else {
-		if ($probe['isPublic'] == 0) {
-			# ORG probes can use the ORG queue and fall back on the public queue
-			# when the ORG queue is empty
-			$queuelist = array('org','public');
-		} else {
-			# public probes can only use the week-behind public queue
-			$queuelist = array('public');
-		}
+		# public probes can only use the week-behind public queue
+		$queuelist = array('public');
 	}
 
 	$msgcount = 0;
