@@ -808,7 +808,7 @@ class StreamResultProcessor {
 	$result = $this->conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
-		inner join urls on urls.urlID = l.urlID
+		inner join urls_compat urls on urls.urlID = l.urlID
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
 		where urls.url = ? and l.network_name = ?
 		group by l.network_name",
@@ -889,7 +889,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		# Fetch results from status summary table, left joining to get last blocked time
 		$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
 		from url_latest_status l 
-		inner join urls on urls.urlid = l.urlid
+		inner join urls_compat urls on urls.urlid = l.urlid
 		inner join isps on isps.name = l.network_name
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
 		where urls.url = ? and isps.show_results = 1
