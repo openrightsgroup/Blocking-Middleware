@@ -445,7 +445,8 @@ $app->get('/request/httpt/ooni/{network_name}/{queuesuffix}', function(Request $
 			break;
 		}
 		$q->ack($msg->getDeliveryTag());
-		$urls[] = (array)json_decode($msg->getBody());
+		$urldata = (array)json_decode($msg->getBody());
+		$urls[] = $urldata['url'];
 		$msgcount ++;
 	}
 
