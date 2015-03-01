@@ -396,7 +396,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 });
 
 $app->get('/request/httpt/ooni/{network_name}/{queue_suffix}', function(Request $req, $network_name, $queue_suffix) use ($app) {
-	checkParameters($req, array('probe_uuid','signature','network_name'));
+	checkParameters($req, array('probe_uuid','signature'));
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
