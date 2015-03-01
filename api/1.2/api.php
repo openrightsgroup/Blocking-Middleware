@@ -395,6 +395,73 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 		'secret' => $secret), 201);
 });
 
+$app->get('/request/httpt/ooni/{network_name}/{queue_suffix}', function(Request $req, $network_name, $queue_suffix) use ($app) {
+	checkParameters($req, array('probe_uuid','signature','network_name'));
+
+	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	checkProbe($probe);
+	Middleware::verifyUserMessage(
+		implode(':', array($req->get('probe_uuid'), $network_name)),  
+		$probe['secret'], 
+		$req->get('signature')
+		);
+	
+	# Get the ISP details
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
+
+	if (!$isp['queue_name']) {
+		return $app->json(array(
+			'success' => false,
+			'error' => 'No queue found'
+			), 404);
+	}
+
+	$msgcount = 0;
+	$batch = 25;
+	$urls = array();
+
+	$q = new AMQPQueue($ch);
+
+	$queuename = 'url.' . $isp['queue_name'] . '.' . $queuesuffix;
+	error_log("Reading from: {$queuename}");
+	$q->setName($queuename);
+	$q->setFlags(AMQP_PASSIVE);
+	try {
+		# passive gives us an error if the queue does not exist,
+		# but doesn't create it
+		$q->declare();
+	} catch (AMQPQueueException $e) {
+		return $app->json(array(
+			'success' => false,
+			'error' => "Queue for {$isp['name']} does not exist",
+		), 404);
+	}
+
+	while ($msgcount < $batch) {
+		$msg = $q->get();
+		if ($msg === false) {
+			# move onto the next queue
+			break;
+		}
+		$q->ack($msg->getDeliveryTag());
+		$urls[] = (array)json_decode($msg->getBody());
+		$msgcount ++;
+	}
+
+	if (count($urls) == 0) {
+		return $app->json(array(
+			'success' => false,
+			'error' => 'No queued URLs found'
+			), 404);
+	}
+
+	error_log("Got URLs: " . $msgcount);
+	$app['db.probe.load']->updateReqSent($probe['uuid'], $msgcount);
+
+	return new Response(implode("\r\n", $urls), 200);
+
+});
+
 $app->get('/request/httpt', function(Request $req) use ($app) {
 	checkParameters($req, array('probe_uuid','signature','network_name'));
 
