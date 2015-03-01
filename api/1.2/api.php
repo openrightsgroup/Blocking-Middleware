@@ -420,6 +420,7 @@ $app->get('/request/httpt/ooni/{network_name}/{queue_suffix}', function(Request 
 	$batch = 25;
 	$urls = array();
 
+	$ch = $app['service.amqp'];
 	$q = new AMQPQueue($ch);
 
 	$queuename = 'url.' . $isp['queue_name'] . '.' . $queuesuffix;
