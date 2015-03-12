@@ -1042,4 +1042,42 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 
 });
 
+## OONI REPORT API
+
+$app->post('/report', function (Request $req) use ($app) {
+	$conn = $app['service.db'];
+	$data = json_decode($req->getContent());
+
+	$probe = $app['db.probe.load']->load($data->probe_uuid);
+	Middleware::checkMessageTimestamp($data['probe_ts']);
+	Middleware::verifyUserMessage($data->probe_ts, $probe['secret'], $data->probe_signature);
+
+	$conn->query("insert into reports(data, created) values (?, now())",
+		array($req->getContent()));
+	$id = $conn->insert_id;
+	$output = json_encode(array(
+		'report_id' => "$id",
+		'backend_version' => 0.01,
+	));
+
+	return $app->json($output, 201);
+});	
+
+$app->post("/report/{id}/close", function (Request $req, $id) use ($app) {
+
+	return $app->json(array(),201);
+});
+
+$app->put("/report/{id}", function (Request $req, $id) use ($app) {
+	$conn = $app['service.db'];
+	$data = json_decode($req->getContent());
+
+	$conn->query("insert into report_entries(report_id, data, created) values (?,?,now())",
+	array($data->report_id, $data->content));
+	
+	
+	return $app->json(array(),201);
+
+});
+
 $app->run();
