@@ -400,16 +400,16 @@ $app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuff
 
 	# Get the ISP details
 	$network_name = $app['service.ip.query']->lookup($req->getClientIp());
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
 	Middleware::verifyUserMessage(
-		implode(':', array($req->get('probe_uuid'), $network_name)),  
+		implode(':', array($req->get('probe_uuid'), $isp['name'])),  
 		$probe['secret'], 
 		$req->get('signature')
 		);
 	
-	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
 	if (!$isp['queue_name']) {
 		return $app->json(array(
