@@ -5,7 +5,7 @@ CREATE TABLE `reports` (
   `created` datetime DEFAULT NULL,
   `complete` tinyint DEFAULT 0 NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `report_entries` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -14,5 +14,6 @@ CREATE TABLE `report_entries` (
   `created` datetime DEFAULT NULL,
   `processed` tinyint DEFAULT 0 NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+ALTER TABLE report_entries ADD FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE;
