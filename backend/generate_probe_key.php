@@ -15,8 +15,15 @@ $loader = new ProbeLoader($conn);
 
 $probe = $loader->load($argv[1]);
 
-print Middleware::createSignatureHash(
-	implode(":", array($argv[1], $argv[2])),
-	$probe['secret']
-	) . "\n";
+if (@$argv[2]) {
+	print Middleware::createSignatureHash(
+		implode(":", array($argv[1], $argv[2])),
+		$probe['secret']
+		) . "\n";
 
+} else {
+	print Middleware::createSignatureHash(
+		$argv[1], 
+		$probe['secret']
+		) . "\n";
+}
