@@ -69,7 +69,7 @@ function load_result($id) {
 
 	$msg = array(
 		'network_name' =>  $network['name'],
-		'network_ip' =>  $report_data2['probe_ip'],
+		'ip_network' =>  $report_data2['probe_ip'],
 		'url' =>  $dirty['request']['url'],
 		'http_status' =>  $dirty['response']['code'],
 		'status' =>  $status,
