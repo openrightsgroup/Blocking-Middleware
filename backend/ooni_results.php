@@ -89,6 +89,7 @@ function load_result($id) {
 	$conn->query("update report_entries set processed=1 where id=?",
 		array($id)
 		);
+	$conn->commit();
 
 }
 

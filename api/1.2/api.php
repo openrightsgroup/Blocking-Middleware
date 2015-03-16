@@ -1069,11 +1069,13 @@ $app->put("/report", function (Request $req) use ($app) {
 
 	$conn->query("insert into report_entries(report_id, data, created) values (?,?,now())",
 	array($data->report_id, $data->content));
+	$entry_id = $conn->insert_id;
+	$conn->commit();
 
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
-	$ex->publish((string)$conn->insert_id, 'ooniresults.' . $data->report_id, AMQP_NOPARAM, array('priority'=>2));
+	$ex->publish((string)$entry_id, 'ooniresults.' . $data->report_id, AMQP_NOPARAM, array('priority'=>2));
 	
 	
 	return $app->json(array(),201);
