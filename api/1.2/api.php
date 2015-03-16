@@ -395,7 +395,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 		'secret' => $secret), 201);
 });
 
-$app->get('/request/httpt/ooni/{network_name}/{queuesuffix}', function(Request $req, $network_name, $queuesuffix) use ($app) {
+$app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuffix) use ($app) {
 	checkParameters($req, array('probe_uuid','signature'));
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
@@ -407,6 +407,7 @@ $app->get('/request/httpt/ooni/{network_name}/{queuesuffix}', function(Request $
 		);
 	
 	# Get the ISP details
+	$network_name = $app['service.ip.query']->lookup($req->getClientIp());
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
 	if (!$isp['queue_name']) {
