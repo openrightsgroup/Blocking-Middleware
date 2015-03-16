@@ -404,8 +404,10 @@ $app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuff
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
+	# remove ISP name from auth for now, and just use hashed uuid 
+	# (allows portability between machines on different networks)
 	Middleware::verifyUserMessage(
-		implode(':', array($req->get('probe_uuid'), $isp['name'])),  
+		$req->get('probe_uuid'),
 		$probe['secret'], 
 		$req->get('signature')
 		);
