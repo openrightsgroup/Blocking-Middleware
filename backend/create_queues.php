@@ -37,6 +37,7 @@ while ($isp = $result->fetch_assoc()) {
 	createqueue($ch, 'url.'.$isp['queue_name'].'.org',  'url.org');
 }
 
+createqueue($ch, "ooniresults",  "ooniresults.#");
 createqueue($ch, "results",  "results.#");
 createqueue($ch, "check",  "check.#");
 createqueue($ch, "heartbeat",  "probe.heartbeat.#");

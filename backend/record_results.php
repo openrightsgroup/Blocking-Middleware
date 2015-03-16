@@ -19,15 +19,21 @@ $q->setName('results');
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
+if (@$ARGV[1] == '--noauth') {
+	$auth = false;
+} else {
+	$auth = true;
+}
+
 $processor = new ResultProcessorService(
 	$conn,
 	new UrlLoader($conn),
 	new ProbeLoader($conn),
-	new IspLoader($conn)
+	new IspLoader($conn),
 	);
 
 function process_result($msg, $queue) {
-	global $processor, $ex;
+	global $processor, $ex, $auth;
 
 	
 	$data = (array)json_decode($msg->getBody());
@@ -49,18 +55,20 @@ function process_result($msg, $queue) {
 	}
 	
 
-	Middleware::verifyUserMessage(
-		implode(":", array(
-			$data['probe_uuid'],
-			$data['url'],
-			$data['status'],
-			$data['date'],
-			$data['config']
-			)
-		),
-		$probe['secret'],
-		$data['signature']
-	);
+	if ($auth) {
+		Middleware::verifyUserMessage(
+			implode(":", array(
+				$data['probe_uuid'],
+				$data['url'],
+				$data['status'],
+				$data['date'],
+				$data['config']
+				)
+			),
+			$probe['secret'],
+			$data['signature']
+		);
+	}
 	
 	try {
 		$processor->process_result($data, $probe);

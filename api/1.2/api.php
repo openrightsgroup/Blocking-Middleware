@@ -1069,6 +1069,11 @@ $app->put("/report", function (Request $req) use ($app) {
 
 	$conn->query("insert into report_entries(report_id, data, created) values (?,?,now())",
 	array($data->report_id, $data->content));
+
+	$ch = $app['service.amqp'];
+	$ex = new AMQPExchange($ch);
+	$ex->setName('org.blocked');
+	$ex->publish((string)$conn->insert_id, 'ooniresults.' + $data->report_id, AMQP_NOPARAM, array('priority'=>2));
 	
 	
 	return $app->json(array(),201);
@@ -1080,6 +1085,7 @@ $app->post('/report/{id}/close', function (Request $req, $id) use ($app) {
 
 	$conn->query("update reports set complete=1 where id=?",
 		array($id));
+
 
 	return $app->json(array(),200);
 });

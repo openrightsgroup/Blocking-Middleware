@@ -10,8 +10,9 @@ CREATE TABLE `reports` (
 CREATE TABLE `report_entries` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `report_id` int(11) NOT NULL,
-  `data` text,
+  `data` mediumtext,
   `created` datetime DEFAULT NULL,
+  `processed` tinyint DEFAULT 0 NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
