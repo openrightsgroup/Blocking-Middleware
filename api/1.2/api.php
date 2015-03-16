@@ -1073,7 +1073,7 @@ $app->put("/report", function (Request $req) use ($app) {
 	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
-	$ex->publish((string)$conn->insert_id, 'ooniresults.' + $data->report_id, AMQP_NOPARAM, array('priority'=>2));
+	$ex->publish((string)$conn->insert_id, 'ooniresults.' . $data->report_id, AMQP_NOPARAM, array('priority'=>2));
 	
 	
 	return $app->json(array(),201);
