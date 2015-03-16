@@ -94,8 +94,14 @@ function load_result($id) {
 }
 
 function process_result($msg, $queue) {
-	load_result($msg->getBody());
-	$queue->ack($msg->getDeliveryTag());
+	try {
+		load_result($msg->getBody());
+		$queue->ack($msg->getDeliveryTag());
+	} catch (Exception $e) {
+		error_log("Caught exception: " . get_class($e));
+		error_log("Message was: " . $e->getMessage());
+	}
+		
 	return true;
 }
 
