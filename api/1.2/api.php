@@ -1049,7 +1049,7 @@ $app->post('/report', function (Request $req) use ($app) {
 	$data = json_decode($req->getContent());
 
 	$probe = $app['db.probe.load']->load($data->probe_uuid);
-	Middleware::checkMessageTimestamp($data['probe_ts']);
+	#Middleware::checkMessageTimestamp($data['probe_ts']);
 	Middleware::verifyUserMessage($data->probe_ts, $probe['secret'], $data->probe_signature);
 
 	$conn->query("insert into reports(data, created) values (?, now())",
@@ -1078,6 +1078,15 @@ $app->put("/report/{id}", function (Request $req, $id) use ($app) {
 	
 	return $app->json(array(),201);
 
+});
+
+$app->post('/report/{id}/close', function (Request $req, $id) use ($app) {
+	$conn = $app['service.db'];
+
+	$conn->query("update reports set complete=1 where id=?",
+		array($id));
+
+	return $app->json(array(),200);
 });
 
 $app->run();

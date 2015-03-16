@@ -32,6 +32,8 @@
 	RewriteRule ^stream/results api.php [NC,L,qsa]
 	RewriteRule ^verify/email api.php [NC,L,qsa]
 
+	RewriteRule ^report.* api.php [NC,L,QSA]
+
 </IfModule>
 DirectoryIndex index.php
 
