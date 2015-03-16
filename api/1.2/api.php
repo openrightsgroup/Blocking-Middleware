@@ -400,7 +400,7 @@ $app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuff
 
 	# Get the ISP details
 	$network_name = $app['service.ip.query']->lookup($req->getClientIp());
-	$isp = $app['db.isp.load']->load($req->get('network_name'));
+	$isp = $app['db.isp.load']->load($network_name);
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
