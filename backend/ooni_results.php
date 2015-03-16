@@ -76,7 +76,8 @@ function load_result($id) {
 		'probe_uuid' =>  $report_data->probe_uuid,
 		'config' =>  -1,
 		'category' =>  '',
-		'blocktype' =>  ''
+		'blocktype' =>  '',
+		'date' => strftime('%Y-%m-%d %H:%M:%S', $report_data['start_time'])
 		);
 	print_r($msg);
 
