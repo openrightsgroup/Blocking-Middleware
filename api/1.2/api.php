@@ -398,6 +398,9 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 $app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuffix) use ($app) {
 	checkParameters($req, array('probe_uuid','signature'));
 
+	# Get the ISP details
+	$network_name = $app['service.ip.query']->lookup($req->getClientIp());
+
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
 	Middleware::verifyUserMessage(
@@ -406,8 +409,6 @@ $app->get('/request/httpt/ooni/{queuesuffix}', function(Request $req, $queuesuff
 		$req->get('signature')
 		);
 	
-	# Get the ISP details
-	$network_name = $app['service.ip.query']->lookup($req->getClientIp());
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
 	if (!$isp['queue_name']) {
