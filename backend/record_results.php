@@ -19,7 +19,7 @@ $q->setName('results');
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-if (@$ARGV[1] == '--noauth') {
+if (@$argv[1] == '--noauth') {
 	$auth = false;
 } else {
 	$auth = true;
@@ -29,7 +29,7 @@ $processor = new ResultProcessorService(
 	$conn,
 	new UrlLoader($conn),
 	new ProbeLoader($conn),
-	new IspLoader($conn),
+	new IspLoader($conn)
 	);
 
 function process_result($msg, $queue) {
