@@ -1063,7 +1063,7 @@ $app->post('/report', function (Request $req) use ($app) {
 	return $app->json($output, 201);
 });	
 
-$app->put("/report/{id}", function (Request $req, $id) use ($app) {
+$app->put("/report", function (Request $req) use ($app) {
 	$conn = $app['service.db'];
 	$data = json_decode($req->getContent());
 
