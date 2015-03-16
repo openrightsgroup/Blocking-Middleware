@@ -1050,23 +1050,18 @@ $app->post('/report', function (Request $req) use ($app) {
 
 	$probe = $app['db.probe.load']->load($data->probe_uuid);
 	#Middleware::checkMessageTimestamp($data['probe_ts']);
-	Middleware::verifyUserMessage($data->probe_ts, $probe['secret'], $data->probe_signature);
+	#Middleware::verifyUserMessage($data->probe_ts, $probe['secret'], $data->probe_signature);
 
 	$conn->query("insert into reports(data, created) values (?, now())",
 		array($req->getContent()));
 	$id = $conn->insert_id;
-	$output = json_encode(array(
+	$output = array(
 		'report_id' => "$id",
 		'backend_version' => 0.01,
-	));
+	);
 
 	return $app->json($output, 201);
 });	
-
-$app->post("/report/{id}/close", function (Request $req, $id) use ($app) {
-
-	return $app->json(array(),201);
-});
 
 $app->put("/report/{id}", function (Request $req, $id) use ($app) {
 	$conn = $app['service.db'];
