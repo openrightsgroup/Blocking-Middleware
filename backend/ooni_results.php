@@ -77,7 +77,7 @@ function load_result($id) {
 		'config' =>  -1,
 		'category' =>  '',
 		'blocktype' =>  '',
-		'date' => strftime('%Y-%m-%d %H:%M:%S', $report_data->start_time)
+		'date' => strftime('%Y-%m-%d %H:%M:%S', $report_data2['start_time'])
 		);
 	print_r($msg);
 
