@@ -917,7 +917,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 
 	$timeout = (int)$req->get('timeout');
 	if ($timeout) {
-		if (!(5 <= $timeout && $timeout <= 30)) {
+		if (!(5 <= $timeout && $timeout <= 300)) {
 			return $app->json(array(
 				"success" => false, 
 				"error" => "Invalid timeout value"

@@ -29,7 +29,7 @@ $args = array(
 	"url" => $url,
 	"date" => date("Y-m-d H:i:s"),
 	"email" => $USER,
-	"timeout" => 5,
+	"timeout" => 120,
 );
 $args['signature'] = sign($SECRET, $args, array("url", "date"));
 

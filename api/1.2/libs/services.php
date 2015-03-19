@@ -283,7 +283,7 @@ class IpLookupService {
 				}
 
 				error_log("TXT: " .  $record2[0]['txt']);
-				if (!preg_match('/ \| [A-Z0-9\-_]+ (\- )?([^\|]*?)$/', $record2[0]['txt'], &$matches)) {
+				if (!preg_match('/ \| [A-Z0-9\-_]+ (\- )?([^\|]*?)$/', $record2[0]['txt'], $matches)) {
 					throw new IpLookupError();
 				}
 				$descr = $matches[2];
