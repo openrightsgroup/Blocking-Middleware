@@ -33,8 +33,9 @@ $processor = new ResultProcessorService(
 	);
 
 function process_result($msg, $queue) {
-	global $processor, $ex, $auth;
+	global $processor, $ex, $auth, $conn;
 
+	$conn->ping(); ## wake up DB
 	
 	$data = (array)json_decode($msg->getBody());
 	$queue->ack($msg->getDeliveryTag());

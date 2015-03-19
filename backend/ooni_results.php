@@ -37,6 +37,8 @@ function test_result($result) {
 function load_result($id) {
 	global $conn, $iplookup, $isploader, $ex;
 
+	$conn->ping(); ## wake up DB
+
 	$res = $conn->query("select * from report_entries where id = ?",
 		array($id)
 		);
