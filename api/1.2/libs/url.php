@@ -43,3 +43,23 @@ function normalize_url($url) {
 	#return $url;
 
 }
+
+function url_ascii($url) {
+	# bit inefficient, but reliable enough.
+	$p = parse_url($url);
+	$tmp = idn_to_ascii($p['host']);
+	if ($tmp == $p['host']) {
+		return $url;
+	}
+	return $p['scheme'] . "://" . $tmp . @$p['path'] . (isset($p['query']) ? '?'. $p['query'] : '');
+}
+
+function url_utf8($url) {
+	# bit inefficient, but reliable enough.
+	$p = parse_url($url);
+	$tmp = idn_to_utf8($p['host']);
+	if ($tmp == $p['host']) {
+		return $url;
+	}
+	return $p['scheme'] . "://" . $tmp . @$p['path'] . (isset($p['query']) ? '?'. $p['query'] : '');
+}

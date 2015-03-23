@@ -258,7 +258,8 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 		$queued = true;
 
-		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
+		# send the ascii-IDN version for ooniprobe compatibility
+		$msgbody = json_encode(array('url'=>url_ascii($urltext), 'hash'=>md5($urltext)));
 
 		$ch = $app['service.amqp'];
 		$ex = new AMQPExchange($ch);

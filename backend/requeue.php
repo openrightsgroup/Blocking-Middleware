@@ -3,6 +3,7 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
+include "$dir/../api/1.2/libs/url.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 define('MAXQ', 2250);
@@ -64,7 +65,7 @@ $result = $conn->query("select urlid, url, hash from urls_compat urls
 $c = 0;
 print "Sending URLs (untested)...\n";
 while ($row = $result->fetch_row()) {
-	$msg = array('url' => $row[1], 'hash' => $row[2]);
+	$msg = array('url' => url_ascii($row[1]), 'hash' => $row[2]);
 	$ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
 	$conn->query("update urls set lastpolled = now() where urlid = ?", array($row[0]));
 	$c += 1;
@@ -76,7 +77,7 @@ $result = $conn->query("select urlid, url, hash from urls_compat urls
 
 print "Sending URLs (previously tested)...\n";
 while ($row = $result->fetch_row()) {
-	$msg = array('url' => $row[1], 'hash' => $row[2]);
+	$msg = array('url' => url_ascii($row[1]), 'hash' => $row[2]);
 	$ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
 	$conn->query("update urls set lastpolled = now() where urlid = ?", array($row[0]));
 	$c += 1;

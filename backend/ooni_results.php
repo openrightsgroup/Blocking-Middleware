@@ -5,6 +5,7 @@ ini_set('mysqli.reconnect',1);
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
 include_once __DIR__ . "/../api/1.2/libs/amqp.php";
+include_once __DIR__ . "/../api/1.2/libs/url.php";
 include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
@@ -69,10 +70,12 @@ function load_result($id) {
 
 	$status = test_result($entry_data);
 
+	# re-encode IDN urls as utf8 for the results processor.
+
 	$msg = array(
 		'network_name' =>  $network['name'],
 		'ip_network' =>  $report_data2['probe_ip'],
-		'url' =>  $dirty['request']['url'],
+		'url' =>  url_utf8($dirty['request']['url']),
 		'http_status' =>  $dirty['response']['code'],
 		'status' =>  $status,
 		'probe_uuid' =>  $report_data->probe_uuid,
@@ -85,7 +88,7 @@ function load_result($id) {
 
 	$ex->publish(
 		json_encode($msg), 
-		'results.'. $network_key . '.' . md5($dirty['request']['url']),
+		'results.'. $network_key . '.' . md5($msg['url']),
 		AMQP_NOPARAM
 		);
 	$conn->query("update report_entries set processed=1 where id=?",
