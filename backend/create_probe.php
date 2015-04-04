@@ -2,7 +2,7 @@
 
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
-include ".$dir/./api/1.2/libs/services.php";
+include "$dir/../api/1.2/libs/services.php";
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
