@@ -679,6 +679,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$isp = $app['db.isp.load']->create($descr, $AUTO_CREATE_QUEUES);
 
         if ($AUTO_CREATE_QUEUES) {
+            $ch = $app['service.amqp'];
             create_queue($ch, 'url.' . $isp['queue_name'] . '.org', 'url.org');
             create_queue($ch, 'url.' . $isp['queue_name'] . '.public', 'url.public');
         }
