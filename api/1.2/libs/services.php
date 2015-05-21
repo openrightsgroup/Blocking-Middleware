@@ -207,7 +207,7 @@ class IspLoader {
             $queue_name = null;
         }
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created, description) values (?, now(), ?, ?)",
+			"insert ignore into isps(name,created, description, queue_name) values (?, now(), ?, ?)",
 			array($title, $title, $queue_name)
 			);
 		if (!$result) {
