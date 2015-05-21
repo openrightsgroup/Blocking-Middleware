@@ -221,7 +221,7 @@ class IspLoader {
 		if (!$result) {
 			throw new DatabaseError();
 		}
-		return array('name' => $title);
+		return array('id' => $ispid, 'name' => $title, 'description' => $title, 'queue_name' => $queue_name);
 	}
 }
 
