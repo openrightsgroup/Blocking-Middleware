@@ -650,7 +650,7 @@ $app->post('/update/gcm', function(Request $req) use ($app) {
 	return $app->json(array('success'=>true,'status'=>'ok'));
 });
 
-$app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app) {
+$app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app, $AUTO_CREATE_QUEUES) {
 	# Get information about an IP.  If {client_ip} is omitted, use request originating IP
 	checkParameters($req, array('probe_uuid','signature','date'));
 
@@ -676,8 +676,12 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	}
 	catch (IspLookupError $e) {
 		error_log("Caught failed lookup");
-		$queue_name =  get_queue_name($descr);
-		$isp = $app['db.isp.load']->create($descr);
+		$isp = $app['db.isp.load']->create($descr, $AUTO_CREATE_QUEUES);
+
+        if ($AUTO_CREATE_QUEUES) {
+            create_queue($ch, 'url.' . $isp['queue_name'] . '.org', 'url.org');
+            create_queue($ch, 'url.' . $isp['queue_name'] . '.public', 'url.public');
+        }
 
 	}
 

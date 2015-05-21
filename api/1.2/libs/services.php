@@ -198,12 +198,17 @@ class IspLoader {
 		return $row;
 	}
 
-	function create($name) {
+	function create($name, $create_queues=false) {
 		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
 		// TODO: tidy up module dependency
+        if ($create_queues) {
+            $queue_name =  get_queue_name($title);
+        } else {
+            $queue_name = null;
+        }
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created, description) values (?, now(), ?)",
-			array($title, $title)
+			"insert ignore into isps(name,created, description) values (?, now(), ?, ?)",
+			array($title, $title, $queue_name)
 			);
 		if (!$result) {
 			throw new DatabaseError();

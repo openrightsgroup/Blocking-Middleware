@@ -23,6 +23,8 @@ $AMQP_VHOST= '/';
 # $SUBMIT_ROUTING_KEY = 'check.org'; # submit via robots.txt checker
 $SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
 
+$AUTO_CREATE_QUEUES = true; # create queues when a new ISP appears
+
 /* GCM creds */
 
 define("GOOGLE_API_KEY", "GOOGLE_KEY");
