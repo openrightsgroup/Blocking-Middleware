@@ -322,12 +322,12 @@ class ResultProcessorService {
 		$url = $this->url_loader->load($result['url']);
 
 		$this->conn->query(
-			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created) 
-			values (?,?,?,?,?,?,?,?,?,now())",
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, report_entry_id, created) 
+			values (?,?,?,?,?,?,?,?,?,?,now())",
 			array(
 				$url['urlID'],$probe['id'], $result['config'],$result['ip_network'],
 				$result['status'],$result['http_status'], $result['network_name'],
-				@$result['category'],@$result['blocktype']
+				@$result['category'],@$result['blocktype'],@$result['report_entry_id']
 			)
 		);
 

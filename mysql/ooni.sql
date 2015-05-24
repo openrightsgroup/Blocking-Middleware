@@ -17,3 +17,5 @@ CREATE TABLE `report_entries` (
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 ALTER TABLE report_entries ADD FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE;
+
+ALTER TABLE results ADD `report_entry_id` int DEFAULT NULL;

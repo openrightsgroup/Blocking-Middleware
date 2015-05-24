@@ -10,6 +10,8 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
+include_once "ooni_test.php";
+
 $ch = amqp_connect();
 
 $ex = new AMQPExchange($ch);
@@ -23,17 +25,6 @@ $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 $iplookup = new IPLookupService($conn);
 $isploader = new IspLoader($conn);
 
-function test_result($result) {
-	
-	if (!is_null($result['control_failure']) || !is_null($result['experiment_failure'])) {
-		return 'error';
-	}
-	if (!$result['body_length_match']) {
-		return 'blocked';
-	}
-	return 'ok';
-
-}
 	
 function load_result($id) {
 	global $conn, $iplookup, $isploader, $ex;
@@ -61,12 +52,7 @@ function load_result($id) {
 	$network = $isploader->load($network_name);
 	$network_key = str_replace(' ','_', strtolower($network['name']));
 
-	foreach ($entry_data['requests'] as $request) {
-		if ($request['request']['tor']['is_tor'] == false) {
-			$dirty = $request;
-			break;
-		}
-	}
+    $dirty = find_dirty($entry_data);
 
 	$status = test_result($entry_data);
 
@@ -82,6 +68,7 @@ function load_result($id) {
 		'config' =>  -1,
 		'category' =>  '',
 		'blocktype' =>  '',
+        'report_entry_id' => $id,
 		'date' => strftime('%Y-%m-%d %H:%M:%S', $report_data2['start_time'])
 		);
 	print_r($msg);
