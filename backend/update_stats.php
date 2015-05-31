@@ -10,7 +10,7 @@ if(count($argv) == 1) {
 
 if ($argv[1] == 'counters') {
 
-	$result = $conn->query(" select count(*) from urls", array());
+	$result = $conn->query(" select count(*) from urls where not (source = 'dmoz' and lastPolled is null)", array());
 	$row = $result->fetch_row();
 
 	$stats = array(
@@ -25,11 +25,11 @@ if ($argv[1] == 'counters') {
 	$row = $result->fetch_row();
 	$stats['blocked_sites_sample_size'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where status = 'blocked' and source='alexa'", array());
+	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and source='alexa'", array());
 	$row = $result->fetch_row();
 	$stats['blocked_sites_detected'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where status = 'blocked' and filter_level in ('','default') and source='alexa'", array());
+	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and filter_level in ('','default') and source='alexa'", array());
 	$row = $result->fetch_row();
 	$stats['blocked_sites_detected_default_filter'] = $row[0];
 
@@ -46,13 +46,13 @@ if ($argv[1] == 'counters') {
 
 } elseif ($argv[1] == 'isps') {
 
-	$rs = $conn->query("select network_name, status, count(*) ct
+	$rs = $conn->query("select network_name, url_latest_status.status, count(*) ct
 	from url_latest_status
 	inner join isps on (isps.name = network_name)
 	inner join urls using (urlID)
 	where show_results = 1 and source = 'alexa'
-	group by network_name, status
-	order by network_name, status", array());
+	group by network_name, url_latest_status.status
+	order by network_name, url_latest_status.status", array());
 
 	$row = $rs->fetch_assoc();
 	
