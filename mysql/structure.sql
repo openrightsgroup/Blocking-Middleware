@@ -126,7 +126,7 @@ CREATE TABLE `urls` (
   `domain` varchar(255) NOT NULL,
   `path` varchar(255) NOT NULL,
   `scheme` varchar(5) not null,
-  `source` enum('social','user','canary','probe','alexa','dmoz') DEFAULT NULL,
+  `source` enum('social','user','canary','probe','alexa','dmoz','citizenlab') DEFAULT NULL,
   `lastPolled` datetime DEFAULT NULL,
   `inserted` datetime NOT NULL,
   `polledAttempts` int(10) unsigned DEFAULT '0',
