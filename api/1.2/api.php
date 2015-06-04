@@ -841,6 +841,27 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 });
 
 
+$app->get('/status/daily-stats', function (Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+    $off = $req->get('days', 84);
+
+	$rs = $conn->query("select stats_date, blocked from daily_stats where stats_date >= date_sub(current_date, INTERVAL ? DAY) order by stats_date",
+        array($off)
+        );
+	$stats = array();
+	while($row = $rs->fetch_row()) {
+		$stats[$row[0]] = array('blocked' => (int)$row[1]);
+	}
+
+	return $app->json(array('success' => true, "stats" => $stats));
+
+});
+
 $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	function mkint($v) {
 		return (int)$v;

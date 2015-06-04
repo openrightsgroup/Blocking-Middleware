@@ -4,7 +4,7 @@ include_once __DIR__ . "/../api/1.2/libs/DB.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 if(count($argv) == 1) {
-	echo "Required arg: <counters|isps>\n";
+	echo "Required arg: <counters|isps|daily>\n";
 	exit(1);
 }
 
@@ -93,4 +93,12 @@ if ($argv[1] == 'counters') {
 	} while ($row);
 	
 	$conn->commit();
+} elseif ($argv[1] == 'daily') {
+    
+    $conn->query("insert into daily_stats(stats_date, blocked) select current_date(), value from stats_cache where name = ?",
+        array('blocked_sites_detected'));
+
+    $conn->commit();
+
+
 }

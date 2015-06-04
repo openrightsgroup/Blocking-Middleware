@@ -306,6 +306,13 @@ select concat(scheme,'://',domain,path) as URL, urlID, hash, source,
 lastPolled, inserted, polledAttempts, polledSuccess, status
 from urls;
 
+
+CREATE TABLE daily_stats(
+    `id` int(10) unsigned PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    `stats_date` date NOT NULL UNIQUE,
+    `blocked` int unsigned NOT NULL DEFAULT 0
+);
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
