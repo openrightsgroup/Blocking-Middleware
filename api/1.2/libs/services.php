@@ -292,7 +292,7 @@ class IpLookupService {
 				if (!preg_match('/ \| ([^\|]*?)$/', $record2[0]['txt'], $matches)) {
 					throw new IpLookupError();
 				}
-				$descr = trim($matches[2]);
+				$descr = trim($matches[1]);
 				error_log("Descr: $descr");
 
 			}
