@@ -848,11 +848,20 @@ $app->get('/status/daily-stats', function (Request $req) use ($app) {
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
-    $off = $req->get('days', 84);
+    if ($req->query->has('days') || (!$req->query->has('start') && !$req->query->has('end'))) {
+        $off = $req->get('days', 84);
 
-	$rs = $conn->query("select stats_date, blocked from daily_stats where stats_date >= date_sub(current_date, INTERVAL ? DAY) order by stats_date",
-        array($off)
-        );
+        $rs = $conn->query("select stats_date, blocked from daily_stats where stats_date >= date_sub(current_date, INTERVAL ? DAY) order by stats_date",
+            array($off)
+            );
+    } elseif ($req->query->has('start') && $req->query->has('end')) {
+        $rs = $conn->query("select stats_date, blocked from daily_stats where stats_date between ? and ? order by stats_date",
+            array($req->get('start'), $req->get('end')));
+
+    } else {
+        throw new InputError("Requires days or start&end parameters");
+    }
+
 	$stats = array();
 	while($row = $rs->fetch_row()) {
 		$stats[$row[0]] = array('blocked' => (int)$row[1]);
