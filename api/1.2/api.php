@@ -42,7 +42,7 @@ $app['db.isp.load'] = function($app) {
 	return new IspLoader($app['service.db']);
 };
 $app['service.ip.query'] = function($app) {
-	return new IpLookupService($app['service.db']);
+	return new IpLookupService($app['service.db'], "WHOIS");
 };
 
 $app['service.result.process'] = function($app) {
@@ -654,12 +654,12 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 	# Get information about an IP.  If {client_ip} is omitted, use request originating IP
 	checkParameters($req, array('probe_uuid','signature','date'));
 
-	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
-	checkProbe($probe);
+	#$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
+	#checkProbe($probe);
 
-	Middleware::checkMessageTimestamp($req->get('date'));
+	#Middleware::checkMessageTimestamp($req->get('date'));
 
-	Middleware::verifyUserMessage($req->get('date'), $probe['secret'], $req->get('signature') );
+	#Middleware::verifyUserMessage($req->get('date'), $probe['secret'], $req->get('signature') );
 
 	if ($client_ip) {
 		$ip = $client_ip;

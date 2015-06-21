@@ -226,8 +226,9 @@ class IspLoader {
 }
 
 class IpLookupService {
-	function __construct($conn) {
+	function __construct($conn, $method='AS') {
 		$this->conn = $conn;
+        $this->method = $method;
 	}
 
 	function check_cache($ip) {
@@ -258,7 +259,15 @@ class IpLookupService {
 		error_log("Cache write complete");
 	}
 
-	function lookup($ip) {
+    function lookup($ip) {
+        if ($this->method == 'AS') {
+            return $this->lookup_as($ip);
+        } elseif ($this->method="WHOIS") {
+            return $this->lookup_whois($ip);
+        }
+    }
+
+	function lookup_as($ip) {
 		# run a DNS query for the IP address
 
 		$descr = $this->check_cache($ip);
@@ -307,6 +316,58 @@ class IpLookupService {
 		error_log("Descr: $descr");
 		return $descr;
 	}
+
+    function format_seg($seg) {
+        return sprintf("%03d",$seg);
+    }
+
+    function format_ip($ip) {
+        return implode(".", array_map( array($this,"format_seg"), explode('.', $ip) ));
+    }
+
+    function lookup_whois($ip) {
+        $fmt_ip = $this->format_ip($ip);
+        $res = $this->conn->query("select isp_name, start, end from isp_netblocks where start <= ? and end >= ?",
+            array($fmt_ip, $fmt_ip)
+        );
+		$row = $res->fetch_assoc();
+        if ($row) {
+            error_log("Netblock found in cache: $ip ${row['start']}-${row['end']}");
+            return $row['isp_name'];
+        }
+
+        $proc = popen("/usr/bin/whois -h whois.afrinic.net '" . escapeshellarg($ip) . "'","r");
+        while ($line = fgets($proc)) {
+            if (strpos($line,":") === false) {
+                continue;
+            }
+            list($key, $value) = explode(":",trim($line), 2);
+            switch($key) {
+                case "inetnum":
+                    list($start, $end) = explode(' - ', trim($value));
+                    break;
+                case "netname":
+                    $netname = trim($value);
+                    if (preg_match('/^(.*)\-\d+$/', $netname, $matches)) {
+                        $netname = $matches[1];
+                    }
+                    break;
+            };
+        }
+        if (!$start || !$end || !$netname) {
+            throw new IpLookupError("No match for $ip");
+        }
+
+        $res = $this->conn->query("insert into isp_netblocks(isp_name, start, end) values (?,?,?)",
+            array(trim($netname), $this->format_ip(trim($start)), $this->format_ip(trim($end)))
+            );
+        if (!$res) {
+            throw new IpLookupError();
+        }
+        return $netname;
+
+    }
+
 }
 
 class ResultProcessorService {
