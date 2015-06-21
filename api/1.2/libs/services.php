@@ -226,9 +226,10 @@ class IspLoader {
 }
 
 class IpLookupService {
-	function __construct($conn, $method='AS') {
+	function __construct($conn, $method='AS', $whois_server='') {
 		$this->conn = $conn;
         $this->method = $method;
+        $this->whois_server=$whois_server;
 	}
 
 	function check_cache($ip) {
@@ -336,7 +337,7 @@ class IpLookupService {
             return $row['isp_name'];
         }
 
-        $proc = popen("/usr/bin/whois -h whois.afrinic.net '" . escapeshellarg($ip) . "'","r");
+        $proc = popen("/usr/bin/whois -h {$this->whois_server} '" . escapeshellarg($ip) . "'","r");
         while ($line = fgets($proc)) {
             if (strpos($line,":") === false) {
                 continue;

@@ -41,8 +41,8 @@ $app['db.url.load'] = function($app) {
 $app['db.isp.load'] = function($app) {
 	return new IspLoader($app['service.db']);
 };
-$app['service.ip.query'] = function($app) {
-	return new IpLookupService($app['service.db'], "WHOIS");
+$app['service.ip.query'] = function($app) use ($WHOIS_SERVER) {
+	return new IpLookupService($app['service.db'], "WHOIS", $WHOIS_SERVER);
 };
 
 $app['service.result.process'] = function($app) {

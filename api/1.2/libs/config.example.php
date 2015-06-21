@@ -28,3 +28,6 @@ $AUTO_CREATE_QUEUES = true; # create queues when a new ISP appears
 /* GCM creds */
 
 define("GOOGLE_API_KEY", "GOOGLE_KEY");
+
+$AUTO_CREATE_QUEUES = false;
+$WHOIS_SERVER='whois.afrinic.net';
