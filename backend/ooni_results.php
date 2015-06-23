@@ -22,7 +22,7 @@ $q->setName('ooniresults');
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-$iplookup = new IPLookupService($conn);
+$iplookup = new IPLookupService($conn, "WHOIS", $WHOIS_SERVER);
 $isploader = new IspLoader($conn);
 
 	
