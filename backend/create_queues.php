@@ -38,6 +38,7 @@ while ($isp = $result->fetch_assoc()) {
 }
 
 createqueue($ch, "ooniresults",  "ooniresults.#");
+createqueue($ch, "oonireports",  "ooniresults.public");
 createqueue($ch, "results",  "results.#");
 createqueue($ch, "check",  "check.#");
 createqueue($ch, "heartbeat",  "probe.heartbeat.#");

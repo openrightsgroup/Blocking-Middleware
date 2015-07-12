@@ -1128,6 +1128,24 @@ $app->post('/report/{id}/close', function (Request $req, $id) use ($app) {
 	$conn->query("update reports set complete=1 where id=?",
 		array($id));
 
+    $res = $conn->query("select * from reports where id = ?",
+        array($id));
+    $report = $res->fetch_assoc();
+    $report_data = json_decode($report['data'])
+
+    # possibly temporary - only send report for those in the 
+    # public queue, since the others don't have the page request
+    # body
+
+    if ($report_data['probe_queue'] == 'public') {
+        
+        $ch = $app['service.amqp'];
+        $ex = new AMQPExchange($ch);
+        $ex->setName('org.blocked');
+        $ex->publish((string)$id, 'oonireports.' . $report_data['probe_queue'], 
+            AMQP_NOPARAM, array('priority'=>2));
+
+    }
 
 	return $app->json(array(),200);
 });
