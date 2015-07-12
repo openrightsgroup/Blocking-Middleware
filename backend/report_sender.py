@@ -11,10 +11,10 @@ import requests
 import amqplib.client_0_8 as amqp
 
 logging.basicConfig(
-	level=logging.INFO,
-	format="%(asctime)s\t%(levelname)s\t%(message)s",
-	datefmt="[%Y-%m-%d %H:%M:%S]",
-	)
+    level=logging.INFO,
+    format="%(asctime)s\t%(levelname)s\t%(message)s",
+    datefmt="[%Y-%m-%d %H:%M:%S]",
+    )
 
 class ReportsSender(object):
     def __init__(self, config, conn, ch):
@@ -23,7 +23,7 @@ class ReportsSender(object):
         self.ch = ch
 
     def send_report(self, msg):
-		self.ch.basic_ack(msg.delivery_tag)
+        self.ch.basic_ack(msg.delivery_tag)
 
         c = self.conn.cursor()
         c.execute("select * from reports where id = %s",
@@ -60,27 +60,27 @@ class ReportsSender(object):
 
 def main():
 
-	cfg = ConfigParser.ConfigParser()
-	assert(len(cfg.read(['report_sender.ini'])) == 1)
+    cfg = ConfigParser.ConfigParser()
+    assert(len(cfg.read(['report_sender.ini'])) == 1)
 
 
-	# create MySQL connection
-	mysqlopts = dict(cfg.items('mysql'))
-	conn = MySQLdb.connect(**mysqlopts)
+    # create MySQL connection
+    mysqlopts = dict(cfg.items('mysql'))
+    conn = MySQLdb.connect(**mysqlopts)
 
-	# Create AMQP connection
-	amqpopts = dict(cfg.items('amqp'))
-	amqpconn = amqp.Connection( **amqpopts)
-	ch = amqpconn.channel()
+    # Create AMQP connection
+    amqpopts = dict(cfg.items('amqp'))
+    amqpconn = amqp.Connection( **amqpopts)
+    ch = amqpconn.channel()
 
-	sender = ReportsSender(config, conn, ch)
+    sender = ReportsSender(config, conn, ch)
 
-	# create consumer, enter mainloop
-	ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='sender1', 
+    # create consumer, enter mainloop
+    ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='sender1', 
         callback=sender.send_report)
 
-	while True:
-		ch.wait()
+    while True:
+        ch.wait()
 
 if __name__ == '__main__':
-	main()
+    main()
