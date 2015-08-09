@@ -1137,12 +1137,12 @@ $app->post('/report/{id}/close', function (Request $req, $id) use ($app) {
     # public queue, since the others don't have the page request
     # body
 
-    if ($report_data['probe_queue'] == 'public') {
+    if ($report_data->probe_queue == 'public') {
         
         $ch = $app['service.amqp'];
         $ex = new AMQPExchange($ch);
         $ex->setName('org.blocked');
-        $ex->publish((string)$id, 'oonireports.' . $report_data['probe_queue'], 
+        $ex->publish((string)$id, 'oonireports.' . $report_data->probe_queue, 
             AMQP_NOPARAM, array('priority'=>2));
 
     }
