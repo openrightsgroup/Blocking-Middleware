@@ -1131,7 +1131,7 @@ $app->post('/report/{id}/close', function (Request $req, $id) use ($app) {
     $res = $conn->query("select * from reports where id = ?",
         array($id));
     $report = $res->fetch_assoc();
-    $report_data = json_decode($report['data'])
+    $report_data = json_decode($report['data']);
 
     # possibly temporary - only send report for those in the 
     # public queue, since the others don't have the page request
