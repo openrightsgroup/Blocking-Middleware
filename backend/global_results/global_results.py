@@ -12,10 +12,10 @@ from signing import RequestSigner
 from api import APIRequest, StatusUrlRequest
 
 logging.basicConfig(
-	level=logging.INFO,
-	format="%(asctime)s\t%(levelname)s\t%(message)s",
-	datefmt="[%Y-%m-%d %H:%M:%S]",
-	)
+    level=logging.INFO,
+    format="%(asctime)s\t%(levelname)s\t%(message)s",
+    datefmt="[%Y-%m-%d %H:%M:%S]",
+    )
 
 class GlobalResultChecker(object):
     def __init__(self, ch):
@@ -48,21 +48,21 @@ class GlobalResultChecker(object):
     
 
 def main():
-	cfg = ConfigParser.ConfigParser()
-	assert(len(cfg.read(['config.ini'])) == 1)
+    cfg = ConfigParser.ConfigParser()
+    assert(len(cfg.read(['config.ini'])) == 1)
 
-	# Create AMQP connection
-	amqpopts = dict(cfg.items('amqp'))
-	amqpconn = amqp.Connection( **amqpopts)
-	ch = amqpconn.channel()
+    # Create AMQP connection
+    amqpopts = dict(cfg.items('amqp'))
+    amqpconn = amqp.Connection( **amqpopts)
+    ch = amqpconn.channel()
 
     checker = GlobalResultChecker(ch)
 
-	# create consumer, enter mainloop
-	ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='global1', 
+    # create consumer, enter mainloop
+    ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='global1', 
         callback=checker.global_check)
-	while True:
-		ch.wait()
+    while True:
+        ch.wait()
 
 
 if __name__ == '__main__':

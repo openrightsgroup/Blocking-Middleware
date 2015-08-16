@@ -4,6 +4,7 @@ CREATE TABLE global_api (
     server varchar(60) not null,
     username varchar(60) not null, 
     secret varchar(64) not null,
-    country char(2) not null
+    country char(2) not null,
+    live tinyint default 1 not null
     );
 
