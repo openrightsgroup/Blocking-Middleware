@@ -833,7 +833,7 @@ $app->get('/status/global/url', function (Request $req) use ($app) {
 
     $conn = $app['service.db'];
 
-    $rs = $conn->query("select address, username, secret, country from global_api where live=1",
+    $rs = $conn->query("select server, username, secret, country from global_api where live=1",
         array());
 
     $amqp = $app['service.amqp'];
