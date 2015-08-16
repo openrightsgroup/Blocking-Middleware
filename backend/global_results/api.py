@@ -51,9 +51,9 @@ class APIRequest(object):
             url = self.get_url()
             logging.info("Opening ORG Api connection to: %s", url)
             if self.METHOD == 'GET':
-                rq = requests.get(url, params=self.args)
+                rq = requests.get(url, params=self.args, verify=False)
             else:
-                rq = requests.post(url, data=self.args)
+                rq = requests.post(url, data=self.args, verify=False)
         except Exception,v:
             logging.error("API Error: %s", v)
             raise 
