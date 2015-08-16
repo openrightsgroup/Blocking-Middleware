@@ -59,8 +59,8 @@ if($urldata->success) {
 	echo "<table>";
 	echo "<tr><th>Country</th><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</th><th>Category</th></tr>";
 	foreach($urldata->results as $country_result) {
-        $country = $country_result->country;
-        foreach ($country->results as $result) {
+        $country = $country_entry->country;
+        foreach ($country_entry->results as $result) {
 	print <<< END
 	<tr><td>{$country}</td><td>{$result->network_name}</td><td>{$result->status}</td><td>{$result->status_timestamp}</td><td>{$result->last_blocked_timestamp}</td><td>{$result->first_blocked_timestamp}</td><td>{$result->category}</td></tr>
 END;
