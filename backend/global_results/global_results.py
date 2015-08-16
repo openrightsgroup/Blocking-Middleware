@@ -40,7 +40,7 @@ class GlobalResultChecker(object):
 
         logging.info("Check of %s returns %s", data['server'], status)
 
-        msgsend = amqp.Message(json.dumps(results))
+        msgsend = amqp.Message(json.dumps(response))
 
         self.ch.basic_publish(msgsend, self.config.get('daemon','exchange'), 
             data['resultqueue'])
