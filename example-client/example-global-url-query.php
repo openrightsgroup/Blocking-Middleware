@@ -58,7 +58,7 @@ Results for <?php echo $_POST['url'] ?>
 if($urldata->success) {
 	echo "<table>";
 	echo "<tr><th>Country</th><th>ISP</th><th>Status</th><th>Status timestamp</th><th>Last blocked timestamp</th><th>First blocked timestamp</th><th>Category</th></tr>";
-	foreach($urldata->results as $country_result) {
+	foreach($urldata->results as $country_entry) {
         $country = $country_entry->country;
         foreach ($country_entry->results as $result) {
 	print <<< END
