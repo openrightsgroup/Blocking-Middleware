@@ -823,6 +823,65 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	));
 });
 
+$app->get('/status/global/url', function (Request $req) use ($app) {
+	checkParameters($req, array('url','email','signature'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
+
+	$urltext = normalize_url($req->get('url'));
+
+    $conn = $app['service.db'];
+
+    $rs = $conn->query("select server, username, secret, country from global_api where live=1",
+        array());
+
+    $amqp = $app['service.amqp'];
+
+    $q = new AMQPQueue($amqp);
+    $qid = uniqid(); # good enough for now
+    $q->setName("result.global." . $qid);
+    $q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
+    $q->declare();
+
+    $ex = new AMQPExchange($amqp);
+    $count = 0;
+    while ($row = $rs->fetch_row()) {
+        $msg = array(
+            'url' => $urltext,
+            'server' => $row[0],
+            'username' => $row[1],
+            'secret' => $row[2],
+            'resultqueue' => "result.global." . $qid,
+            'country' => $row[3]
+            );
+
+        # publish direct to a named queue
+        $ex->publish((string)json_encode($msg), "url.global", AMQP_NOPARAM, array('priority'=>2));
+        $count ++;
+    }
+    if ($count == 0) {
+        return $app->json(array("success" => true), 200);
+    }
+
+    $t = time();
+    $results = array();
+    while ((time() < $t + 15) && (count($results) < $count)) {
+        $amqpmsg = $q->get(AMQP_AUTOACK);
+        if ($amqpmsg === false) {
+            sleep(1);
+            continue;
+        }
+        $msg = json_decode($amqpmsg->getBody());
+        $results[] = $msg;
+
+    }
+
+    return $app->json(array("success" => true, "results" => $results), 200);
+
+
+});
+
 $app->get('/status/stats', function( Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
