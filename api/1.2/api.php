@@ -841,12 +841,12 @@ $app->get('/status/global/url', function (Request $req) use ($app) {
     $q = new AMQPQueue($amqp);
     $qid = uniqid(); # good enough for now
     $q->setName("result.global." . $qid);
-    $q->setFlags(AMQP_AUTODELETE,AMQP_EXCLUSIVE);
+    $q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
     $q->declare();
 
     $ex = new AMQPExchange($amqp);
     $count = 0;
-    while ($data = $rs->fetchrow()) {
+    while ($data = $rs->fetch_row()) {
         $msg = array(
             'url' => $urltext,
             'server' => $row[0],
