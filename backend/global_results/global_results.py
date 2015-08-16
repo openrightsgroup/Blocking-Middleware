@@ -27,7 +27,7 @@ class GlobalResultChecker(object):
         # msg contains: url, server, username, secret, resultqueue, country
         logging.info("Checking %s on %s; user=%s", data['url'], data['server'], data['username'])
 
-        signer = RequestSigner(data['secret'])
+        signer = RequestSigner(data['secret'].encode('utf-8'))
         req = StatusUrlRequest(
             signer,
             email=data['username'],
