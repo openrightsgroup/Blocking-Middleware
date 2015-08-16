@@ -846,7 +846,7 @@ $app->get('/status/global/url', function (Request $req) use ($app) {
 
     $ex = new AMQPExchange($amqp);
     $count = 0;
-    while ($data = $rs->fetch_row()) {
+    while ($row = $rs->fetch_row()) {
         $msg = array(
             'url' => $urltext,
             'server' => $row[0],
