@@ -18,11 +18,13 @@ logging.basicConfig(
     )
 
 class GlobalResultChecker(object):
-    def __init__(self, ch):
+    def __init__(self, config, ch):
         self.ch = ch
+        self.config = config
 
     def global_check(self, msg):
         data = json.loads(msg.body)
+        self.ch.basic_ack(msg.delivery_tag)
         
         # msg contains: url, server, username, secret, resultqueue, country
         logging.info("Checking %s on %s; user=%s", data['url'], data['server'], data['username'])
@@ -56,7 +58,7 @@ def main():
     amqpconn = amqp.Connection( **amqpopts)
     ch = amqpconn.channel()
 
-    checker = GlobalResultChecker(ch)
+    checker = GlobalResultChecker(cfg, ch)
 
     # create consumer, enter mainloop
     ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='global1', 
