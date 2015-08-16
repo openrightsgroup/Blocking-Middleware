@@ -7,8 +7,16 @@ class RequestSigner(object):
 	def __init__(self, secret):
 		self.secret = secret
 
+    @staticmethod
+    def encode(s):
+        if isinstance(s, unicode):
+            return s.encode('utf-8')
+        elif not isinstance(s,str):
+            return str(s)
+        return s
+
 	def sign(self, *args):
-		msg = ':'.join([str(x) if not isinstance(x, (str,unicode)) else x for x in args])
+		msg = ':'.join([self.encode(x) for x in args])
 		logging.debug("Using signature string: %s", msg)
 		hm = hmac.new(self.secret, msg, hashlib.sha512)
 		return hm.hexdigest()
