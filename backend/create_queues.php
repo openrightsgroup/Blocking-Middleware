@@ -24,7 +24,9 @@ function createqueue($ch, $name,  $key, $exchange = 'org.blocked') {
 	$q->setName($name);
 	$q->setFlags(AMQP_DURABLE);
 	$q->declare();
-	$q->bind($exchange, $key);
+    if (!is_null($key)) {
+        $q->bind($exchange, $key);
+    }
 }
 
 $result = $conn->query("select name, queue_name from isps where queue_name is not null", array());
@@ -40,6 +42,7 @@ while ($isp = $result->fetch_assoc()) {
 createqueue($ch, "ooniresults",  "ooniresults.#");
 createqueue($ch, "oonireports",  "ooniresults.public");
 createqueue($ch, "results",  "results.#");
+createqueue($ch, "url.global", null);
 createqueue($ch, "check",  "check.#");
 createqueue($ch, "heartbeat",  "probe.heartbeat.#");
 
