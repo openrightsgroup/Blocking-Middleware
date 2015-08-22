@@ -1,0 +1,12 @@
+
+
+- name: install iptables-persistent
+  apt: name=iptables-persistent state=present
+
+- name: configure iptables
+  copy: src=security/rules.v4 dest=/etc/iptables owner=root mode=0600
+  notify:
+  - reload_deb_iptables
+
+- name: enable forwarding
+  sysctl: name=net.ipv4.ip_forward value=1 state=present 

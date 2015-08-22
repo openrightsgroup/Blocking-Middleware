@@ -1,0 +1,32 @@
+<?php
+
+/*
+This file should be copied to api/1.2/libs/config.php and edited
+to suit the local environment.  config.php is gitignored, and can't
+be committed.
+*/
+
+/* MySQL database config */
+
+$dbhost = '{{dbhost}}';
+$dbuser = '{{dbuser}}';
+$dbpass = '{{dbpass}}';
+$dbname = '{{dbname}}';
+
+/* AMQP Config */
+
+$AMQP_HOST = '{{amqp_host}}';
+$AMQP_USER = '{{amqp_userid}}';
+$AMQP_PASS = '{{amqp_password}}';
+$AMQP_VHOST= '{{amqp_vhost}}';
+
+$SUBMIT_ROUTING_KEY = 'check.org'; # submit via robots.txt checker
+# $SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
+
+$AUTO_CREATE_QUEUES = true;
+
+/* GCM creds */
+
+define("GOOGLE_API_KEY", "GOOGLE_KEY");
+
+$WHOIS_SERVER='whois.afrinic.net';

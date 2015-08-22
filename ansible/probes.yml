@@ -1,0 +1,6 @@
+
+
+- hosts: [probes]
+  roles:
+  - {role: ooniprobe, tags: ooniprobe}
+  - {role: vpn_client, tags: vpn_client}

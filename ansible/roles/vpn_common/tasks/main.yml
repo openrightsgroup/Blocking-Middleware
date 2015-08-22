@@ -1,0 +1,2 @@
+- include: openvpn.yml
+  when: vpn_config != false

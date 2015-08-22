@@ -1,0 +1,35 @@
+[amqp]
+userid={{ amqp_userid }}
+password={{ amqp_password }}
+host={{ amqp_host }}
+port={{ amqp_port }}
+vhost={{ amqp_vhost }}
+
+[api]
+host={{ api_host }}
+https={{ api_https }}
+port={{ api_port }}
+version={{ api_version }}
+verify={{ api_ssl_verify }}
+
+[global]
+interval=2
+oonipath=/usr/local/bin/ooniprobequeue
+nettest=blocking/http_requests
+{% if item == 'org' %}
+nettest_args=-B
+{% else %}
+nettest_args=
+{% endif %}
+collector={{ collector }}
+
+[probe]
+queue={{ item }}
+uuid={{ probe_uuid }}
+secret={{ probe_secret }}
+{% if public_ip is defined %}
+public_ip={{ public_ip }}
+{% endif %}
+
+[environment]
+#PYTHONPATH=/ooni

@@ -1,0 +1,6 @@
+- name: copy script
+  copy: src=bwmon/bytes.sh dest=/usr/local/bin mode=0755
+
+- name: setup cron
+  cron: cron_file=bwmon name=bwmon job="/usr/local/bin/bytes.sh 2>/var/log/bandwidth.log" user=root
+

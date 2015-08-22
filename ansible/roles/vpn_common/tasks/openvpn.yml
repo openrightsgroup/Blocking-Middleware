@@ -1,0 +1,11 @@
+- name: install openvpn
+  apt: name=openvpn state=present
+
+- name: configure common
+  copy: src=files/ssl/{{item}} dest=/etc/openvpn/{{item}} mode=0600 owner=root
+  with_items:
+  - ca.crt
+
+- name: enable openvpn
+  service: name=openvpn enabled=yes
+

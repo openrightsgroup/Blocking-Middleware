@@ -1,0 +1,32 @@
+
+
+- name: enable ssl
+  apache2_module: name=ssl state=present
+  notify:
+  - reload httpd
+
+- name: copy httpd vhost file
+  template: src=httpd/{{item}} dest={{apache_vhost_dir}}/blocked-api-ssl.conf owner=root group=root mode=0644
+  tags: httpd
+  with_items:
+  - blocked-api-ssl.conf
+  notify:
+  - reload httpd
+
+- name: install SSL cert
+  sudo: yes
+  copy: src=files/ssl/{{api_host_name}}.crt dest={{ssl_basedir}}/certs/{{api_host_name}}.crt owner=root group=root mode=0644
+  notify:
+  - reload httpd
+
+- name: install SSL CA
+  sudo: yes
+  copy: src=files/ssl/ca.crt dest={{ssl_basedir}}/certs/blocked-ca.crt owner=root group=root mode=0644
+  notify:
+  - reload httpd
+
+- name: install SSL key
+  sudo: yes
+  copy: src=files/ssl/{{api_host_name}}.key dest={{ssl_basedir}}/private/{{api_host_name}}.key owner=root group=ssl-cert mode=0640
+  notify:
+  - reload httpd

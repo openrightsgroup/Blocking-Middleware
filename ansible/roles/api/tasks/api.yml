@@ -1,0 +1,82 @@
+
+- name: create API checkout dir
+  sudo: yes
+  file: name={{checkout_path}} state=directory owner=root
+
+- name: API checkout
+  sudo: yes
+  git: repo=https://github.com/openrightsgroup/Blocking-Middleware.git dest={{ checkout_path }} version=feature/unicode_urls force=no
+  tags: [dbcreds,alexa]
+
+- name: create logs dir
+  sudo: yes
+  file: name={{checkout_path}}/logs state=directory owner=root
+
+- name: create http documentroot
+  sudo: yes
+  file: name={{checkout_path}}/insecure state=directory owner=root
+
+- name: api config
+  template: src=config.php.j2 dest={{checkout_path}}/api/1.2/libs/config.php owner=root mode=0644
+
+- name: copy supervisord config
+  sudo: yes
+  template: src=supervisor/{{item}}.conf dest=/etc/supervisor/conf.d/{{item}}.conf owner=root mode=0644
+  with_items:
+  - record
+  - listen
+  - check
+  - global
+  - ooni
+  notify:
+  - restart queue listeners
+
+- name: requeue cron job
+  sudo: yes
+  cron: name=requeue cron_file=requeue minute="*/30" state=present job="/usr/bin/php -f {{checkout_path}}/backend/requeue.php >> {{checkout_path}}/logs/requeue.log 2>&1" user=root
+  tags: cron
+
+- name: stats cron job
+  sudo: yes
+  cron: name=stats cron_file=stats minute="*/10" state=present job="/usr/bin/php -f {{checkout_path}}/backend/queue_stats.php >> {{checkout_path}}/logs/stats.log 2>&1" user=root
+  tags: cron
+
+- name: update_stats cron job
+  sudo: yes
+  cron: name="update_stats1" cron_file=update_stats minute="*/20" state=present job="/usr/bin/php -f {{checkout_path}}/backend/update_stats.php counters >> {{checkout_path}}/logs/update_stats.log 2>&1" user=root
+  tags: cron
+
+- name: update_stats cron job2
+  sudo: yes
+  cron: name="update_stats2" cron_file=update_stats minute="4" hour="*/4" state=present job="/usr/bin/php -f {{checkout_path}}/backend/update_stats.php isps >> {{checkout_path}}/logs/update_stats.log 2>&1" user=root
+  tags: cron
+
+- name: update_stats cron job3
+  sudo: yes
+  cron: name="update_stats3" cron_file=update_stats minute="10" hour="0" state=present job="/usr/bin/php -f {{checkout_path}}/backend/update_stats.php daily >> {{checkout_path}}/logs/update_stats.log 2>&1" user=root
+  tags: cron
+
+- name: checker deps
+  pip: name={{item}} state=present
+  tags: checker
+  with_items:
+  - requests
+  - requests_cache
+
+- name: checker deps (2)
+  apt: name={{item}} state=present
+  tags: checker
+  with_items:
+  - python-amqplib
+
+
+- name: checker config
+  sudo: yes
+  template: src=config.ini.j2 dest={{checkout_path}}/backend/robots_txt_checker/config.ini owner=root mode=0644
+  tags: checker
+
+- name: global_results config
+  sudo: yes
+  template: src=global_results-config.ini.j2 dest={{checkout_path}}/backend/global_results/config.ini owner=root mode=0644
+  tags: global
+

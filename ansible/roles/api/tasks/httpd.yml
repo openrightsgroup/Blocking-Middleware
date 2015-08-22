@@ -1,0 +1,21 @@
+
+- name: enable rewrite
+  apache2_module: name=rewrite state=present
+  notify:
+  - reload httpd
+
+- name: Set apache2 charset
+  copy: content="AddDefaultCharset UTF-8" dest=/etc/apache2/conf.d/charset mode=0644 owner=root
+  notify:
+  - reload httpd
+
+- name: copy httpd vhost files
+  template: src=httpd/{{item}} dest={{apache_vhost_dir}}/blocked-api.conf owner=root group=root mode=0644
+  with_items:
+  - blocked-api.conf
+  notify:
+  - reload httpd
+
+- name: httpd service
+  sudo: yes
+  service: name={{apache_service_name}} enabled=yes

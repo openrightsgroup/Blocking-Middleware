@@ -1,0 +1,40 @@
+
+- name: Install packages
+  sudo: yes
+  yum: pkg={{item}} state=present
+  with_items:
+  - httpd
+  - php
+  - php-mysql
+  - php-pecl-memcache
+  - php-pecl-yaml
+  - mysql-server
+  - MySQL-python
+  - php-amqp
+  - python-pip
+  - rabbitmq-server
+  - mod_ssl
+
+- name: create sudoers.d
+  file: name=/etc/sudoers.d state=directory owner=root mode=0750
+
+- name: include sudoers.d
+  lineinfile: dest=/etc/sudoers line="#includedir=/etc/sudoers.d" state=present
+
+- name: install supervisor
+  sudo: yes
+  pip: name=supervisor
+
+- name: install supervisor init script
+  copy: src=supervisord dest=/etc/init.d/supervisord mode=0755 owner=root group=root
+
+- name: create supervisor config dir
+  sudo: yes
+  file: dest=/etc/supervisor/conf.d state=directory 
+
+- name: supervisord sysconfig
+  sudo: yes
+  copy: src=supervisord.sysconfig dest=/etc/sysconfig/supervisord owner=root group=root mode=0640
+
+- name: supervisor config
+  copy: src=supervisord.conf dest=/etc owner=root mode=0644

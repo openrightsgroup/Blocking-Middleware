@@ -1,0 +1,20 @@
+- name: install sudo
+  apt: pkg=sudo state=present
+
+- name: install python-apt
+  sudo: yes
+  command: apt-get -y install python-apt
+    creates=/usr/share/pyshared/apt
+  tags: bootstrap
+
+
+- name: install common tools
+  sudo: yes
+  apt: pkg={{ item }} update_cache=yes cache_valid_time=86400
+  with_items: common_packages
+  tags: packages
+    
+- name: enable sysstat
+  sudo: yes
+  copy: dest=/etc/default/sysstat content='ENABLED="true"\n' owner=root mode=0644
+  tags: sysstat

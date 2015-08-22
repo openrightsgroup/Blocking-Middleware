@@ -1,0 +1,15 @@
+
+- name: restart_tor
+  service: name=tor state=restarted
+
+- name: restart_wrapper
+  supervisorctl: name=wrapper state=restarted
+
+- name: update_supervisor
+  command: /usr/bin/supervisorctl update
+
+- name: update-ca-certificates
+  command: update-ca-certificates
+
+- name: restart_supervisor
+  service: name=supervisor state=restarted

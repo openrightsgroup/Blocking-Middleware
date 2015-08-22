@@ -1,0 +1,49 @@
+
+- name: Install packages
+  apt: pkg={{item}} state=present
+  with_items:
+  - sudo
+  - apache2
+  - php5
+  - php5-intl
+  - php5-mysql
+  - php5-memcache
+  - mysql-server
+  - python-mysqldb
+  - python-pip
+  - rabbitmq-server
+  - supervisor
+  - libyaml-0-2
+  - bind9-host
+  - whois
+  - python-crypto
+
+#  - php-pecl-amqp
+#  - php-pecl-yaml
+
+- file: name=/etc/apache2/sites-enabled/000-default state=absent
+
+- copy: src=deb/{{item}} dest=/usr/lib/php5/20100525/{{item}} owner=root mode=0644
+  with_items:
+  - amqp.so
+  - yaml.so
+
+- name: rabbit libraries
+  copy: src=deb/{{item}} dest=/tmp/{{item}} mode=0644 owner=root
+  with_items: rabbit_libs
+
+- name: install rabbit libs
+  apt: deb=/tmp/librabbitmq1_0.5.2-2_amd64.deb
+  tags: inst
+
+- name: install rabbit tools
+  apt: deb=/tmp/amqp-tools_0.5.2-2_amd64.deb
+  tags: inst
+
+- copy: content="extension=yaml.so" dest=/etc/php5/conf.d/20-yaml.ini mode=0644 owner=root
+- copy: content="extension=amqp.so" dest=/etc/php5/conf.d/20-amqp.ini mode=0644 owner=root
+
+- name: PHP reconnect setting
+  lineinfile: dest=/etc/php5/cli/php.ini line="mysqli.reconnect = On" regexp="^mysqli.reconnect"
+  tags: phpconf
+

@@ -1,0 +1,9 @@
+
+
+- hosts: apiservers
+  roles:
+  - api
+  - {role: vpn_server,tags: vpn}
+  vars_files:
+  - [ "platform/{{ ansible_os_family }}.yml","platform/defaults.yml" ]
+

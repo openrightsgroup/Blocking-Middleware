@@ -1,0 +1,3 @@
+
+- name: restart_mysql
+  service: name=mysql state=restarted

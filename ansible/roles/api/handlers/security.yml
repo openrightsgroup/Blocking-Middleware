@@ -1,0 +1,12 @@
+
+- name: reload_iptables
+  sudo: yes
+  service: name=iptables state=restarted
+
+- name: reload_ip6tables
+  sudo: yes
+  service: name=ip6tables state=restarted
+
+- name: reload_deb_iptables
+  service: name=iptables-persistent state=restarted
+

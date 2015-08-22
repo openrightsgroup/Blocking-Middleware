@@ -1,0 +1,22 @@
+
+#- apt_repository: repo="deb http://deb.torproject.org/torproject.org precise main" update_cache=yes state=present
+
+#- apt_key: id=886DDD89 keyserver=keys.gnupg.net state=present
+
+- name: install tor
+  apt: name={{item}}  state=present
+  with_items:
+  - tor
+#  - deb.torproject.org-keyring 
+
+- copy: src=torrc dest=/etc/tor/torrc
+  notify: 
+  - restart_tor
+
+- file: name=/root/.ooni owner=root mode=0755 state=directory
+
+- template: src=ooniprobe.conf.j2 dest=/root/.ooni/ooniprobe.conf
+
+
+
+

@@ -1,0 +1,10 @@
+
+apache_conf_dir : /etc/apache2/conf.d
+apache_vhost_dir : /etc/apache2/sites-enabled
+apache_service_name : apache2
+apache_logs: '${APACHE_LOG_DIR}'
+
+mysql_service_name : mysql
+
+ssl_basedir: /etc/ssl
+ssl_ca: /usr/share/ca-certificates

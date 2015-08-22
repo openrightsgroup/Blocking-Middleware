@@ -1,0 +1,3 @@
+
+*/10 * * * * root find /home/pi/ooni-wrapper -name 'report*.yamloo*' -mmin +720 | xargs --no-run-if-empty rm >/tmp/cleanup.log 2>&1
+

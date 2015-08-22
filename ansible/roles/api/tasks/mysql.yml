@@ -1,0 +1,42 @@
+- name: Configure innodb
+  copy: src=innodb.cnf dest=/etc/mysql/conf.d owner=root mode=0644
+
+- name: Start MySQL
+  service: name={{mysql_service_name}} enabled=yes state=started
+
+- name: set MySQL root
+  mysql_user: name=root host=localhost password={{root_password}} 
+  ignore_errors: yes
+
+- name: create /root/my.cnf
+  sudo: yes
+  template: src=my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0644
+
+- name: remove test database
+  sudo: yes
+  mysql_db: name=test state=absent
+
+- name: remove anon user (1)
+  sudo: yes
+  mysql_user: name='' host=localhost state=absent
+
+- name: remove anon user (2)
+  sudo: yes
+  mysql_user: name='' host={{ansible_hostname}} state=absent
+
+- name: create db
+  mysql_db: name={{dbname}}
+
+- name: create db user
+  sudo: yes
+  mysql_user: name={{dbuser}} password={{dbpass}} state=present priv='{{dbname}}.*:select,update,insert,delete,create'
+
+
+- name: import_db
+  shell: mysql {{dbname}} < {{checkout_path}}/mysql/structure.sql
+    creates=/var/lib/mysql/blocked/isps.frm
+
+- name: ooni_db
+  shell: mysql {{dbname}} < {{checkout_path}}/mysql/ooni.sql
+    creates=/var/lib/mysql/blocked/reports.frm
+

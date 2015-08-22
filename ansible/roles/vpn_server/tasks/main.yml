@@ -1,0 +1,21 @@
+
+- name: copy keys
+  copy: src=files/ssl/{{item}} dest=/etc/openvpn/{{item}} mode=0600 owner=root
+  with_items:
+  - ca.key
+  - dh2048.pem
+  - "{{api_host_name}}.crt"
+  - "{{api_host_name}}.key"
+  when: vpn_config != false
+  notify:
+  - restart_openvpn
+
+- name: configure server
+  template: src={{item}} dest=/etc/openvpn/{{item}} mode=0600 owner=root
+  with_items:
+  - srv.conf
+  - srv2.conf
+  when: vpn_config != false
+  notify:
+  - restart_openvpn
+

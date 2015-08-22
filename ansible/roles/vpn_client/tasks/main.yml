@@ -1,0 +1,17 @@
+
+- name: configure client
+  copy: src=files/ssl/{{item}} dest=/etc/openvpn/{{item | basename}} mode=0600 owner=root
+  with_items:
+  - "client.crt"
+  - "client.key"
+  notify:
+  - restart_openvpn
+
+
+- name: configure client (2)
+  template: src={{item}} dest=/etc/openvpn/{{item}} mode=0600 owner=root
+  with_items:
+  - clnt.conf
+  notify:
+  - restart_openvpn
+

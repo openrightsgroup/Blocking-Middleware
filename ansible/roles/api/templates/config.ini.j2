@@ -1,0 +1,21 @@
+
+[mysql]
+host = {{dbhost}}
+user = {{dbuser}}
+passwd = {{dbpass}}
+db = {{dbname}}
+
+[amqp]
+host = localhost
+userid = {{amqp_userid}}
+password = {{amqp_password}}
+virtual_host= {{ amqp_vhost }}
+
+[daemon]
+queue = check
+useragent = RobotsChecker/0.5 (+http://www.blocked.org.uk)
+probe_useragent = OrgProbe/1.0 (+http://www.blocked.org.uk)
+exchange = org.blocked
+cache_ttl = 259200
+
+

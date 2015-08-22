@@ -1,0 +1,56 @@
+
+- include: debian.yml
+  when: ansible_os_family == "Debian"
+
+
+- name: RabbitMQ Service
+  service: name=rabbitmq-server enabled=yes state=started
+
+- include: api.yml
+  tags: update
+
+- include: security.yml
+  tags: firewall
+
+
+- include: httpd.yml
+  tags: httpd
+
+- include: ssl.yml
+  tags: ssl
+
+- include: mysql.yml
+  tags: mysql
+
+- name: Configure Rabbit User
+  rabbitmq_user: user={{amqp_userid}} password={{amqp_password}} configure_priv=.* read_priv=.* write_priv=.* state=present
+
+- name: remove rabbit guest
+  rabbitmq_user: user=guest state=absent
+
+- name: Supervisor Service
+  service: name=supervisord enabled=yes state=started pattern=/usr/bin/supervisord
+  ignore_errors: yes
+  when: ansible_os_family == "RedHat"
+  tags: super
+
+- name: create queues
+  shell: /usr/bin/php -f {{checkout_path}}/backend/create_queues.php
+
+- name: update supervisor
+  command: supervisorctl update
+
+- name: start supervisor jobs
+  command: supervisorctl start all
+
+- name: create website user
+  command: "php -f {{checkout_path}}/backend/create_user.php {{website_user}} {{website_secret}}"
+  tags: dbcreds
+  when: website_user is defined
+  ignore_errors: yes
+
+- name: create probe
+  command: "php -f {{checkout_path}}/backend/create_probe.php {{probe_uuid}} {{probe_secret}} raspi {{website_user}}"
+  when: probe_uuid is defined and website_user is defined
+  tags: dbcreds
+  ignore_errors: yes

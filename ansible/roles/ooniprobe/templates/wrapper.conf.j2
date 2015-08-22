@@ -1,0 +1,29 @@
+[program:wrapper]
+command = python /home/pi/ooni-wrapper/wrapper.py -c /home/pi/ooni-wrapper/wrapper.org.ini
+process_name=wrapper-%(process_num)s
+numprocs=2
+directory = /home/pi/ooni-wrapper
+autostart=true
+autorestart=true
+startsecs=5
+redirect_stderr=true
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=4
+user=root
+stopsignal=INT
+stopwaitsecs=10
+
+[program:wrapper-public]
+command = python /home/pi/ooni-wrapper/wrapper.py -c /home/pi/ooni-wrapper/wrapper.public.ini
+process_name=wrapper-public-%(process_num)s
+numprocs=2
+directory = /home/pi/ooni-wrapper
+autostart=true
+autorestart=true
+startsecs=5
+redirect_stderr=true
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=4
+user=root
+stopsignal=INT
+stopwaitsecs=10

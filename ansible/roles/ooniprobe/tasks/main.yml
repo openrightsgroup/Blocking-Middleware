@@ -1,0 +1,107 @@
+
+- name: install packages
+  apt: name={{item}} state=present
+  with_items:
+  - strace
+  - supervisor
+  - libdumbnet1
+  - python-yaml
+  - python-openssl
+  - python-ipaddr
+  - python-setuptools
+  - python-zope.interface
+  - libgeoip1
+  - libffi5
+  - ppp
+  - wvdial
+  - usb-modeswitch
+
+- name: install dev packages
+  apt: name={{item}} state=present
+  with_items:
+  - python-pip
+  - python-pypcap
+  - python-dumbnet
+  - python-geoip
+  - python-dev
+  - libffi-dev
+  - libdumbnet-dev
+  - build-essential
+  - libpcap-dev
+  - libgeoip-dev
+  when: buildmode == true
+
+- name: unpack python deps
+  unarchive: src=dist-packages-raspiv2.tar.gz dest=/usr/local/lib/python2.7/dist-packages copy=yes creates=/usr/local/lib/python2.7/dist-packages/six.py
+  when: buildmode == false
+
+- name: install python modules
+  pip: name={{item}} state=present
+  with_items:
+  - requests
+  - pika
+  when: buildmode == true
+
+- include: ooni.yml
+  tags: ooniconfig
+
+- file: name=/home/pi state=directory
+
+- git: repo=https://github.com/dantheta/ooni-probe.git dest=/home/pi/ooniprobe version=org_queue_simplified update=yes
+  tags: update
+
+- name: ooni deps
+  pip: state=present requirements=/home/pi/ooniprobe/requirements.txt
+  when: buildmode == true
+
+- git: repo=https://github.com/dantheta/OoniWrapper.git dest=/home/pi/ooni-wrapper update=yes version=queue_driver
+  tags: wrapper, update
+  notify:
+  - restart_wrapper
+
+- name: wrapper config
+  template: src=wrapper.ini.j2 dest=/home/pi/ooni-wrapper/wrapper.{{item}}.ini
+  with_items:
+  - org
+  - public
+  notify:
+  - restart_wrapper
+  tags: wrapper
+
+- name: supervisor config
+  copy: src=supervisord.conf dest=/etc/supervisor/supervisord.conf owner=root mode=0644
+  notify: restart_supervisor
+  tags: supervisor 
+
+- template: src=wrapper.conf.j2 dest=/etc/supervisor/conf.d/wrapper.conf owner=root mode=0644
+  tags: wrapper
+  notify:
+  - update_supervisor
+
+- service: name=tor enabled=yes state=started
+
+- name: install ooni
+  command: /usr/bin/python setup.py install
+  args:
+    chdir: /home/pi/ooniprobe
+    creates: /usr/local/bin/ooniprobe
+  tags: install
+  notify:
+  - restart_wrapper
+
+- command: /usr/local/bin/ooniresources --update-geoip
+    creates=/var/lib/ooni/GeoIP/GeoIP.dat.gz
+
+- name: copy CA cert
+  copy: src=files/ssl/ca.crt dest=/usr/share/ca-certificates/blocked-ca.crt owner=root group=root mode=0644
+
+- name: install CA cert
+  lineinfile: dest=/etc/ca-certificates.conf line="blocked-ca.crt" 
+  notify: update-ca-certificates
+
+- name: copy cleanup cron
+  copy: src=cleanup dest=/etc/cron.d/cleanup owner=root mode=0644
+  tags: cleanup
+
+- include: bwmon.yml
+  tags: bwmon

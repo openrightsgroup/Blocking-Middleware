@@ -1,0 +1,67 @@
+
+
+checkout_path: /srv/blocked/
+
+# mysql root password
+
+root_password: ChangeThis4
+
+# main host entry, used for OpenVPN, apache, and probe config
+api_host_name: server.example.com
+
+# admin email, used in apache config
+api_host_admin: admin@example.com
+
+
+# enable the example client, make more stuff available over non-HTTPS
+devserver: true
+
+# don't do detailed verification of results in record_results
+authenticate_results: false
+
+# ???
+server: server.example.com
+
+# collector address for OONI
+collector: https://server.example.com
+
+
+# AMQP host for probes and PHP utilities
+amqp_host: server.example.com
+amqp_userid: blocked
+amqp_password: ChangeThis3
+amqp_vhost: /
+amqp_port: 5672
+
+# default probe credentials
+probe_uuid: GeneratedUUID
+probe_secret: MadeUpSecret
+
+# API details
+api_host: server.example.com
+api_https: true
+api_port: 443
+api_version: 1.2
+api_ssl_verify: false
+
+# unused, but a very good idea
+probe_root: ChangeThis2
+
+# if true, install ooniprobe deps from pip/apt repos
+# if false, use bundled binaries
+buildmode: false
+
+# DB details
+
+dbhost : localhost
+dbuser : blocked
+dbpass : ChangeThis
+dbname : blocked
+
+# configure vpn true/false
+vpn_config: true
+
+# vpn subnet
+vpn_subnet: 172.16.110.0
+
+

@@ -1,0 +1,8 @@
+
+common_packages:
+  - git
+  - screen
+  - iftop
+  - sysstat
+  - curl
+  - sudo

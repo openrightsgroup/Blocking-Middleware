@@ -1,0 +1,4 @@
+
+rabbit_libs:
+  - librabbitmq1_0.5.2-2_amd64.deb
+  - amqp-tools_0.5.2-2_amd64.deb

@@ -1,0 +1,8 @@
+
+- name: restart queue listeners
+  supervisorctl: name={{item}} state=restarted
+  with_items:
+  - record
+  - listen
+  - ooni
+  - check
