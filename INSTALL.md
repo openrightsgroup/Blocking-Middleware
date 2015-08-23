@@ -11,13 +11,13 @@ Server
  * 1GB+ RAM
  * 4GB+ Disk space
  * Root access (either by connecting directly with SSH, or by connecting as an
-   unprivileged user and using sudo.
+   unprivileged user and using sudo).
 
 Probe
 
  * Raspberry Pi v2
  * 2GB+ SD Card
- * Raspbian Wheezy
+ * Raspbian Wheezy / minibian
 
 A set of ansible playbooks has been provided to set up the server and initial
 probe image.  These playbooks will set up the server with a self-signed
