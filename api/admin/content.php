@@ -6,12 +6,9 @@ $ch = amqp_connect();
 $network = $_GET['network'];
 $hash = $_GET['hash'];
 
+$st = time();
 $q = new AMQPQueue($ch);
 $q->setName("view.$network.$hash");
-$q->setFlags(AMQP_AUTODELETE);
-$q->declare();
-$q->bind("org.blocked", "admin.results.$network.$hash");
-$st = time();
 
 while (time() - $st < 10) {
     $msg = $q->get();

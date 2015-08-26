@@ -7,7 +7,12 @@ $networks = array(
 'vodafone' => 'Vodafone',
 'o2' => 'O2',
 'ee' => 'EE',
-'fakeisp' => 'Fake ISP'
+'aaisp' => 'AAISP',
+'bt' => 'BT',
+'talktalk' => 'TalkTalk',
+'plusnet' => 'PlusNet',
+'sky' => 'Sky'
+
 );
 
 $url = $_POST['url'];
@@ -43,21 +48,28 @@ $msgbody = json_encode(array('url' => $url, 'hash' => $id));
 
 <form action="view.php" method="POST">
 <label for="url">URL:</label>
-<input type="text" name="url" value="<?=$url?>" />
+<input type="text" name="url" value="<?php echo $url?>" />
 <input type="submit" value="Submit" />
 </form>
 
 <ul class="">
 <?php foreach ($networks as $network => $name): ?>
-<li><a href="#<?=$network?>" ><?=$name?></a> </li>
+<li><a href="#<?php echo $network?>" ><?=$name?></a> </li>
 <?php endforeach?>
 </ul>
 
 <div class="row">
 <?php foreach ($networks as $network => $name): ?>
-  <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12" id="<?=$network?>" style="border: 1px solid gray; float: left">
-    <h2><a name="<?=$network?>"><?=$name?></a></h2>
-    <iframe  class="frame" src="content.php?network=<?=$network?>&hash=<?=$id?>"></iframe>
+<?php
+$q = new AMQPQueue($ch);
+$q->setName("view.$network.$hash");
+$q->setArgument("x-expires", 25000);
+$q->declare();
+$q->bind("org.blocked", "admin.results.$network.$hash");
+?>
+  <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12" id="<?php echo $network?>" style="border: 1px solid gray; float: left">
+    <h2><a name="<?php echo $network?>"><?=$name?></a></h2>
+    <iframe  class="frame" src="content.php?network=<?php echo $network?>&hash=<?=$id?>"></iframe>
   </div>
 <?php endforeach?>
 </div>
