@@ -17,6 +17,7 @@ $networks = array(
 
 $url = $_POST['url'];
 $id = md5($url);
+$hash = md5($url);
 $msgbody = json_encode(array('url' => $url, 'hash' => $id));
 
 ?>
