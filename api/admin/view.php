@@ -54,7 +54,7 @@ $msgbody = json_encode(array('url' => $url, 'hash' => $id));
 
 <ul class="">
 <?php foreach ($networks as $network => $name): ?>
-<li><a href="#<?php echo $network?>" ><?=$name?></a> </li>
+<li><a href="#<?php echo $network?>" ><?php echo $name?></a> </li>
 <?php endforeach?>
 </ul>
 
@@ -68,8 +68,8 @@ $q->declare();
 $q->bind("org.blocked", "admin.results.$network.$hash");
 ?>
   <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12" id="<?php echo $network?>" style="border: 1px solid gray; float: left">
-    <h2><a name="<?php echo $network?>"><?=$name?></a></h2>
-    <iframe  class="frame" src="content.php?network=<?php echo $network?>&hash=<?=$id?>"></iframe>
+    <h2><a name="<?php echo $network?>"><?php echo $name?></a></h2>
+    <iframe  class="frame" src="content.php?network=<?php echo $network?>&hash=<?php echo $id?>"></iframe>
   </div>
 <?php endforeach?>
 </div>
