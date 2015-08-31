@@ -54,7 +54,7 @@ function load_result($id) {
 
     $dirty = find_dirty($entry_data);
 
-	$status = test_result($entry_data);
+	list($status, $category) = test_result($entry_data);
 
 	# re-encode IDN urls as utf8 for the results processor.
 
@@ -65,8 +65,8 @@ function load_result($id) {
 		'http_status' =>  $dirty['response']['code'],
 		'status' =>  $status,
 		'probe_uuid' =>  $report_data->probe_uuid,
-		'config' =>  -1,
-		'category' =>  '',
+		'config' =>  OONI_TESTLIB_VERSION,  
+		'category' =>  $category,
 		'blocktype' =>  '',
         'report_entry_id' => $id,
 		'date' => strftime('%Y-%m-%d %H:%M:%S', $report_data2['start_time'])
