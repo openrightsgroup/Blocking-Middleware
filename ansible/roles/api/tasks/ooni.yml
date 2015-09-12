@@ -1,0 +1,22 @@
+
+- name: add ooniprobe deps
+  apt: name={{item}} state=present
+  - libpcap-dev
+  - python-virtualenv
+  - libffi-dev
+  - libdumbnet-dev
+  - libgeoip-dev
+  - python-dev
+  - tor
+
+- name: create ooniprobe root
+  file: name=/srv/ooniprobe state=directory owner=root mode=0755
+
+- name: install ooniprobe from pip
+  pip: virtualenv=/srv/ooniprobe name=ooniprobe state=present
+
+- name: copy ooniprobe config
+  copy: src=ooni/ooniprobe.conf dest=/root/.ooni/ooniprobe.conf
+
+- name: start and enable tor
+  service: name=tor state=started enabled=yes

@@ -54,3 +54,7 @@
   when: probe_uuid is defined and website_user is defined
   tags: dbcreds
   ignore_errors: yes
+
+- name: install ooniprobe
+  tags: ooniprobe
+  include: ooni.yml
