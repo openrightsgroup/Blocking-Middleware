@@ -2,18 +2,18 @@ import os
 import sys
 import json
 import logging
+import tempfile
+import subprocess
 import MySQLdb
 import MySQLdb.cursors
-import urlparse
 import ConfigParser
 
 
 import amqplib.client_0_8 as amqp
 
-class SocksSupportUnavailable(Exception): pass
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s\t%(levelname)s\t%(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S]",
     )
@@ -24,64 +24,47 @@ class ReportsSender(object):
         self.conn = conn
         self.ch = ch
 
-    def get_session(self):
-        try:
-            proxy = self.config.get('socks','proxy')
-        except ConfigParser.Error:
-            proxy = None
-        if proxy:
-            try:
-                import requesocks as requests
-                session = requests.session()
-                session.proxies = {
-                    'http': proxy,
-                    'https': proxy,
-                    'httpo': proxy
-                    }
-                return session
-            except ImportError:
-                raise SocksSupportUnavailable
-        else:
-            import requests
-            return requests.session()
-
-            
 
     def send_report(self, msg):
         logging.debug("Got msg: %s", msg)
-        self.ch.basic_ack(msg.delivery_tag)
+        try:
 
-        c = self.conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-        c.execute("select * from reports where id = %s",
-            [msg.body])
-        report = c.fetchone()
+            c = self.conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
+            c.execute("select * from reports where id = %s",
+                [msg.body])
+            report = c.fetchone()
+            
+            if not report['complete']:
+                logging.error("Report not complete: %s", msg)
+                return True
+
+            report_data = json.loads(report['data'])
+
+            tmpfile = tempfile.NamedTemporaryFile(delete=False)
+            tmpfile.write(report_data['content'])
+            
         
-        if not report['complete']:
-            logging.error("Report not complete: %s", msg)
-            return True
-    
-        session = self.get_session()
+            c.execute("select report_entries.* from report_entries where report_id=%s",
+                [report['id']])
+            for entry in c:
+                tmpfile.write(entry['data'])
+            tmpfile.close()
 
-        # send report
-        req = session.post(self.config.get('ooni','base_url'),
-            data=report['data'])
-        upstream_id = req.json()['report_id']
-        logging.info("Got upstream: %s", upstream_id)
-
-        c.execute("select report_entries.* from report_entries where report_id=%s",
-            [report['id']])
-        for entry in c:
-            req2 = session.put(self.config.get('ooni','base_url'),
-                data={'report_id': upstream_id, 'content': entry['data']})
-
-            logging.info("Sent entry: %s, report: %s, upstream: %s",
-                entry['id'], report['id'], upstream_id)
+            logging.info("Data for report %s written to %s",
+                report['id'], tmpfile.name)
 
 
-        req3 = session.post(
-            self.config.get('ooni','base_url') + '/{0}/close'.format(upstream_id))
-        logging.info("Close: %s", req3.status_code)
+            ret = subprocess.call([self.config.get('ooni','oonireport'), 
+                "upload", tmpfile.name ])
+            logging.info("oonireport returns: %s", ret)
 
+            os.unlink(tmpfile.name)
+            self.ch.basic_ack(msg.delivery_tag)
+        except Exception,v:
+            logging.error("Got error: %s", repr(v))
+            self.ch.basic_reject(msg.delivery_tag)
+
+        sys.exit(0)
         return True
 
         
@@ -91,13 +74,6 @@ def main():
     cfg = ConfigParser.ConfigParser()
     assert(len(cfg.read(['report_sender.ini'])) == 1)
 
-    try:
-        if cfg.get('socks','proxy'):
-                import requesocks as requests
-        else:
-            import requests
-    except ImportError:
-            import requests
 
     # create MySQL connection
     mysqlopts = dict(cfg.items('mysql'))
