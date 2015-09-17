@@ -125,7 +125,7 @@
         ],
         "must-block": [
             "http://www.pornhub.com",
-            "http://www.youporn.com",
+            "http://www.youporn.com"
         ]
     }
 }
