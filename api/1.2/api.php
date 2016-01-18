@@ -44,6 +44,9 @@ $app['db.isp.load'] = function($app) {
 $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
 };
+$app['db.category.load'] = function($app) {
+	return new DMOZCategoryLoader($app['service.db']);
+};
 
 $app['service.result.process'] = function($app) {
 	return new ResultProcessorService(
@@ -989,4 +992,80 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 
 });
 
+#-----------
+# DMOZ category functions
+#-----------
+
+$app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
+    
+	checkParameters($req, array('email','signature'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+
+    $output = array('status' => 'ok');
+    if ($parent != "0") {
+        $cat1 = $app['db.category.load']->load($parent);
+        if (!$cat1) {
+            return $app->json(array("status"=>"notfound"),404);
+        }
+        $output['id'] = $parent;
+        $output['name'] = $cat1['display_name'];
+        $res = $app['db.category.load']->load_children($cat1);
+        $prev = $app['db.category.load']->get_parent($cat1);
+        $output['parent'] = $prev;
+        foreach($app['db.category.load']->get_counts($cat1) as $k => $v) {
+            $output[$k] = $v;
+        }
+        $output['blocked_url_count'] = $cat1['blocked_url_count'];
+        $output['block_count'] = $cat1['block_count'];
+    } else {
+        $res = $app['db.category.load']->load_toplevel();
+    }
+
+    $cat = array();
+    while ($row = $res->fetch_assoc()) {
+        $cat[] = array(
+            'id' => $row['id'],
+            'fullname' => $row['display_name'],
+            'name' => $row['name'],
+            'block_count' => $row['block_count'],
+            'blocked_url_count' => $row['blocked_url_count']
+        );
+    }
+    $output['categories'] = $cat;
+
+    return $app->json($output);
+
+
+})->value('parent',0);
+
+$app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
+	checkParameters($req, array('email','signature'));
+
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+
+    $cat = $app['db.category.load']->load($parent);
+    if (!$cat) {
+        return $app->json(array("status"=>"notfound"),404);
+    }
+    $res = $app['db.category.load']->load_blocks($parent);
+    $sites = array();
+    while ($data = $res->fetch_assoc()) {
+        $sites[] = $data;
+    }
+    return $app->json(array(
+        "status" => "ok", 
+        "category" => $cat['display_name'], 
+        "sites"=> $sites));
+});
+
+#------------
+# END DMOZ category functions
+#------------
+
 $app->run();
+
+
+

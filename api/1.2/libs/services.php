@@ -267,6 +267,186 @@ class IpLookupService {
 	}
 }
 
+class DMOZCategoryLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function load($id) {
+        $res = $this->conn->query("select * from categories where id = ?",
+            array($id));
+        $row = $res->fetch_assoc();
+        return $row;
+    }
+
+    function get_lookup_key($parent) {
+        // returns a dictionary containing name columns that are in use
+        $output = array();
+        $last = null;
+        for ($i = 1; $i <= 10; $i++) {
+            if (trim($parent["name$i"]) != "") {
+                $v = $parent["name$i"];
+                $output["name$i"] = $parent["name$i"];
+            }
+        }
+        return $output;
+
+    }
+
+    function get_parent($node) {
+        error_log("node: " . implode(",", array_keys($node)));
+        $key = $this->get_lookup_key($node);
+        error_log("key: " . implode(",", array_keys($key)));
+        $i = count($key);
+        unset($key["name$i"]);
+
+        if (count($key) == 0) {
+            return "0";
+        }
+
+        $cond = array();
+        $args = array();
+        
+        // build where clause and group by clause
+        foreach ($key as $k => $v) {
+            if (is_null($v)) {
+                $cond[] = "$k is null";
+            } else {
+                $cond[] = "$k = ?";
+                $args[] = $v;
+            }
+        }
+        $n = count($key) ;
+        $cond[] = "name$n is not null";
+        $where = implode(" and ", $cond);
+
+        $sql = "select id, display_name,
+            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
+            sum(blocked_url_count) blocked_url_count,
+            sum(block_count) block_count
+            from categories 
+            where $where
+            order by display_name";
+        $q = $this->conn->query($sql, $args);
+        $row = $q->fetch_assoc();
+        return $row['id'];
+    }
+
+
+    function load_children($parent) {
+        // get the immediate descendents of a parent category
+        $key = $this->get_lookup_key($parent);
+
+        $cond = array();
+        $args = array();
+        $group = array();
+        // build where clause and group by clause
+        foreach ($key as $k => $v) {
+            $group[] = $k;
+            if (is_null($v)) {
+                $cond[] = "$k is null";
+            } else {
+                $cond[] = "$k = ?";
+                $args[] = $v;
+            }
+        }
+        if (count($key) < 9) {
+            $n = count($key)+2;
+            $cond[] = "name$n is null";
+        }
+        if (count($key) < 10) {
+            $n = count($key) + 1;
+            $cond[] = "name$n is not null";
+            $group[] = "name$n";
+        }
+        $where = implode(" and ", $cond);
+        $groupby = implode(",",$group);
+    
+
+        $sql = "select id, display_name,
+            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
+            sum(blocked_url_count) blocked_url_count,
+            sum(block_count) block_count
+            from categories 
+            where $where
+            group by $groupby
+            order by display_name";
+        return $this->conn->query($sql, $args);
+    }
+
+    function get_counts($parent) {
+        // get block_count and blocked_url_count for a category
+        $key = $this->get_lookup_key($parent);
+
+        $cond = array();
+        $args = array();
+
+        foreach ($key as $k => $v) {
+            if (is_null($v)) {
+                $cond[] = "$k is null";
+            } else {
+                $cond[] = "$k = ?";
+                $args[] = $v;
+            }
+        }
+        $where = implode(" and ", $cond);
+        
+        $sql = "select sum(blocked_url_count)  blocked_url_count_total,
+        sum(block_count) block_count_total
+        from categories
+        where $where";
+        $ret = $this->conn->query($sql, $args);
+        return $ret->fetch_assoc();
+    }
+        
+    function load_toplevel() {
+        // get the top-level categories (same format as load_children)
+        $sql = "select id, display_name,
+            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
+            sum(blocked_url_count) blocked_url_count,
+            sum(block_count) block_count
+            from categories 
+            where name1 is not null and name2 is null
+            group by name1
+            order by display_name";
+        return $this->conn->query($sql, array());
+
+
+    }
+
+    function load_sites($parent) {
+        // get sites that belong to a category (does not get sites of child categories)
+        # TODO: unicode function
+		$result = $this->conn->query(
+			"select URL from urls
+			inner join url_categories on urls.urlID = url_categories.urlID
+			where category_id = ?", array($parent));
+		$out = array();
+		while ($row = $result->fetch_row()) {
+			$out[] = $row[0];
+		}
+		return $out;
+	}
+
+    function load_blocks($parentid) {
+        // get blocked sites that belong to a category (does not get sites of child categories)
+
+        $result = $this->conn->query(
+            "select URL as url, count(distinct network_name) block_count
+                from urls
+            inner join url_categories on urls.urlID = url_categories.urlID
+            inner join url_latest_status uls on uls.urlID=urls.urlID
+            where url_categories.category_id = ? and uls.status = 'blocked'
+            group by url
+            order by URL, network_name",
+            array($parentid)
+            );
+        return $result;
+    }
+}
+
+
+
 class ResultProcessorService {
 	function __construct($conn, $url_loader, $probe_loader, $isp_loader) {
 		$this->conn = $conn;
