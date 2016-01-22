@@ -238,6 +238,18 @@ $app->post('/submit/url', function(Request $req) use ($app) {
     );
 
 	$request_id = $conn->insert_id;
+    if ($req->get('additional_data')) {
+        $additional = array();
+        parse_str($req->get('additional_data'), $additional);
+        foreach ($additional as $k => $v) {
+            $conn->query(
+                "insert into requests_additional_data(request_id, name, value, created) 
+                    values (?,?,?,now())",
+                array($request_id, $k, $v)
+                );
+        }
+
+    }
 
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$conn->query(
@@ -1003,7 +1015,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
 
-    $output = array('status' => 'ok');
+    $output = array('success' => true);
     if ($parent != "0") {
         $cat1 = $app['db.category.load']->load($parent);
         if (!$cat1) {
@@ -1056,7 +1068,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         $sites[] = $data;
     }
     return $app->json(array(
-        "status" => "ok", 
+        "success" => true, 
         "category" => $cat['display_name'], 
         "sites"=> $sites));
 });
