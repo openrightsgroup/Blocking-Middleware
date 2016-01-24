@@ -250,6 +250,16 @@ END;
 //
 DELIMITER ;
 
+DELIMITER //
+CREATE PROCEDURE record_new(p_urlid int, p_network_name varchar(64), p_status varchar(8))
+BEGIN
+  IF NOT EXISTS(SELECT 1 FROM results WHERE network_name = p_network_name AND urlid = p_urlid) THEN 
+    INSERT INTO url_status_changes(urlid, network_name, new_status, created) VALUES (p_urlid, p_network_name, p_status, now()); 
+  END IF; 
+END;
+//
+DELIMITER ;
+
 CREATE TRIGGER record_change 
 BEFORE UPDATE ON url_latest_status 
 FOR EACH ROW 
@@ -263,6 +273,11 @@ INSERT INTO url_latest_status(urlID, network_name, status, created, category, bl
 SELECT NEW.urlID, NEW.network_name, NEW.status, NEW.created, NEW.category, NEW.blocktype
 ON DUPLICATE KEY 
 UPDATE status = NEW.status, created = NEW.created, category = NEW.category, blocktype=NEW.blocktype;
+
+CREATE TRIGGER record_new 
+BEFORE INSERT ON results 
+FOR EACH ROW 
+CALL record_new(NEW.urlid, NEW.network_name, NEW.status);
 
 DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
