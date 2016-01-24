@@ -4,8 +4,9 @@ include "../1.2/libs/DB.php";
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-$rs = $conn->query("select usc.*,url from url_status_changes usc
+$rs = $conn->query("select usc.*,url, category from url_status_changes usc
 inner join urls using (urlid)
+inner join url_latest_status uls on (uls.urlid = usc.urlid and uls.network_name = usc.network_name)
 where old_status is null and new_status = 'blocked' order by id desc limit 25;", 
 array());
 
@@ -24,9 +25,14 @@ function ent($s) {
 <?php while ($item = $rs->fetch_assoc()): ?>
         <item>
             <title><?php echo ent($item['url'])?> is blocked on <?php echo ent($item['network_name'])?></title>
-            <description><?php echo ent($item['url'])?> is blocked on <?php echo ent($item['network_name'])?></description>
+            <description><?php echo ent($item['url'])?> is blocked on <?php echo ent($item['network_name'])?>
+<?php if ($item['category']): ?>
+	    , in category <?php echo ent($item['category'])?>
+<?php endif?>
+            </description>
             <link>http://www.blocked.org.uk/results?url=<?php echo urlencode($item['url'])?></link>
             <pubDate><?php echo date("r",strtotime($item['created']))?></pubDate>
+            <guid>new-blocked-<?php echo $item['id'];?></guid>
         </item>
 <?php endwhile?>
     </channel>
