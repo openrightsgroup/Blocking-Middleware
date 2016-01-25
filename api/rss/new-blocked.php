@@ -37,7 +37,7 @@ header("Content-type: application/rss+xml");
             </description>
             <link>http://www.blocked.org.uk/results?url=<?php echo urlencode($item['url'])?></link>
             <pubDate><?php echo date("r",strtotime($item['created']))?></pubDate>
-            <guid>new-blocked-<?php echo $item['id'];?></guid>
+            <guid isPermaLink="false">new-blocked-<?php echo $item['id'];?></guid>
         </item>
 <?php endwhile?>
     </channel>
