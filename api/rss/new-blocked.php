@@ -16,10 +16,13 @@ function ent($s) {
 
 ?>
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
+        <atom:link href="https://api.blocked.org.uk/rss/new-blocked" rel="self" type="application/rss+xml" />
         <title>Blocked.org.uk results: new blocked</title>
         <link>http://www.blocked.org.uk</link>
+        <ttl>15</ttl>
+        <lastBuildDate><?php echo date("r"); ?></lastBuildDate>
         <description>RSS Feed of newly detected blocked results</description>
         <language>en-gb</language>
 <?php while ($item = $rs->fetch_assoc()): ?>
