@@ -72,6 +72,12 @@ class UrlLoader {
             "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
             array($url, md5($url), $source)
         );
+        /* returns true/false for whether a row was really inserted. */
+        if ($this->conn->affected_rows) {
+            return true;
+        } else {
+            return false;
+        }
         
     }
 
