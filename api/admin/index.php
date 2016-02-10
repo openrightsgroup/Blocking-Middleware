@@ -1,8 +1,24 @@
+<?php
+
+require "../1.2/libs/DB.php";
+
+$db = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+
+$recent = $db->query("select source, max(urlid), max(inserted)
+    from urls 
+    where source not in ('user','dmoz')
+    group by source
+    having max(inserted) > date_sub(now(), interval 30 day)
+    order by max(inserted) desc",
+    array()
+    );
+
+?>
 <!DOCTYPE html>
 <html>
 <head>
 <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<title>API Admin :: Manual verification</title>
+<title>API Admin :: Home</title>
 </head>
 <body>
     <?php include "nav.php"?>
@@ -12,6 +28,16 @@
     <h3>Data Management</h3>
     <ul>
     <li><a href="load.php">Bulk load URLs</a></li>
+    </ul>
+
+    <h4>Recent bulk uploads</h4>
+    <ul>
+    <?php while ($data = $recent->fetch_array()): ?>
+    <li><a href="importstatus.php?source=<?php echo $data['source']; ?>">
+        <?php echo $data['source'] ?>
+        </a>
+    </li>
+    <?php endwhile ?>
     </ul>
 
     </div>
