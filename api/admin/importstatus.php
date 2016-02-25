@@ -15,13 +15,13 @@ where source = ?",
 $ttl2row = $ttl2->fetch_array();
 
 
-$res = $db->query("select results.status, 
+$res = $db->query("select uls.status, 
     count(distinct urlid) url_count, count(distinct urlid, network_name) block_count
     from urls 
-    inner join results using (urlid)
+    inner join url_latest_status uls using (urlid)
     where source = ?
-    group by results.status
-    order by results.status",
+    group by uls.status
+    order by uls.status",
     array($_GET['source'])
     );
 
@@ -59,7 +59,9 @@ $res = $db->query("select results.status,
     <?php endwhile ?>
     </table>
 
-    <p>Download <a href="results.php?mode=full&source=<?php echo $_GET['source']?>">full results</a> or
+    <p>Download 
+    <a href="results.php?mode=full&source=<?php echo $_GET['source']?>">full results</a>,
+    <a href="results.php?mode=latest&source=<?php echo $_GET['source']?>">latest results</a> or
     <a href="results.php?mode=table&source=<?php echo $_GET['source']?>">tabulated summary</a>
     </p>
 
