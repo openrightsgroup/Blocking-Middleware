@@ -60,8 +60,23 @@ $recent = $db->query("select source, max(urlid), max(inserted)
 
 
     </div><!-- /.row -->
-
+    <div class="row">
+        <div class="col-xs-6">        
+        <h3>URL management</h3>
+        
+        <form class="form-inline" action="recheck.php">
+        <div class="form-group">
+        <label class="sr-only" for="url">URL to force-check</label>
+        <input type="text" class="form-control" name="url" placeholder="URL to force-check" /><input class="btn btn-default" type="submit" value="submit" />
+        </div>
+        </form>
+        
+        </div>
     </div>
+        
+    
+    
+    </div> <!-- /.container -->
 
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </body>
