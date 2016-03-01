@@ -1,5 +1,6 @@
 <?php
 
+require "page.inc.php";
 include "../1.2/libs/amqp.php";
 $ch = amqp_connect();
 
@@ -20,13 +21,8 @@ $id = md5($url);
 $hash = md5($url);
 $msgbody = json_encode(array('url' => $url, 'hash' => $id));
 
+page_top("API Admin :: Manual verification");
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-<link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<title>API Admin :: Manual verification</title>
 <style type="text/css">
     .frame {
         -ms-zoom: 0.6;
@@ -40,11 +36,7 @@ $msgbody = json_encode(array('url' => $url, 'hash' => $id));
         height: 340px;
     }
 </style>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
-</head>
-<body>
 
-<div class="container">
 <h1>Manual Verification</h1>
 
 <form action="view.php" method="POST">
@@ -75,16 +67,7 @@ $q->bind("org.blocked", "admin.results.$network.$hash");
 <?php endforeach?>
 </div>
 
-</div>
 
-<script type="text/javascript">
-    jQuery(document).ready(function ($) {
-        //$('#tabs').tab();
-    });
-</script>
-<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-</body>
-</html>
 <?php
 
 ob_flush();
@@ -94,5 +77,7 @@ $ex->setName('org.blocked');
 if ($url) {
     $ex->publish($msgbody, "admin.view.$id", AMQP_NOPARAM, array('priority'=>2));
 }
+
+page_bottom();
 
 ?>
