@@ -1,5 +1,6 @@
 <?php
 
+require "page.inc.php";
 include_once "../1.2/libs/DB.php";
 include_once "../1.2/libs/amqp.php";
 include_once "../1.2/libs/services.php";
@@ -36,17 +37,9 @@ while ($line = fgets($fp)) {
 
     }
 }
+page_top("API Admin :: Bulk load");
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-<link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<title>API Admin :: Bulk load</title>
-</head>
-<body>
-<?php include "nav.php"?>
 
-    <div class="container">
 <h1>Bulk load : summary</h1>
 
 <div class="row">
@@ -59,6 +52,6 @@ while ($line = fgets($fp)) {
 
     </div>
 
-<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-</body>
-</html>
+<?php
+page_bottom();
+?>

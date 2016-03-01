@@ -5,7 +5,7 @@
 <title>API Admin :: Manual verification</title>
 </head>
 <body>
-<?php include "nav.php"?>
+<?php include "nav.inc.php"?>
 
     <div class="container">
 <h1>Manual Verification</h1>

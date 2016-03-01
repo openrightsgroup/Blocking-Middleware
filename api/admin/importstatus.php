@@ -1,5 +1,6 @@
 <?php
 
+require "page.inc.php";
 require "../1.2/libs/DB.php";
 
 $db = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
@@ -25,19 +26,8 @@ $res = $db->query("select uls.status,
     array($_GET['source'])
     );
 
+page_top("API Admin :: Bulk import status");
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-<link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<title>API Admin :: Bulk import status</title>
-<style type="text/css">
-.num { text-align: right }
-</style>
-</head>
-<body>
-    <?php include "nav.php"?>
-    <div class="container">
     <div class="row">
 
     <h3>Results - <?php echo $_GET['source']?></h3>
@@ -66,6 +56,7 @@ $res = $db->query("select uls.status,
     </p>
 
     </div>
-    </div>
-</body>
-</html>
+
+<?php
+page_bottom();
+?>
