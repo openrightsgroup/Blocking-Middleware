@@ -13,8 +13,6 @@ limit 10",array());
 
 page_top("API Admin :: Home");
 ?>
-    <?php include "messages.inc.php"?>
-    
     <div class="row">
         
         
