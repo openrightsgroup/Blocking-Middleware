@@ -23,6 +23,7 @@ $recent = $db->query("select source, max(urlid), max(inserted)
 <body>
     <?php include "nav.php"?>
     <div class="container">
+    <?php include "messages.php"?>
     <div class="row">
     <div class="col-xs-4 ">
     <h3>Data Management</h3>
