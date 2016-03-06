@@ -13,6 +13,7 @@
         <ul class="nav navbar-nav">
           <li class="<?php echo ($_SERVER['PHP_SELF'] == "/admin/index.php")? "active":"";?> "><a href="/admin/">Home</a></li>
           <li class="<?php echo ($_SERVER['PHP_SELF'] == "/admin/load.php")? "active":"";?> "><a href="load.php">Bulk URL Load</a></li>
+          <li class="<?php echo ($_SERVER['PHP_SELF'] == "/admin/users.php")? "active":"";?> "><a href="users.php">Users</a></li>
           <!--<li class=""><a href="verify.php">Manual Verification</a></li>-->
           <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Reports <span class="caret"></span></a>
