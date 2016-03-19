@@ -1,6 +1,6 @@
 <?php
 
-require "page.inc.php";
+require "template.inc.php";
 require "../1.2/libs/DB.php";
 
 $db = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
@@ -26,37 +26,9 @@ $res = $db->query("select uls.status,
     array($_GET['source'])
     );
 
-page_top("API Admin :: Bulk import status");
-?>
-    <div class="row">
-
-    <h3>Results - <?php echo $_GET['source']?></h3>
-    <p>Total URLs: <?php echo $ttlrow['ct']?></p>
-    <p>URLs Tested: <?php echo $ttl2row['ct']?></p>
-
-    <table class="table">
-    <tr>
-    <th>Status</th>
-    <th class="num">URL Count</th>
-    <th class="num">Result Count</th>
-    </tr>
-    <?php while ($data = $res->fetch_array()): ?>
-    <tr>
-      <td><?php echo $data['status'] ?></td>
-      <td class="num"><?php echo $data['url_count'] ?></td>
-      <td class="num"><?php echo $data['block_count'] ?></td>
-    </tr>
-    <?php endwhile ?>
-    </table>
-
-    <p>Download 
-    <a href="results.php?mode=full&source=<?php echo $_GET['source']?>">full results</a>,
-    <a href="results.php?mode=latest&source=<?php echo $_GET['source']?>">latest results</a> or
-    <a href="results.php?mode=table&source=<?php echo $_GET['source']?>">tabulated summary</a>
-    </p>
-
-    </div>
-
-<?php
-page_bottom();
-?>
+$twig->display("importstatus.html", array(
+    'source' => $_GET['source'],
+    'ttlrow' => $ttlrow,
+    'ttl2row' => $ttl2row,
+    'status' => $res
+    ));

@@ -1,0 +1,34 @@
+{% extends "page.part.html" %} 
+
+{% block title %}API Admin :: Bulk Import Status{% endblock %}
+
+{% block content %}
+    <div class="row">
+
+    <h3>Results - {{ source }}</h3>
+    <p>Total URLs: {{ ttlrow['ct'] }}</p>
+    <p>URLs Tested: {{ ttl2row['ct'] }}</p>
+
+    <table class="table">
+    <tr>
+    <th>Status</th>
+    <th class="num">URL Count</th>
+    <th class="num">Result Count</th>
+    </tr>
+    {% for data in status %}
+    <tr>
+      <td>{{ data['status'] }}</td>
+      <td class="num">{{ data['url_count'] }}</td>
+      <td class="num">{{ data['block_count'] }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+
+    <p>Download 
+    <a href="results.php?mode=full&source={{ source }}">full results</a>,
+    <a href="results.php?mode=latest&source={{ source }}">latest results</a> or
+    <a href="results.php?mode=table&source={{ source }}">tabulated summary</a>
+    </p>
+
+    </div>
+{% endblock %}

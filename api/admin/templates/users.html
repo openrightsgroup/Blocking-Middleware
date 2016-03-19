@@ -1,0 +1,34 @@
+{% extends "page.part.html" %}
+
+{% block title %}API Admin :: Users{% endblock %}
+
+{% block content %}
+<h1>User Management</h1>
+
+<table class="table">
+  <tr>
+    <th>Email</th>
+    <th>Full Name</th>
+    <th>Status</th>
+    <th>Created</th>
+    <th>Actions</th>
+  </tr>
+{% for user in users %}
+  <tr>
+    <td>{{ user['email'] }}</td>
+    <td>{{ user['fullName'] }}</td>
+    <td>{{ user['status'] }}</td>
+    <td>{{ user['createdAt'] }}</td>
+    <td>
+    {% if (user['status'] == "ok") %}
+      <a class="btn-xs btn-warning" href="#">Suspend</a> <a class="btn-xs btn-danger" href="#">Ban</a>
+    {% elseif (user['status'] == "suspended") %}
+      <a class="btn-xs btn-success" href="#">Restore</a>
+    {% elseif (user['status'] == "pending") %}
+      <a class="btn-xs btn-success" href="#">Approve</a>
+    {% endif %}
+    </td>
+  </tr>
+{% endfor %}
+</table>
+{% endblock %}

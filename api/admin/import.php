@@ -1,6 +1,6 @@
 <?php
 
-require "page.inc.php";
+require "template.inc.php";
 include_once "../1.2/libs/DB.php";
 include_once "../1.2/libs/amqp.php";
 include_once "../1.2/libs/services.php";
@@ -37,21 +37,8 @@ while ($line = fgets($fp)) {
 
     }
 }
-page_top("API Admin :: Bulk load");
-?>
 
-<h1>Bulk load : summary</h1>
-
-<div class="row">
-<div class="col-xs-4"></div>
-<div class="col-xs-4 well">
-  <div>New URLs loaded: <?php echo $new; ?></div>
-  <div>Existing URLs skipped: <?php echo $exist; ?></div>
-</div>
-</div> <!-- /.row -->
-
-    </div>
-
-<?php
-page_bottom();
-?>
+$twig->display("import.html", array(
+    'new' => $new,
+    'exist' => $exist
+    ));
