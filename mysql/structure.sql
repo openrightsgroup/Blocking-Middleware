@@ -124,7 +124,7 @@ CREATE TABLE `urls` (
   `urlID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `URL` varchar(2048) NOT NULL COLLATE latin1_bin,
   `hash` varchar(32) DEFAULT NULL,
-  `source` enum('social','user','canary','probe','alexa','dmoz') DEFAULT NULL,
+  `source` varchar(40) DEFAULT NULL,
   `lastPolled` datetime DEFAULT NULL,
   `inserted` datetime NOT NULL,
   `polledAttempts` int(10) unsigned DEFAULT '0',

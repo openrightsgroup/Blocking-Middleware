@@ -65,6 +65,22 @@ class UrlLoader {
 		$this->conn = $conn;
 	}
 
+    function insert($url, $source="user") {
+        /* Insert user record.  Does not return ID, because of insert-ignore, and 
+        because URLs are uniquely indexes only on the first 767 chars */
+        $this->conn->query(
+            "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
+            array($url, md5($url), $source)
+        );
+        /* returns true/false for whether a row was really inserted. */
+        if ($this->conn->affected_rows) {
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
+
 	function load($url) {
 		$result = $this->conn->query(
 			"select * from urls where URL=?",

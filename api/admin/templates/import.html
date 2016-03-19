@@ -1,0 +1,17 @@
+{% extends "page.part.html%} 
+
+{% block title %}API Admin :: Bulk load{% endblock %}
+
+{% block content %}
+<h1>Bulk load : summary</h1>
+
+<div class="row">
+<div class="col-xs-4"></div>
+<div class="col-xs-4 well">
+  <div>New URLs loaded: {{ new }} </div>
+  <div>Existing URLs skipped: {{ exist }}</div>
+</div>
+</div> <!-- /.row -->
+
+
+{% endblock %}

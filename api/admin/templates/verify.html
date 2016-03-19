@@ -1,0 +1,13 @@
+{% extends "page.part.html" %}
+{% block title %}API Admin :: Manual verification{%endblock%}
+
+{% block content %}
+<h1>Manual Verification</h1>
+
+<form action="view.php" method="POST">
+<label for="url">URL:</label>
+<input type="text" name="url" />
+<input type="submit" value="Submit" />
+</form>
+
+{% endblock %}

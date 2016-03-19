@@ -1,0 +1,41 @@
+{% extends "page.part.html" %}
+
+{% block pagestyle %}
+    .frame {
+        -ms-zoom: 0.6;
+        -moz-transform: scale(0.6);
+        -moz-transform-origin: 0 0;
+        -o-transform: scale(0.6);
+        -o-transform-origin: 0 0;
+        -webkit-transform: scale(0.6);
+        -webkit-transform-origin: 0 0; 
+        width: 600px;
+        height: 340px;
+    }
+
+{% endblock %}
+
+{% block content %}
+<h1>Manual Verification</h1>
+
+<form action="view.php" method="POST">
+<label for="url">URL:</label>
+<input type="text" name="url" value="{{ url }}" />
+<input type="submit" value="Submit" />
+</form>
+
+<ul class="">
+{% for network, name in networks %}
+<li><a href="#{{ network }}" >{{ name }}</a> </li>
+{% endfor %}
+</ul>
+
+<div class="row">
+{% for network, name in networks %}
+  <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12" id="{{ network }}" style="border: 1px solid gray; float: left">
+    <h2><a name="{{ network }}">{{ name }}</a></h2>
+    <iframe  class="frame" src="content.php?network={{ network }}&hash={{ id }}"></iframe>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

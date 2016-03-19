@@ -1,20 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-<link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
-<title>API Admin :: Manual verification</title>
-</head>
-<body>
+<?php
 
-<h1>Manual Verification</h1>
+require "../1.2/libs/DB.php";
 
-<form action="view.php" method="POST">
-<label for="url">URL:</label>
-<input type="text" name="url" />
-<input type="submit" value="Submit" />
-</form>
+require "template.inc.php";
+
+$db = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 
-<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-</body>
-</html>
+$recent_urls = $db->query("select URL, inserted, lastPolled
+from urls
+order by urlid desc
+limit 10",array());
+
+$twig->display('index.html', array(
+    'recent_urls' => $recent_urls
+    ));
