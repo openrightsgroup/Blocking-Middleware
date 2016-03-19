@@ -9,5 +9,5 @@ $res = $db->query("select email, fullname, status, createdat from users order by
 
 
 $twig->display("users.html", array(
-   'users' => $res
+   'users' => new ResultSetIterator($res)
    ));

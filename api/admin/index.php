@@ -13,5 +13,5 @@ order by urlid desc
 limit 10",array());
 
 $twig->display('index.html', array(
-    'recent_urls' => $recent_urls
+    'recent_urls' => new ResultSetIterator($recent_urls)
     ));

@@ -15,6 +15,6 @@ $recent = $db->query("select source, max(urlid), max(inserted)
     );
 
 $twig->display('load.html',array(
-    'recent' => $recent
+    'recent' => new ResultSetIterator($recent)
     ));
     

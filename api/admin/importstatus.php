@@ -30,5 +30,5 @@ $twig->display("importstatus.html", array(
     'source' => $_GET['source'],
     'ttlrow' => $ttlrow,
     'ttl2row' => $ttl2row,
-    'status' => $res
+    'status' => new ResultSetIterator($res)
     ));

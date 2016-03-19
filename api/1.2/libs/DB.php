@@ -81,3 +81,59 @@ include_once "config.php";
 
 	}
 			
+
+class ResultSetIterator implements Iterator {
+    /* Compatibility obj for PHP 5.3, so that mysql result sets
+    can be used in foreach loops */
+
+    function __construct($rs) {
+        #error_log(__METHOD__);
+        $this->_rs = $rs;
+        $this->num_rows = $rs->num_rows;
+    }
+
+    function current() {
+        #error_log(__METHOD__);
+        return $this->_row;
+    }
+
+    function key() {
+        #error_log(__METHOD__);
+        return $this->_key;
+
+    }
+
+    function next() {
+        #error_log(__METHOD__);
+        $this->_row = $this->_rs->fetch_assoc();
+        $this->_key++;
+
+    }
+
+    function rewind() {
+        #error_log(__METHOD__);
+        $this->_row = $this->_rs->fetch_assoc();
+        $this->_key = 0;
+    }
+
+    function valid() {
+        #error_log(__METHOD__);
+        return !is_null($this->_row);
+    }
+
+    /* pass-through other mysqli_result methods */
+
+    function fetch_array($resulttype = MYSQLI_BOTH) {
+        return $this->_rs->fetch_array($resulttype);
+
+    }
+
+    function fetch_assoc() {
+        return $this->_rs->fetch_assoc();
+    }
+
+    function fetch_row() {
+        return $this->_rs->fetch_row();
+    }
+
+}
