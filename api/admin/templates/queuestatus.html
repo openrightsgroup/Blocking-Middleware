@@ -1,0 +1,30 @@
+{% extends "page.part.html" %}
+
+{%block title%}Queue Status{% endblock %}
+
+{% block pagestyle %}
+th, td { text-align: right }
+th.name, td.name {text-align: left }
+{% endblock %}
+
+
+{%block content %}
+<h1>Queue Status</h1>
+
+<table class="table">
+  <tr>
+    <th class="name">Queue Name</th>
+    <th>Messages</th>
+    <th>In Progress</th>
+    <th>Workers</th>
+  </tr>
+  {% for status in queues %}
+  <tr>
+    <td class="name">{{status['name']}}</td>
+    <td>{{status['messages']}}</td>
+    <td>{{status['in_progress']}}</td>
+    <td>{{status['workers']}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
