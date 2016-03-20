@@ -24,9 +24,9 @@ while ($line = fgets($fp)) {
     }
     $out[] = array(
         'name' => $parts[0],
-        'messages' => $parts[1],
+        'messages' => (int)$parts[1],
         'in_progress' => $parts[2],
-        'workers' => $parts[3]
+        'workers' => (int)$parts[3]
         );
 }
 fclose($fp);

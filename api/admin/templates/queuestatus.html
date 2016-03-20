@@ -21,9 +21,17 @@ th.name, td.name {text-align: left }
   {% for status in queues %}
   <tr>
     <td class="name">{{status['name']}}</td>
-    <td>{{status['messages']}}</td>
+    <td>{{status['messages']}}
+      {% if status['messages'] > 1000 %}
+      <span class="label label-warning"><span class="glyphicon glyphicon-warning-sign"></span></span>
+      {% endif %}
+    </td>
     <td>{{status['in_progress']}}</td>
-    <td>{{status['workers']}}</td>
+    <td>{{status['workers']}}
+      {% if status['workers'] == 0 %}
+      <span class="label label-warning"><span class="glyphicon glyphicon-warning-sign"></span></span>
+      {% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>
