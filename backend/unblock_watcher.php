@@ -65,7 +65,7 @@ Thank you for contributing to blocked.org.uk!";
         array( "From" => "ORG Admin <blocked@openrightsgroup.org>" )
         );
 
-    $conn->query("UPDATE isp_reports set unblocked=1, notified=now()
+    $conn->query("UPDATE isp_reports set unblocked=1, notified=now(), last_updated=now()
         where id = ?",
         array($report['id'])
         );

@@ -146,26 +146,27 @@ class UrlLoader {
 
         $res = $this->conn->query("select 
                 uls.network_name, uls.created, urls.url, uls.category,
-                group_concat(display_name)
+                ifnull(group_concat(display_name separator '!!'), '') dmoz_categories
             from url_latest_status uls
-            inner join urls using (urlID)
-            left join isp_reports using (urlID)
-            left join url_categories using (urlID)
+            inner join urls on (urls.urlID = uls.urlID)
+            left join isp_reports on (isp_reports.urlID = uls.urlID and isp_reports.network_name = uls.network_name)
+            left join url_categories on (uls.urlID = url_categories.urlID)
             left join categories on (category_id = categories.id)
             where 
                 uls.status = 'blocked' and isp_reports.urlID is null 
             group by uls.urlID
-            order by rand() limit " . (int)$count;
+            order by rand() limit " . (int)$count,
             # sort  by rand is horrible, do something better
             array()
             );
 
         $output = array();
         while ($data = $res->fetch_assoc()) {
+            $data['dmoz_categories'] = explode('!!', $data['dmoz_categories']);
             $output[] = $data;
         }
 
-        return $data;
+        return $output;
 
     }
 

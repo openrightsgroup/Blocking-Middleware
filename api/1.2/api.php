@@ -47,6 +47,9 @@ $app['service.ip.query'] = function($app) {
 $app['db.category.load'] = function($app) {
 	return new DMOZCategoryLoader($app['service.db']);
 };
+$app['db.ispreport.load'] = function($app) {
+	return new ISPReportLoader($app['service.db']);
+};
 
 $app['service.result.process'] = function($app) {
 	return new ResultProcessorService(
@@ -1080,7 +1083,7 @@ $app->get('/ispreport/candidates', function (Request $req) use ($app) {
         'success' => true,
         'status' => 'blocked',
         'results' => $data
-        );
+        ));
 });
 
 
