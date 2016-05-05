@@ -1069,6 +1069,21 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
 # END DMOZ category functions
 #------------
 
+#------------
+# Site reporting functions
+#------------
+
+$app->get('/ispreport/candidates', function (Request $req) use ($app) {
+    $data = $app['db.url.load']->get_unreported_blocks();
+
+    return $app->json(array(
+        'success' => true,
+        'status' => 'blocked',
+        'results' => $data
+        );
+});
+
+
 $app->run();
 
 

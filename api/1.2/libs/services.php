@@ -140,6 +140,36 @@ class UrlLoader {
 			throw new UrlLookupError();
 		}
 	}
+
+    function get_unreported_blocks($count = 10) {
+        // return <n> unreported blocked sites
+
+        $res = $this->conn->query("select 
+                uls.network_name, uls.created, urls.url, uls.category,
+                group_concat(display_name)
+            from url_latest_status uls
+            inner join urls using (urlID)
+            left join isp_reports using (urlID)
+            left join url_categories using (urlID)
+            left join categories on (category_id = categories.id)
+            where 
+                uls.status = 'blocked' and isp_reports.urlID is null 
+            group by uls.urlID
+            order by rand() limit " . (int)$count;
+            # sort  by rand is horrible, do something better
+            array()
+            );
+
+        $output = array();
+        while ($data = $res->fetch_assoc()) {
+            $output[] = $data;
+        }
+
+        return $data;
+
+    }
+
+
 }
 
 class ContactLoader {
@@ -461,6 +491,29 @@ class DMOZCategoryLoader {
     }
 }
 
+
+class ISPReportLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function insert($name, $email, $urlID, $network_name, $message) {
+        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, created)
+        values (?,?,?,?,?,now())",
+        array($name, $email, $urlID, $network_name, $message)
+        );
+        return $this->conn->insertid();
+    }
+
+    function load($id) {
+        $res = $this->conn->query("select isp_reports.* from isp_reports
+        where id = ?",
+        array($id));
+
+        $row = $res->fetch_assoc();
+        return $row;
+    }
+}
 
 
 class ResultProcessorService {
