@@ -14,6 +14,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+$CORS_HEADERS = array(
+    'Access-Control-Allow-Origin' => '*',
+    'Access-Control-Allow-Methods' => 'GET, OPTIONS, PUT, POST',
+    'Access-Control-Allow-Headers' => 'content-type',
+);
+    
+
 $app = new Silex\Application();
 $app['debug'] = true;
 
@@ -1083,9 +1090,71 @@ $app->get('/ispreport/candidates', function (Request $req) use ($app) {
         'success' => true,
         'status' => 'blocked',
         'results' => $data
-        ));
+        ), 200 );
 });
 
+$app->post('/ispreport/submit', function (Request $req) use ($app) {
+    global $CORS_HEADERS;
+    /*
+    Accepts a JSON post body with this structure:
+    {
+      'url': 'http://www.example.com',
+      'networks': ["O2","Vodafone"],
+      'reporter': {
+        'name': "J Bloggs",
+        'email': 'j.bloggs@example.com'
+      },
+      'message': "I would like this unblocked because ..."
+    }
+    */
+    
+    $conn = $app['service.db'];
+    error_log($req->getContent());
+    $data = json_decode($req->getContent(), true);
+
+
+    $url = $app['db.url.load']->load(normalize_url($data['url']));
+
+    $ids = array();
+    $rejected = array();
+    foreach($data['networks'] as $network_name) {
+        $network = $app['db.isp.load']->load($network_name);
+
+        // check latest status
+        $q = $app['service.db']->query("select id from url_latest_status
+            where urlID = ? and network_name = ? and status = 'blocked'",
+            array($url['urlID'], $network_name)
+            );
+        $row = $q->fetch_row();
+        if (!$row) {
+            $rejected[$network_name] = "Not blocked on this network";
+            continue;
+        }
+
+        if ($app['db.ispreport.load']->can_report($url['urlID'], $network_name)) {
+            $ids[$network_name] = $app['db.ispreport.load']->insert(
+                $data['reporter']['name'],
+                $data['reporter']['email'],
+                $url['urlID'],
+                $network_name,
+                $data['message']
+                );
+        } else {
+            $rejected[$network_name] = "Already reported";
+        }
+
+        # send email here
+    }
+
+    return $app->json(array(
+        'success' => true,
+        'report_ids' => $ids,
+        'rejected' => $rejected
+    ), 201);
+
+
+
+});
 
 $app->run();
 

@@ -503,7 +503,7 @@ class ISPReportLoader {
         values (?,?,?,?,?,now())",
         array($name, $email, $urlID, $network_name, $message)
         );
-        return $this->conn->insertid();
+        return $this->conn->insert_id;
     }
 
     function load($id) {
@@ -513,6 +513,17 @@ class ISPReportLoader {
 
         $row = $res->fetch_assoc();
         return $row;
+    }
+
+    function can_report($urlID, $network_name) {
+        $res = $this->conn->query("select count(*) from isp_reports
+            where urlid = ? and network_name = ? and unblocked = 0",
+            array($urlID, $network_name));
+        $row = $res->fetch_row();
+        if ($row[0] == 0) {
+            return true;
+        } 
+        return false;
     }
 }
 
