@@ -33,6 +33,13 @@ $app['service.amqp'] = $app->share(function() {
 	return amqp_connect();
 });
 
+$loader = new Twig_Loader_Filesystem("templates");
+$app['service.template'] = new Twig_Environment($loader, array(
+    'cache' => false,
+    'debug' => true
+));
+$app['service.template']->addExtension(new Twig_Extension_Debug());
+
 $app['db.user.load'] = function($app) {
 	return new UserLoader($app['service.db']);
 };
