@@ -9,6 +9,8 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
+include_once __DIR__ . "silex/vendor/autoload.php";
+
 $ch = amqp_connect();
 
 $ex = new AMQPExchange($ch);
@@ -18,6 +20,12 @@ $q = new AMQPQueue($ch);
 $q->setName('unblock_watcher');
 
 $q->bind("org.results", "*");
+
+$loader = new Twig_Loader_Filesystem(__DIR__ . "/templates");
+$twig = new Twig_Environment($loader, array(
+    'cache' => false,
+    'debug' => true
+));
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 $urlloader = new UrlLoader($conn);
@@ -51,23 +59,26 @@ function process_result($msg, $queue) {
     }
 
     // placeholder text
-    $msgemail = "Dear {$report[name]}, 
-
-On {$report[created]} you reported the overblocking of {$url[url]} to 
-{$report[network_name]}.  Blocked.org.uk has now detected that the site
-has been unblocked.
-
-Thank you for contributing to blocked.org.uk!";
-
-    mail("{$report[name] <{$report[email]}>, ORG <blocked@openrightsgroup.org>",
-        "Site unblocked: {$url[url]} on {$report[network_name]}",
-        $msgemail,
-        array( "From" => "ORG Admin <blocked@openrightsgroup.org>" )
-        );
 
     $conn->query("UPDATE isp_reports set unblocked=1, notified=now(), last_updated=now()
         where id = ?",
         array($report['id'])
+        );
+
+    # send unblock notification email
+
+    $msg = new PHPMailer();
+    $msg->setFrom('blocked@openrightsgroup.org', 'Blocked Admin');
+    $msg->addAddress($report['email'], $report['name']);
+    $msg->Subject = "Site unblocked: " . $url['URL'] . " on " . $report['network_name'];
+    $msg->isHTML(false);
+    $msg->CharSet = 'utf-8';
+    $msg->Body = $twig->render(
+        'unblock_email.txt',
+        array(
+            'report' => $report,
+            'url' => $url
+            )
         );
 
 

@@ -1137,6 +1137,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             $rejected[$network_name] = "Not blocked on this network";
             continue;
         }
+        if (!$network['admin_email']) {
+            $rejected[$network_name] = "No administration email for this network";
+            continue;
+        }
 
         if ($app['db.ispreport.load']->can_report($url['urlID'], $network_name)) {
             $ids[$network_name] = $app['db.ispreport.load']->insert(
@@ -1146,11 +1150,31 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $network_name,
                 $data['message']
                 );
+            # send email here
+
+            $msg = new PHPMailer();
+            $msg->setFrom($data['reporter']['email'], $data['reporter']['name'] . ' via Blocked.org.uk');
+            $msg->addAddress($network['admin_email'], $network['admin_name']);
+            $msg->Subject = "Website blocking enquiry - " . $url['URL'];
+            $msg->isHTML(false);
+            $msg->CharSet = 'utf-8';
+            $msg->Body = $app['service.template']->render(
+                'report_email.txt',
+                array(
+                    'reporter_email' => $data['reporter']['email'],
+                    'reporter_name' => $data['reporter']['name'],
+                    'url' => $url['URL'],
+                    'message' => $data['message'],
+                    )
+                );
+            if(!$msg->send()) {
+                error_log("Unable to send message: " . $msg->ErrorInfo);
+            }
+
         } else {
             $rejected[$network_name] = "Already reported";
         }
 
-        # send email here
     }
 
     return $app->json(array(

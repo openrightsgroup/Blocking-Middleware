@@ -46,4 +46,7 @@ CREATE TABLE `isp_reports` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+
+ALTER TABLE isps add admin_email varchar(255) null;
+ALTER TABLE isps add admin_name varchar(255) null;
 -- Dump completed on 2016-05-12 20:16:00
