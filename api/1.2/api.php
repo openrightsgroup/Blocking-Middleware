@@ -278,10 +278,33 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			where urlID = ? and contactID = ?",
 			array(Middleware::generateSharedSecret(10), $url['urlID'], $contact['id'])
 			);
+        $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
+            array($url['urlID'], $contact['id'])
+            );
+        $subscriberow = $r->fetch_row();
 
-
-
-		# TODO: send verify email
+        if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
+            # TODO: send verify email
+            $msg = new PHPMailer();
+            $msg->setFrom(SITE_EMAIL, SITE_NAME);
+            $msg->addAddress($req->get('contactemail'));
+            $msg->Subject = "Confirm your blocking alert subscription";
+            $msg->isHTML(false);
+            $msg->CharSet = "utf-8";
+            $msg->Body = $app['service.template']->render(
+                'subscribe_email.txt',
+                array(
+                    'name' => $req->get('fullname'),
+                    'url' => $req->get('url'),
+                    'confirm_url' => CONFIRM_URL,
+                    'token' => $subscriberow[0],
+                    'site_url' => SITE_URL,
+                    'site_name' => SITE_NAME,
+                    'site_email' => SITE_EMAIL
+                )
+            );
+            $msg->Send();
+        }
 	}
 
 	# test the lastPolled date
