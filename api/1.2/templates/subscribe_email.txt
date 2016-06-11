@@ -1,0 +1,18 @@
+
+Dear {{name}},
+
+To confirm your subscription to blocking alerts for {{url}}, 
+please open:
+
+{{confirm_url}}?token={{token}} 
+
+in your web browser.
+
+If your have not subscribed to blocking alerts and this email
+has been sent in error, please ignore this message.
+
+For more information, please visit {{site_url}} or email {{site_email}}.
+
+Kind regards,
+
+{{site_name}}

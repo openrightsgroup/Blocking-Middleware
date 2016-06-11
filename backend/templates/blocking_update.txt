@@ -1,0 +1,16 @@
+
+Dear {{fullname}},
+
+Here is your website blocking update for {{date}}.
+
+{% for site, siteresults in results %}
+{{ site }}
+
+{% for network, netresults in siteresults %}
+{{ network }}
+{% for res in netresults %}
+  {{res['created']}}    {{"%-9s" | format(res['old_status'])}} -> {{"%-10s" | format(res['new_status'])}}
+{% endfor %}
+
+{% endfor %}
+{% endfor %}
