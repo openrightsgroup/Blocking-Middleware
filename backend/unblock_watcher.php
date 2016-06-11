@@ -9,7 +9,7 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-include_once __DIR__ . "silex/vendor/autoload.php";
+include_once __DIR__ . "/silex/vendor/autoload.php";
 
 $ch = amqp_connect();
 
