@@ -19,13 +19,19 @@ function send_update($contact, $results) {
     global $twig, $conn;
 
     var_dump($contact);
-    var_dump($results);
+    #var_dump($results);
 
     if (count($results) == 0) {
         return;
     }
 
-    print $twig->render(
+    $msg = new PHPMailer();
+    $msg->setFrom(SITE_EMAIL, SITE_NAME);
+    $msg->addAddress($contact[1], $contact[0]);
+    $msg->Subject = "Blocked.org.uk site updates :: " . date('Y-m-d');
+    $msg->isHTML(false);
+    $msg->CharSet = 'utf-8';
+    $msg->Body = $twig->render(
         'blocking_update.txt',
         array(
             'fullname' => $contact[0],
@@ -33,6 +39,13 @@ function send_update($contact, $results) {
             'results' => $results
             )
         );
+
+    print $msg->Body . "\n";
+
+    if (!$msg->Send()) {
+        print "Unable to send message : " . $msg->ErrorInfo . "\n";
+        return;
+    }
 
     $conn->query("update url_subscriptions set last_notification = now() 
         where contactID = ? and verified = 1",
