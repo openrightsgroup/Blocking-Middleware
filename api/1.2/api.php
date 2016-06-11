@@ -303,7 +303,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
                     'site_email' => SITE_EMAIL
                 )
             );
-            $msg->Send();
+            if (!$msg->Send()) {
+                error_log("Unable to send message: " . $msg->ErrorInfo);
+            }
         }
 	}
 
