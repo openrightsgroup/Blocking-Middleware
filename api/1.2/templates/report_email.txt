@@ -1,0 +1,7 @@
+
+Website blocking enquiry from {{reporter_email}}, regarding the website at
+{{url}}.
+
+{{message}}
+
+

@@ -1,0 +1,7 @@
+Dear {{report[name]}}, 
+
+On {{report[created]}} you reported the overblocking of {{url[URL]}} to 
+{{report[network_name]}}.  Blocked.org.uk has now detected that the site
+has been unblocked.
+
+Thank you for contributing to blocked.org.uk!

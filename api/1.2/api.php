@@ -14,6 +14,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+$CORS_HEADERS = array(
+    'Access-Control-Allow-Origin' => '*',
+    'Access-Control-Allow-Methods' => 'GET, OPTIONS, PUT, POST',
+    'Access-Control-Allow-Headers' => 'content-type',
+);
+    
+
 $app = new Silex\Application();
 $app['debug'] = true;
 
@@ -25,6 +32,13 @@ $app['service.db'] = $app->share(function() {
 $app['service.amqp'] = $app->share(function() {
 	return amqp_connect();
 });
+
+$loader = new Twig_Loader_Filesystem("templates");
+$app['service.template'] = new Twig_Environment($loader, array(
+    'cache' => false,
+    'debug' => true
+));
+$app['service.template']->addExtension(new Twig_Extension_Debug());
 
 $app['db.user.load'] = function($app) {
 	return new UserLoader($app['service.db']);
@@ -46,6 +60,9 @@ $app['service.ip.query'] = function($app) {
 };
 $app['db.category.load'] = function($app) {
 	return new DMOZCategoryLoader($app['service.db']);
+};
+$app['db.ispreport.load'] = function($app) {
+	return new ISPReportLoader($app['service.db']);
 };
 
 $app['service.result.process'] = function($app) {
@@ -261,10 +278,35 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			where urlID = ? and contactID = ?",
 			array(Middleware::generateSharedSecret(10), $url['urlID'], $contact['id'])
 			);
+        $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
+            array($url['urlID'], $contact['id'])
+            );
+        $subscriberow = $r->fetch_row();
 
-
-
-		# TODO: send verify email
+        if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
+            # TODO: send verify email
+            $msg = new PHPMailer();
+            $msg->setFrom(SITE_EMAIL, SITE_NAME);
+            $msg->addAddress($req->get('contactemail'));
+            $msg->Subject = "Confirm your blocking alert subscription";
+            $msg->isHTML(false);
+            $msg->CharSet = "utf-8";
+            $msg->Body = $app['service.template']->render(
+                'subscribe_email.txt',
+                array(
+                    'name' => $req->get('fullname'),
+                    'url' => $req->get('url'),
+                    'confirm_url' => CONFIRM_URL,
+                    'token' => $subscriberow[0],
+                    'site_url' => SITE_URL,
+                    'site_name' => SITE_NAME,
+                    'site_email' => SITE_EMAIL
+                )
+            );
+            if (!$msg->Send()) {
+                error_log("Unable to send message: " . $msg->ErrorInfo);
+            }
+        }
 	}
 
 	# test the lastPolled date
@@ -1068,6 +1110,107 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
 #------------
 # END DMOZ category functions
 #------------
+
+#------------
+# Site reporting functions
+#------------
+
+$app->get('/ispreport/candidates', function (Request $req) use ($app) {
+    $data = $app['db.url.load']->get_unreported_blocks();
+
+    return $app->json(array(
+        'success' => true,
+        'status' => 'blocked',
+        'results' => $data
+        ), 200 );
+});
+
+$app->post('/ispreport/submit', function (Request $req) use ($app) {
+    global $CORS_HEADERS;
+    /*
+    Accepts a JSON post body with this structure:
+    {
+      'url': 'http://www.example.com',
+      'networks': ["O2","Vodafone"],
+      'reporter': {
+        'name': "J Bloggs",
+        'email': 'j.bloggs@example.com'
+      },
+      'message': "I would like this unblocked because ..."
+    }
+    */
+    
+    $conn = $app['service.db'];
+    error_log($req->getContent());
+    $data = json_decode($req->getContent(), true);
+
+
+    $url = $app['db.url.load']->load(normalize_url($data['url']));
+
+    $ids = array();
+    $rejected = array();
+    foreach($data['networks'] as $network_name) {
+        $network = $app['db.isp.load']->load($network_name);
+
+        // check latest status
+        $q = $app['service.db']->query("select id from url_latest_status
+            where urlID = ? and network_name = ? and status = 'blocked'",
+            array($url['urlID'], $network_name)
+            );
+        $row = $q->fetch_row();
+        if (!$row) {
+            $rejected[$network_name] = "Not blocked on this network";
+            continue;
+        }
+        if (!$network['admin_email']) {
+            $rejected[$network_name] = "No administration email for this network";
+            continue;
+        }
+
+        if ($app['db.ispreport.load']->can_report($url['urlID'], $network_name)) {
+            $ids[$network_name] = $app['db.ispreport.load']->insert(
+                $data['reporter']['name'],
+                $data['reporter']['email'],
+                $url['urlID'],
+                $network_name,
+                $data['message']
+                );
+            # send email here
+
+            $msg = new PHPMailer();
+            $msg->setFrom($data['reporter']['email'], $data['reporter']['name'] . ' via Blocked.org.uk');
+            $msg->addAddress($network['admin_email'], $network['admin_name']);
+            $msg->Subject = "Website blocking enquiry - " . $url['URL'];
+            $msg->isHTML(false);
+            $msg->CharSet = 'utf-8';
+            $msg->Body = $app['service.template']->render(
+                'report_email.txt',
+                array(
+                    'reporter_email' => $data['reporter']['email'],
+                    'reporter_name' => $data['reporter']['name'],
+                    'url' => $url['URL'],
+                    'message' => $data['message'],
+                    )
+                );
+            if(!$msg->send()) {
+                error_log("Unable to send message: " . $msg->ErrorInfo);
+            }
+
+        } else {
+            $rejected[$network_name] = "Already reported";
+        }
+
+    }
+
+    return $app->json(array(
+        'success' => true,
+        'report_ids' => $ids,
+        'rejected' => $rejected
+    ), 201);
+
+
+
+});
 
 $app->run();
 

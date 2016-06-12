@@ -26,3 +26,10 @@ $SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
 /* GCM creds */
 
 define("GOOGLE_API_KEY", "GOOGLE_KEY");
+
+define('SITE_EMAIL', 'blocked@example.com');
+define('SITE_NAME', 'Example.com');
+define('SITE_URL', 'https://www.example.com');
+define('CONFIRM_URL', 'https://www.example.com/confirm');
+
+define('FEATURE_SEND_SUBSCRIBE_EMAIL', false); # set to true to enable mail sending

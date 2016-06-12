@@ -140,6 +140,37 @@ class UrlLoader {
 			throw new UrlLookupError();
 		}
 	}
+
+    function get_unreported_blocks($count = 10) {
+        // return <n> unreported blocked sites
+
+        $res = $this->conn->query("select 
+                uls.network_name, uls.created, urls.url, uls.category,
+                ifnull(group_concat(display_name separator '!!'), '') dmoz_categories
+            from url_latest_status uls
+            inner join urls on (urls.urlID = uls.urlID)
+            left join isp_reports on (isp_reports.urlID = uls.urlID and isp_reports.network_name = uls.network_name)
+            left join url_categories on (uls.urlID = url_categories.urlID)
+            left join categories on (category_id = categories.id)
+            where 
+                uls.status = 'blocked' and isp_reports.urlID is null 
+            group by uls.urlID
+            order by rand() limit " . (int)$count,
+            # sort  by rand is horrible, do something better
+            array()
+            );
+
+        $output = array();
+        while ($data = $res->fetch_assoc()) {
+            $data['dmoz_categories'] = explode('!!', $data['dmoz_categories']);
+            $output[] = $data;
+        }
+
+        return $output;
+
+    }
+
+
 }
 
 class ContactLoader {
@@ -461,6 +492,40 @@ class DMOZCategoryLoader {
     }
 }
 
+
+class ISPReportLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function insert($name, $email, $urlID, $network_name, $message) {
+        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, created)
+        values (?,?,?,?,?,now())",
+        array($name, $email, $urlID, $network_name, $message)
+        );
+        return $this->conn->insert_id;
+    }
+
+    function load($id) {
+        $res = $this->conn->query("select isp_reports.* from isp_reports
+        where id = ?",
+        array($id));
+
+        $row = $res->fetch_assoc();
+        return $row;
+    }
+
+    function can_report($urlID, $network_name) {
+        $res = $this->conn->query("select count(*) from isp_reports
+            where urlid = ? and network_name = ? and unblocked = 0",
+            array($urlID, $network_name));
+        $row = $res->fetch_row();
+        if ($row[0] == 0) {
+            return true;
+        } 
+        return false;
+    }
+}
 
 
 class ResultProcessorService {
