@@ -20,7 +20,6 @@ What you can do now:
 If you'd like to share your story about how filtering has affected you
 or your business, please email blocked@openrightsgroup.org
 
-
 If your site has been blocked, visit https://blocked.org.uk/unblock for
 information about how to contact broadband and mobile providers.
 
@@ -32,8 +31,7 @@ You can share your results on Twitter, Facebook or GooglePlus.
 Open Rights Group campaigns for your digital rights. We are able to provide
 tools such as blocked.org.uk for free, thanks to our amazing supporters,
 sponsors and volunteers. You can support this project by making a donation,
-joining Open Rights Group or getting involved as a technical
-volunteer.
+joining Open Rights Group or getting involved as a technical volunteer.
 
 https://www.openrightsgroup.org/join/
 https://www.openrightsgroup.org/donate/
