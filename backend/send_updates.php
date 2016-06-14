@@ -12,6 +12,13 @@ $twig = new Twig_Environment($loader, array(
 ));
 $twig->addExtension(new Twig_Extension_Debug());
 
+if (@$argv[1] == "--help") {
+    print "send_updates.php [-n]
+    -n      Dummy mode;  print output email without sending
+
+";
+    exit(0);
+}
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
@@ -41,6 +48,10 @@ function send_update($contact, $results) {
         );
 
     print $msg->Body . "\n";
+
+    if (@$argv[1] == "-n") {
+        return;
+    }
 
     if (!$msg->Send()) {
         print "Unable to send message : " . $msg->ErrorInfo . "\n";
