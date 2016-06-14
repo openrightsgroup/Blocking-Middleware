@@ -20,10 +20,12 @@ if (@$argv[1] == "--help") {
     exit(0);
 }
 
+$date = date('Y-m-d');
+
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 function send_update($contact, $results) {
-    global $twig, $conn, $argv;
+    global $twig, $conn, $argv, $date;
 
     var_dump($contact);
     #var_dump($results);
@@ -42,7 +44,7 @@ function send_update($contact, $results) {
         'blocking_update.txt',
         array(
             'fullname' => $contact[0],
-            'date' => date('Y-m-d'),
+            'date' => $date,
             'results' => $results
             )
         );
