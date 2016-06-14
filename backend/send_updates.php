@@ -23,7 +23,7 @@ if (@$argv[1] == "--help") {
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
 function send_update($contact, $results) {
-    global $twig, $conn;
+    global $twig, $conn, $argv;
 
     var_dump($contact);
     #var_dump($results);
