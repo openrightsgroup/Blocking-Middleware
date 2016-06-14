@@ -1,7 +1,7 @@
 
-Dear {{fullname}},
 
-Here is your website blocking update for {{date}}.
+
+Here is your Blocked.org.uk site update for {{date}}.
 
 {% for site, siteresults in results %}
 {{ site }}
@@ -14,3 +14,4 @@ Here is your website blocking update for {{date}}.
 
 {% endfor %}
 {% endfor %}
+
