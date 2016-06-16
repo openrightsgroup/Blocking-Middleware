@@ -773,7 +773,8 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category, l.blocktype
+	$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category, l.blocktype,
+        isps.name
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
@@ -794,6 +795,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		$out['first_blocked_timestamp'] = $row[4];
 		$out['category'] = $row[5];
 		$out['blocktype'] = $row[6];
+        $out['network_id'] = $row[7];
 
 		$output[] = $out;
 	}
@@ -1136,20 +1138,32 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         'name': "J Bloggs",
         'email': 'j.bloggs@example.com'
       },
-      'message': "I would like this unblocked because ..."
+      'message': "I would like this unblocked because ...",
+      'auth': [
+        'email': 'useraccount@blocked.org.uk',
+        'signature': 'abcdef0123456',
+      ]
     }
     */
     
     $conn = $app['service.db'];
-    error_log($req->getContent());
-    $data = json_decode($req->getContent(), true);
+    $data = (array)json_decode($req->getContent(), true);
 
+
+	$user = $app['db.user.load']->load($data['auth']['email']);
+    Middleware::checkMessageTimestamp($data['date']);
+    Middleware::verifyUserMessage(
+        $data['url'] . ":" . $data['date'],
+        $user['secret'],
+        $data['auth']['signature']
+        );
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
     $ids = array();
     $rejected = array();
     foreach($data['networks'] as $network_name) {
+        error_log("Looking up: ". $network_name);
         $network = $app['db.isp.load']->load($network_name);
 
         // check latest status
@@ -1192,8 +1206,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     'message' => $data['message'],
                     )
                 );
+            if (false) {
             if(!$msg->send()) {
                 error_log("Unable to send message: " . $msg->ErrorInfo);
+            }
             }
 
         } else {
