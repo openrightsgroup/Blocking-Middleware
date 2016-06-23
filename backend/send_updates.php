@@ -1,7 +1,7 @@
 <?php
 
-include "../api/1.2/libs/DB.php";
-include "../api/1.2/libs/services.php";
+include __DIR__ . "/../api/1.2/libs/DB.php";
+include __DIR__ . "/../api/1.2/libs/services.php";
 
 include_once __DIR__ . "/silex/vendor/autoload.php";
 
