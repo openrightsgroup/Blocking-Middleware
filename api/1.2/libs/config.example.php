@@ -33,3 +33,5 @@ define('SITE_URL', 'https://www.example.com');
 define('CONFIRM_URL', 'https://www.example.com/confirm');
 
 define('FEATURE_SEND_SUBSCRIBE_EMAIL', false); # set to true to enable mail sending
+
+define('AMQP_PUBLIC_QUEUE_TIMEOUT', 4*86400*1000); # queued jobs expire after 4 days (in milliseconds);

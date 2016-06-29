@@ -5,7 +5,7 @@ include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-$ch = amqp_connect();
+list($amqp, $ch) = amqp_connect_full();
 
 $ex2 = new AMQPExchange($ch);
 $ex2->setName('org.results');
@@ -19,12 +19,55 @@ $ex->setType('topic');
 $ex->setFlags(AMQP_DURABLE);
 $ex->declare();
 
-function createqueue($ch, $name,  $key, $exchange = 'org.blocked') {
-	$q = new AMQPQueue($ch);
-	$q->setName($name);
-	$q->setFlags(AMQP_DURABLE);
-	$q->declare();
-	$q->bind($exchange, $key);
+function delete_queue($name) {
+    global $amqp;
+    try {
+        $c = new AMQPChannel($amqp);
+        $q = new AMQPQueue($c);
+        $q->setName($name);
+        $q->delete();
+    } catch (AMQPQueueException $e) {
+        if (strpos($e->getMessage(), "NOT_FOUND") === false) {
+            throw $e;
+        }
+    }
+
+}
+
+function createqueue($name,  $key, $ttl=0, $recreate=false) {
+    global $amqp;
+    $exchange = 'org.blocked';
+
+    try {
+        $c = new AMQPChannel($amqp);
+        $q = new AMQPQueue($c);
+        $q->setName($name);
+        $q->setFlags(AMQP_DURABLE);
+        if ($ttl) {
+            $q->setArgument("x-message-ttl", $ttl);
+        }
+        $q->declare();
+        $q->bind($exchange, $key);
+    } catch (AMQPQueueException $e) {
+        if (strpos($e->getMessage(), "inequivalent args") === false && $recreate) {
+            try {
+                delete_queue($name);
+                $c = new AMQPChannel($amqp);
+                $q = new AMQPQueue($c);
+                $q->setName($name);
+                $q->setFlags(AMQP_DURABLE);
+                if ($ttl) {
+                    $q->setArgument("x-message-ttl", $ttl);
+                }
+                $q->declare();
+                $q->bind($exchange, $key);
+            } catch (AMQPQueueException $e2) {
+                echo "Recreate Queue error: " .  $e2->getMessage() . "\n";
+            }
+        } else {
+            echo "Queue error: " .  $e->getMessage() . "\n";
+        }
+    }
 }
 
 $result = $conn->query("select name, queue_name from isps where queue_name is not null", array());
@@ -33,14 +76,16 @@ while ($isp = $result->fetch_assoc()) {
 		continue;
 	}
 	print "Creating queue: " . $isp['queue_name'] . "\n";
-	createqueue($ch, 'url.'.$isp['queue_name'].'.public',  'url.public');
-	createqueue($ch, 'url.'.$isp['queue_name'].'.ooni',  'url.public');
-	createqueue($ch, 'url.'.$isp['queue_name'].'.org',  'url.org');
+	createqueue('url.'.$isp['queue_name'].'.public',  'url.public', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
+	createqueue('url.'.$isp['queue_name'].'.org',  'url.org');
 
-    createqueue($ch, 'admin.view.' . $isp['queue_name'], 'admin.view.#');
+	#createqueue('url.'.$isp['queue_name'].'.ooni',  'url.public', AMQP_PUBLIC_QUEUE_TIMEOUT);
+	delete_queue('url.'.$isp['queue_name'].'.ooni');
+
+    #createqueue('admin.view.' . $isp['queue_name'], 'admin.view.#');
 }
 
-createqueue($ch, "results",  "results.#");
-createqueue($ch, "check",  "check.#");
-createqueue($ch, "heartbeat",  "probe.heartbeat.#");
+createqueue("results",  "results.#");
+createqueue("check",  "check.#");
+createqueue("heartbeat",  "probe.heartbeat.#");
 
