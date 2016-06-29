@@ -49,8 +49,9 @@ function createqueue($name,  $key, $ttl=0, $recreate=false) {
         $q->declare();
         $q->bind($exchange, $key);
     } catch (AMQPQueueException $e) {
-        if (strpos($e->getMessage(), "inequivalent args") === false && $recreate) {
+        if (strpos($e->getMessage(), "inequivalent arg") !== false && $recreate) {
             try {
+                print "Recreating $name\n";
                 delete_queue($name);
                 $c = new AMQPChannel($amqp);
                 $q = new AMQPQueue($c);
