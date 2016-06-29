@@ -46,7 +46,7 @@ print "Sending URLs (previously tested)...\n";
 $c = send_urls($result);
 print "$c urls sent.\n";
 
-$result = $conn->query("select urlid, url, hash from urls
+$result = $conn->query("select distinct urlid, url, hash from urls
     inner join isp_reports using (urlID)
     where (lastpolled < date_sub(now(), interval 1 day)) and
     status = 'ok' order by lastpolled limit 100", array());
