@@ -1,78 +1,147 @@
+<?php
+
+include_once "credentials.php";
+
+if ($_SERVER['REQUEST_METHOD'] == "GET") {
+	$args = array(
+		'email' => $USER,
+		'url' => $_GET['url'],
+		'signature' => createSignatureHash($_GET['url'], $SECRET )
+	);
+	$qs = http_build_query($args);
+
+	// build the request
+	$options = array(
+		'http' => array(
+			'method' => 'GET',
+			'ignore_errors' => '1',
+		)
+	);
+
+	// send it
+	$ctx = stream_context_create($options);
+	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
+
+	// get the JSON data back from the api
+	$urldata = json_decode($result);
+
+    print_r($urldata);
+
+    $networks = array();
+    foreach ($urldata->results as $result) {
+        if ($result->status == "blocked") {
+            $networks[] = array($result->network_name, $result->network_id);
+        }
+
+    }
+    print_r($networks);
+
+	// now display
+?>
 <html>
-<head>
-<title>Web Client Test</title>
+<head><title>ISP Report submission</title>
 </head>
 <body>
-<form id="report">
 
-<div>URL: <input type="text" name="url" /></div>
+<h2>
+Results for <?php echo $_GET['url'] ?>
+</h2>
+
+<form action="example-isp-report.php" method="POST">
 <div>
-Networks:<br />
-  <input type="checkbox" name="network" value="FakeISP" />FakeISP <br />
-  <input type="checkbox" name="network" value="FakeISP2" />FakeISP2 <br />
+Website URL: <input type="hidden" name="url" value="<?=$_GET['url']?>" />
+<?=$_GET['url']?>
 </div>
 
-<div>Name: <input type="text" name="name" /></div>
-<div>Email: <input type="text" name="email" /></div>
+<div><h3>Report to networks</h3>
+<?foreach ($networks as $network):?>
+<div><input type="checkbox" checked name="network[]" value="<?=$network[1]?>" /><?=$network[0]?>
+</div>
+<?endforeach?>
+</div>
 
-<div>
-Message:<br />
-<textarea name="message" rows="5" cols="30"></textarea>
+<h3>Your information</h3>
+<div>Name:
+<input type="text" name="name" />
+</div>
+<div>Email:
+<input type="text" name="email" />
+</div>
+
+<div>I am:
+<div><input type="checkbox" name="user" />
+A user of of <?=$_GET['url']?>
+</div>
+<div><input type="checkbox" name="owner" />
+The owner/operator of <?=$_GET['url']?>
+</div>
+</div>
+
+<h3>About this site</h3>
+
+<div>Why this site should be unblocked:<br />
+<textarea rows="5" cols="40" name="message"></textarea>
 </div>
 
 
-<input type="submit" />
+<input type="submit" value="Submit" />
 </form>
 
-<div id="results" />
-
-<script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
-<script type="application/javascript">
-$(document).ready(function(){
-    $('#report').submit(function(){
-        var networks = [];
-        $('input[name=network]:checked').each(function(){
-            networks.push($(this).val());
-        });
-        var data = {
-            'url': $('input[name=url]').val(),
-            'networks': networks,
-
-            'reporter': {
-                'name': $('input[name=name]').val(),
-                'email': $('input[name=email]').val(),
-            },
-            'message': $('textarea[name=message]').val()
-        };
-        $.ajax({
-            'url': '/1.2/ispreport/submit', 
-            'data': JSON.stringify(data), 
-            'type': 'POST',
-            'contentType': 'application/json',
-            'success': function(ret, textStatus, xhr) {
-                var s = '';
-                $.each(ret.report_ids, function(idx, obj) {
-                    s += "Submitted successfully to: " + idx + "<br />";
-                });
-                $.each(ret.rejected, function(idx, obj) {
-                    s += "Rejected for " + idx + ": " + obj + "<br />";
-                })
-                $('#results').html(s)
-            },
-            'error': function(xhr, textStatus, errText) {
-                if (errText == "Not Found") {
-                    $('#results').text("Unknown URL or ISP");
-                }
-            }
-        });
-
-        return false;
-    });
-                
-            
-
-});
-</script>
 </body>
 </html>
 
+<? } else {
+
+// Post methods
+
+    if (count($_POST['network'])==0) {
+        print "Error: an ISP report must have one or more networks selected";
+        exit();
+    }
+
+    $date = date("Y-m-d H:i:s");
+
+    $data = array(
+        'url' => $_POST['url'],
+        'networks' => $_POST['network'],
+        'reporter' => array(
+            'name' => $_POST['name'],
+            'email' => $_POST['email']
+        ),
+        'message' => $_POST['message'],
+        'date' => $date,
+        'auth' => array(
+            'email' => $USER,
+            'signature' => "",
+        )
+    );
+
+    $data['auth']['signature'] = createSignatureHash(
+        $_POST['url'] . ":" . $date,
+        $SECRET
+        );
+
+
+
+    print_r($data);
+
+    $json = json_encode($data);
+	// build the request
+	$options = array(
+		'http' => array(
+			'method' => 'POST',
+            'content' => $json,
+			'ignore_errors' => '1',
+            'header' => 'Content-type: application/javascript'
+		)
+	);
+
+	// send it
+	$ctx = stream_context_create($options);
+	$result = file_get_contents("$API/ispreport/submit", false, $ctx);
+
+    print_r($result);
+
+}
+
+?>
