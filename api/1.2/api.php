@@ -1206,11 +1206,11 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     'message' => $data['message'],
                     )
                 );
-            if (false) {
+
             if(!$msg->send()) {
                 error_log("Unable to send message: " . $msg->ErrorInfo);
             }
-            }
+
 
         } else {
             $rejected[$network_name] = "Already reported";
