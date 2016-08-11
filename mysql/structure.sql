@@ -293,6 +293,10 @@ CREATE TABLE `categories` (
   `name8` varchar(255) DEFAULT NULL,
   `name9` varchar(255) DEFAULT NULL,
   `name10` varchar(255) DEFAULT NULL,
+  `blocked_url_count` int(11) DEFAULT '0',
+  `block_count` int(11) DEFAULT '0',
+  `total_block_count` int(11) DEFAULT 0,
+  `total_blocked_url_count` int(11) DEFAULT 0,  
   `org_category_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx1` (`display_name`)

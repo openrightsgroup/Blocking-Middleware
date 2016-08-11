@@ -1,17 +1,23 @@
+#!/usr/bin/env python
 
+import argparse
 import MySQLdb
 
 from MySQLdb.cursors import DictCursor,SSDictCursor
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--dbname', help="Database name")
+parser.add_argument('--dbuser', help="Database user")
+args = parser.parse_args()
 
-conn2 = MySQLdb.connect(host='localhost',user='root',db='blocked')
+conn2 = MySQLdb.connect(host='localhost',user=args.dbuser,db=args.dbname)
 c2 = conn2.cursor(cursorclass=DictCursor)
 
 c2.execute("select distinct name1 from categories")
 catlist = [x['name1'] for x in c2]
 
 for cat in catlist:
-    conn = MySQLdb.connect(host='localhost',user='root',db='blocked')
+    conn = MySQLdb.connect(host='localhost',user=args.dbuser,db=args.dbname)
     c  = conn.cursor (cursorclass=SSDictCursor)
     c.execute("select id,name1,name2,name3,name4,name5,name6,name7,name8,name9,name10 from categories where name1=%s order by name1, name2, name3, name4, name5, name6, name7, name8, name9, name10",[cat])
     for row in c:
@@ -33,6 +39,28 @@ for cat in catlist:
         conn2.commit()
     conn.commit()
 
+for i in range(1,10):
+    sql = """create table cat_tmp as select {f},sum(block_count) total_block_count, sum(blocked_url_count) total_blocked_url_count
+        from categories x where x.name{i} is not null group by  {g}""".format(
+            i=i,
+            f=",".join(["name{0}".format(x) for x in range(1, i+1)]),
+            g=",".join([ "x.name{0}".format(x) for x in range(1, i+1) ])
+            )
+    print sql
+    c.execute( sql )
+
+    sql2 = """update categories,cat_tmp x set 
+        categories.total_block_count = x.total_block_count, 
+        categories.total_blocked_url_count = x.total_blocked_url_count
+        where {w} and name{j} is null""".format(
+            j = i+1,
+            w=" and ".join([ "categories.name{0} = x.name{0}".format(x) for x in range(1, i+1) ])
+            )
+    print sql2
+    c.execute( sql2 )
+    c.execute("""drop table cat_tmp""")
+
+conn.commit()
 
 
     
