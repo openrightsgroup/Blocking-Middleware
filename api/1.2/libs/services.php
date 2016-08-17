@@ -369,8 +369,10 @@ class DMOZCategoryLoader {
 
         $sql = "select id, display_name,
             coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
-            sum(blocked_url_count) blocked_url_count,
-            sum(block_count) block_count
+            blocked_url_count,
+            block_count,
+            total_blocked_url_count,
+            total_block_count,
             from categories 
             where $where
             order by display_name";
@@ -386,10 +388,8 @@ class DMOZCategoryLoader {
 
         $cond = array();
         $args = array();
-        $group = array();
         // build where clause and group by clause
         foreach ($key as $k => $v) {
-            $group[] = $k;
             if (is_null($v)) {
                 $cond[] = "$k is null";
             } else {
@@ -404,57 +404,32 @@ class DMOZCategoryLoader {
         if (count($key) < 10) {
             $n = count($key) + 1;
             $cond[] = "name$n is not null";
-            $group[] = "name$n";
         }
         $where = implode(" and ", $cond);
-        $groupby = implode(",",$group);
     
 
         $sql = "select id, display_name,
             coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
-            sum(blocked_url_count) blocked_url_count,
-            sum(block_count) block_count
+            total_blocked_url_count,
+            total_block_count,
+            blocked_url_count,
+            block_count
             from categories 
             where $where
-            group by $groupby
             order by display_name";
         return $this->conn->query($sql, $args);
     }
 
-    function get_counts($parent) {
-        // get block_count and blocked_url_count for a category
-        $key = $this->get_lookup_key($parent);
-
-        $cond = array();
-        $args = array();
-
-        foreach ($key as $k => $v) {
-            if (is_null($v)) {
-                $cond[] = "$k is null";
-            } else {
-                $cond[] = "$k = ?";
-                $args[] = $v;
-            }
-        }
-        $where = implode(" and ", $cond);
-        
-        $sql = "select sum(blocked_url_count)  blocked_url_count_total,
-        sum(block_count) block_count_total
-        from categories
-        where $where";
-        $ret = $this->conn->query($sql, $args);
-        return $ret->fetch_assoc();
-    }
-        
     function load_toplevel() {
         // get the top-level categories (same format as load_children)
         $sql = "select id, display_name,
             coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
-            sum(blocked_url_count) blocked_url_count,
-            sum(block_count) block_count
+            total_blocked_url_count,
+            total_block_count,
+            blocked_url_count,
+            block_count
             from categories 
             where name1 is not null and name2 is null
-            group by name1
             order by display_name";
         return $this->conn->query($sql, array());
 

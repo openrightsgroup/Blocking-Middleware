@@ -1062,11 +1062,10 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         $res = $app['db.category.load']->load_children($cat1);
         $prev = $app['db.category.load']->get_parent($cat1);
         $output['parent'] = $prev;
-        foreach($app['db.category.load']->get_counts($cat1) as $k => $v) {
-            $output[$k] = $v;
-        }
         $output['blocked_url_count'] = $cat1['blocked_url_count'];
         $output['block_count'] = $cat1['block_count'];
+        $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];
+        $output['total_block_count'] = $cat1['total_block_count'];
     } else {
         $res = $app['db.category.load']->load_toplevel();
     }
@@ -1077,6 +1076,8 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
             'id' => $row['id'],
             'fullname' => $row['display_name'],
             'name' => $row['name'],
+            'total_block_count' => $row['total_block_count'],
+            'total_blocked_url_count' => $row['total_blocked_url_count'],
             'block_count' => $row['block_count'],
             'blocked_url_count' => $row['blocked_url_count']
         );
