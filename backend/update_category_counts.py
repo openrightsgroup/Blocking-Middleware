@@ -8,9 +8,10 @@ from MySQLdb.cursors import DictCursor,SSDictCursor
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbname', help="Database name")
 parser.add_argument('--dbuser', help="Database user")
+parser.add_argument('--dbpass', help="Database pass")
 args = parser.parse_args()
 
-conn2 = MySQLdb.connect(host='localhost',user=args.dbuser,db=args.dbname)
+conn2 = MySQLdb.connect(host='localhost',user=args.dbuser,db=args.dbname, passwd=args.dbpass)
 c2 = conn2.cursor(cursorclass=DictCursor)
 
 c2.execute("select distinct name1 from categories")
@@ -39,7 +40,7 @@ for cat in catlist:
         conn2.commit()
     conn.commit()
 
-for i in range(1,10):
+for i in range(1,9):
     sql = """create table cat_tmp as select {f},sum(block_count) total_block_count, sum(blocked_url_count) total_blocked_url_count
         from categories x where x.name{i} is not null group by  {g}""".format(
             i=i,
@@ -48,6 +49,11 @@ for i in range(1,10):
             )
     print sql
     c.execute( sql )
+    sql = "create index cat_tmp_idx on cat_tmp({f})".format(
+        f = ",".join(["name{0}".format(x) for x in range(1, min(i+1,4))]),
+        )
+    print sql
+    c.execute(sql)
 
     sql2 = """update categories,cat_tmp x set 
         categories.total_block_count = x.total_block_count, 
@@ -60,8 +66,9 @@ for i in range(1,10):
     c.execute( sql2 )
     c.execute("""drop table cat_tmp""")
 
+    conn.commit()
+
+c.execute("update categories set total_block_count = block_count, total_blocked_url_count = blocked_url_count where name10 is not null")
 conn.commit()
-
-
     
 
