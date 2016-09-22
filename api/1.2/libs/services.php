@@ -372,7 +372,7 @@ class DMOZCategoryLoader {
             blocked_url_count,
             block_count,
             total_blocked_url_count,
-            total_block_count,
+            total_block_count
             from categories 
             where $where
             order by display_name";
