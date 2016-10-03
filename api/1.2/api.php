@@ -1053,7 +1053,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
-	#Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
 
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
