@@ -382,7 +382,14 @@ class DMOZCategoryLoader {
     }
 
 
-    function load_children($parent) {
+    function load_children($parent, $show_empty=0, $sort='display_name') {
+        if (!in_array(ltrim($sort,'-'), array('display_name','total_block_count'))) {
+            throw new InvalidSortError("invalid sort: $sort");
+        }
+        if ($sort[0] == '-') {
+            $sort = ltrim($sort,'-') . " desc";
+        }
+
         // get the immediate descendents of a parent category
         $key = $this->get_lookup_key($parent);
 
@@ -405,7 +412,11 @@ class DMOZCategoryLoader {
             $n = count($key) + 1;
             $cond[] = "name$n is not null";
         }
+        if (!$show_empty) {
+            $cond[] = "total_block_count > 0";
+        }
         $where = implode(" and ", $cond);
+            
     
 
         $sql = "select id, display_name,
@@ -416,12 +427,18 @@ class DMOZCategoryLoader {
             block_count
             from categories 
             where $where
-            order by display_name";
+            order by $sort";
         return $this->conn->query($sql, $args);
     }
 
-    function load_toplevel() {
+    function load_toplevel($show_empty = 1, $sort='display_name') {
         // get the top-level categories (same format as load_children)
+        if (!in_array(ltrim($sort,'-'), array('display_name','total_block_count'))) {
+            throw new InvalidSortError("invalid sort: $sort");
+        }
+        if ($sort[0] == '-') {
+            $sort = ltrim($sort,'-') . " desc";
+        }
         $sql = "select id, display_name,
             coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
             total_blocked_url_count,
@@ -429,8 +446,9 @@ class DMOZCategoryLoader {
             blocked_url_count,
             block_count
             from categories 
-            where name1 is not null and name2 is null
-            order by display_name";
+            where name1 is not null and name2 is null " . 
+            ($show_empty ? "" : " and total_block_count > 0 ") . 
+            "order by $sort";
         return $this->conn->query($sql, array());
 
 

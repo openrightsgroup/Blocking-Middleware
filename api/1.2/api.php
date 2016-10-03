@@ -165,6 +165,10 @@ $app->error(function(APIException $e, $code) {
 			$code = 400;
 			$message = $e->getMessage();
 			break;
+        case 'InvalidSortError':
+			$code = 400;
+			$message = $e->getMessage();
+			break;
 	};
 	error_log("Error response: $code, $message, $error_class");
 	return new JsonResponse(
@@ -1049,7 +1053,10 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+	#Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+
+    $show_empty = $req->get('show_empty', 1);
+    $sort = $req->get('sort', 'display_name');
 
     $output = array('success' => true);
     if ($parent != "0") {
@@ -1059,7 +1066,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         }
         $output['id'] = $parent;
         $output['name'] = $cat1['display_name'];
-        $res = $app['db.category.load']->load_children($cat1);
+        $res = $app['db.category.load']->load_children($cat1, $show_empty, $sort);
         $prev = $app['db.category.load']->get_parent($cat1);
         $output['parent'] = $prev;
         $output['blocked_url_count'] = $cat1['blocked_url_count'];

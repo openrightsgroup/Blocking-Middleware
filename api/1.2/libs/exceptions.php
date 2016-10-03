@@ -39,3 +39,5 @@ class BadUrlError extends APIException{}
 
 class TokenLookupError extends APIException {}
 class InvalidTokenError extends APIException {}
+
+class InvalidSortError extends APIException {}
