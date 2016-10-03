@@ -1074,7 +1074,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];
         $output['total_block_count'] = $cat1['total_block_count'];
     } else {
-        $res = $app['db.category.load']->load_toplevel();
+        $res = $app['db.category.load']->load_toplevel($show_empty, $sort);
     }
 
     $cat = array();
