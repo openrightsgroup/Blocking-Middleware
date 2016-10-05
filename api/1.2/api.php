@@ -1069,6 +1069,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         $res = $app['db.category.load']->load_children($cat1, $show_empty, $sort);
         $prev = $app['db.category.load']->get_parent($cat1);
         $output['parent'] = $prev;
+        $output['parents'] = $app['db.category.load']->get_parents($cat1);
         $output['blocked_url_count'] = $cat1['blocked_url_count'];
         $output['block_count'] = $cat1['block_count'];
         $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];

@@ -340,6 +340,45 @@ class DMOZCategoryLoader {
 
     }
 
+    function get_parents($node) {
+        // recursive query routine - should cache/pregenerate?
+        $out = array();
+        $key = $this->get_lookup_key($node);
+        if (count($key) <= 1) {
+            // bail out if we have been given a toplevel category
+            return array();
+        }
+        // build sql criteria & arguments, leaving off the last value
+        for($i=1; $i < count($key); $i++) {
+            $fields[] = "name$i = ?";
+            $args[] = $key["name$i"];
+        }
+        do {
+            $n = count($fields); //last field index
+            $nf = $n+1; // null field index
+            $sql = ("select id from categories where " . 
+                implode(" AND ", $fields) . 
+                ( $n < 10 ? " AND name$nf is null" : ""));
+            $q = $this->conn->query($sql, $args);
+            $row = $q->fetch_row();
+            $id = $row[0];
+
+            // insert array of (id, name) to output
+            array_unshift($out, array($id, $args[$n-1]));
+
+            // remove last criterion & argument from arrays
+            array_pop($args); array_pop($fields);
+
+
+            if (count($fields) == 0) {
+                // quite when empty
+                break;
+            }
+        // also quit if not found
+        } while ($row);
+        return $out;
+    }
+
     function get_parent($node) {
         error_log("node: " . implode(",", array_keys($node)));
         $key = $this->get_lookup_key($node);
