@@ -137,3 +137,18 @@ class ResultSetIterator implements Iterator {
     }
 
 }
+
+function redis_connect($name) {
+    if (!defined('REDIS')) {
+        return null;
+    }
+    $redis = new Redis();
+    list($host, $port) = explode(":", REDIS);
+    if (!$redis->connect($host, $port)) {
+        error_log("Failed to connect to ". REDIS);
+        return null;
+    }
+    $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_PHP);
+
+    return $redis;
+}
