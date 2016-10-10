@@ -63,7 +63,7 @@ $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
 };
 $app['db.category.load'] = function($app) {
-	return new DMOZCategoryLoader($app['service.db'], $app['service.redis.cache']);
+	return new DMOZCategoryLoader($app['service.db']);
 };
 $app['db.ispreport.load'] = function($app) {
 	return new ISPReportLoader($app['service.db']);
@@ -1062,39 +1062,49 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
 
-    $output = array('success' => true);
-    if ($parent != "0") {
-        $cat1 = $app['db.category.load']->load($parent);
-        if (!$cat1) {
-            return $app->json(array("status"=>"notfound"),404);
-        }
-        $output['id'] = $parent;
-        $output['name'] = $cat1['display_name'];
-        $res = $app['db.category.load']->load_children($cat1, $show_empty, $sort);
-        $prev = $app['db.category.load']->get_parent($cat1);
-        $output['parent'] = $prev;
-        $output['parents'] = $app['db.category.load']->get_parents($cat1);
-        $output['blocked_url_count'] = $cat1['blocked_url_count'];
-        $output['block_count'] = $cat1['block_count'];
-        $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];
-        $output['total_block_count'] = $cat1['total_block_count'];
-    } else {
-        $res = $app['db.category.load']->load_toplevel($show_empty, $sort);
-    }
+    $cached = $app['service.redis.cache']->get("cat:$parent");
 
-    $cat = array();
-    while ($row = $res->fetch_assoc()) {
-        $cat[] = array(
-            'id' => $row['id'],
-            'fullname' => $row['display_name'],
-            'name' => $row['name'],
-            'total_block_count' => $row['total_block_count'],
-            'total_blocked_url_count' => $row['total_blocked_url_count'],
-            'block_count' => $row['block_count'],
-            'blocked_url_count' => $row['blocked_url_count']
-        );
+    if ($cached) {
+        // cache whole output - may require locking under high traffic
+        $output = $cached;
+    } else {
+
+        $output = array('success' => true);
+        if ($parent != "0") {
+            $cat1 = $app['db.category.load']->load($parent);
+            if (!$cat1) {
+                return $app->json(array("status"=>"notfound"),404);
+            }
+            $output['id'] = $parent;
+            $output['name'] = $cat1['display_name'];
+            $res = $app['db.category.load']->load_children($cat1, $show_empty, $sort);
+            $prev = $app['db.category.load']->get_parent($cat1);
+            $output['parent'] = $prev;
+            $output['parents'] = $app['db.category.load']->get_parents($cat1);
+            $output['blocked_url_count'] = $cat1['blocked_url_count'];
+            $output['block_count'] = $cat1['block_count'];
+            $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];
+            $output['total_block_count'] = $cat1['total_block_count'];
+        } else {
+            $res = $app['db.category.load']->load_toplevel($show_empty, $sort);
+        }
+
+        $cat = array();
+        while ($row = $res->fetch_assoc()) {
+            $cat[] = array(
+                'id' => $row['id'],
+                'fullname' => $row['display_name'],
+                'name' => $row['name'],
+                'total_block_count' => $row['total_block_count'],
+                'total_blocked_url_count' => $row['total_blocked_url_count'],
+                'block_count' => $row['block_count'],
+                'blocked_url_count' => $row['blocked_url_count']
+            );
+        }
+        $output['categories'] = $cat;
+
+        $app['service.redis.cache']->set("cat:$parent", $output);
     }
-    $output['categories'] = $cat;
 
     return $app->json($output);
 
