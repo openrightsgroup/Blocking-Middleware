@@ -315,9 +315,8 @@ class IpLookupService {
 }
 
 class DMOZCategoryLoader {
-    function __construct($conn, $redis) {
+    function __construct($conn) {
         $this->conn = $conn;
-        $this->redis = $redis;
     }
 
     function load($id) {
@@ -354,20 +353,9 @@ class DMOZCategoryLoader {
             $fields[] = "name$i = ?";
             $args[] = $key["name$i"];
         }
-        $cachekey = implode(":", $args);
+
         do {
 
-            $thiskey = implode(":", $args);
-            error_log("Checking: $thiskey");
-            if ($this->redis && ($cached = $this->redis->get($thiskey))) {
-                error_log("Found");
-                // cache hit
-                if (is_array($cached)) {
-                    $out = array_merge($cached, $out);
-
-                    break;
-                }
-            } 
             $n = count($fields); //last field index
             $nf = $n+1; // null field index
             $sql = ("select id from categories where " . 
@@ -390,10 +378,6 @@ class DMOZCategoryLoader {
             }
         // also quit if not found
         } while ($row);
-        if ($this->redis !== null) {
-            error_log("Putting: $cachekey = " . serialize($out));
-            $this->redis->set($cachekey, $out);
-        }
         return $out;
     }
 
