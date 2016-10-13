@@ -11,6 +11,7 @@ import ConfigParser
 
 import requests
 import requests_cache
+import bs4
 
 import amqplib.client_0_8 as amqp
 
@@ -51,6 +52,16 @@ class BlockedRobotsTxtChecker(object):
     def set_url_status(self, url, status):
         c = self.conn.cursor()
         c.execute("""update urls set status = %s where url = %s""", [ status, url])
+        c.close()
+        self.conn.commit()
+
+    def save_description(self, url, data):
+        c = self.conn.cursor()
+        #c.execute("update urls set description = %s where url = %s", )
+        c.execute("""insert into site_description(urlid, created, description) 
+            select urlID, now(), %s from urls where url = %s""",
+                [json.dumps(data), url]
+            )
         c.close()
         self.conn.commit()
 
@@ -99,6 +110,7 @@ class BlockedRobotsTxtChecker(object):
         except Exception,v:
             # if anything bad happens, log it but continue
             logging.error("HEAD Exception: %s", v)
+            req = None
                 
 
         # pass the message to the regular location
@@ -106,6 +118,39 @@ class BlockedRobotsTxtChecker(object):
         new_key = msg.routing_key.replace('check','url')
         self.ch.basic_publish(msgsend, self.config.get('daemon','exchange'), new_key)
         logging.info("Message sent with new key: %s", new_key)
+
+        # check feature flag in config file
+        if self.config.get('daemon','extract').lower() != "true":
+            return True
+
+        # now fetch the page to extract data
+        try:
+            descdata = {}
+            if req and req.headers.get('content-type').startswith('text/html'):
+                req2 = requests.get(data['url'], headers=self.headers)
+                doc = bs4.BeautifulSoup(req2.content)
+
+                try:
+                    descdata['title'] = doc.find('title').text
+                except Exception,v:
+                    logging.info("Unable to extract title: %s", repr(v))
+
+                for field in ('keywords','description','twitter:site'):
+                    try:
+                        descdata[field] = doc.find('meta', {'name':field})['content']
+                    except Exception,v:
+                        logging.info("Unable to extract %s: %s", field, repr(v))
+
+                for field in ('og:title','og:description'):
+                    try:
+                        descdata[field] = doc.find('meta', {'property':field})['content']
+                    except Exception,v:
+                        logging.info("Unable to extract %s: %s", field, repr(v))
+
+                self.save_description(data['url'], descdata)
+        except Exception,v:
+            logging.warn("Error in page data retrieval: %s", repr(v))
+
         return True
 
 def main():
