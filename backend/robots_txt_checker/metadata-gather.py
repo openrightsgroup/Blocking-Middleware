@@ -93,7 +93,7 @@ def main():
 
     gather = MetadataGatherer(cfg, conn, ch)
 
-    ch.queue_declare("metadata", durable=True)
+    ch.queue_declare("metadata", durable=True, auto_delete=False)
     ch.queue_bind("metadata", "org.blocked", "url.org")
     ch.queue_bind("metadata", "org.blocked", "url.public")
 
