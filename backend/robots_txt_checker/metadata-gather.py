@@ -101,3 +101,6 @@ def main():
     ch.basic_consume("metadata", consumer_tag='metadata1', callback=gather.get_metadata)
     while True:
         ch.wait()
+
+if __name__ == '__main__':
+    main()
