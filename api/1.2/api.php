@@ -1190,14 +1190,17 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         $network = $app['db.isp.load']->load($network_name);
 
         // check latest status
-        $q = $app['service.db']->query("select id from url_latest_status
-            where urlID = ? and network_name = ? and status = 'blocked'",
-            array($url['urlID'], $network_name)
-            );
-        $row = $q->fetch_row();
-        if (!$row) {
-            $rejected[$network_name] = "Not blocked on this network";
-            continue;
+        // special case for the pseudo-isp ORG
+        if ($network_name != "ORG") {
+            $q = $app['service.db']->query("select id from url_latest_status
+                where urlID = ? and network_name = ? and status = 'blocked'",
+                array($url['urlID'], $network_name)
+                );
+            $row = $q->fetch_row();
+            if (!$row) {
+                $rejected[$network_name] = "Not blocked on this network";
+                continue;
+            }
         }
         if (!$network['admin_email']) {
             $rejected[$network_name] = "No administration email for this network";
