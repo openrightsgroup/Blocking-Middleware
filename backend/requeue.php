@@ -70,7 +70,7 @@ WHERE uls.status = 'blocked' AND urls.status = 'ok' AND source = 'dmoz';
 $result = $conn->query("select urlid, url, hash from urls
     inner join blocked_dmoz using (urlID)
     where (lastpolled < date_sub(now(), interval 1 day)) 
-    lastpolled limit 50", array());
+    order by lastpolled limit 50", array());
 
 print "Sending URLs (blocked dmoz)...\n";
 $c = send_urls($result);
