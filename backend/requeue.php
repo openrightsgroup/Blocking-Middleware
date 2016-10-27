@@ -54,3 +54,24 @@ $result = $conn->query("select distinct urlid, url, hash from urls
 print "Sending URLs (reported)...\n";
 $c = send_urls($result);
 print "$c urls sent.\n";
+
+/* blocked_dmoz built using:
+
+CREATE TABLE blocked_dmoz(urlid int primary key) engine=InnoDB;
+
+INSERT IGNORE INTO blocked_dmoz(urlid) 
+SELECT Urls.urlid 
+FROM Urls 
+INNER JOIN url_latest_status uls USING (urlid) 
+WHERE uls.status = 'blocked' AND urls.status = 'ok' AND source = 'dmoz';
+
+*/
+
+$result = $conn->query("select urlid, url, hash from urls
+    inner join blocked_dmoz using (urlID)
+    where (lastpolled < date_sub(now(), interval 1 day)) 
+    lastpolled limit 50", array());
+
+print "Sending URLs (blocked dmoz)...\n";
+$c = send_urls($result);
+print "$c urls sent.\n";
