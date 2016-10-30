@@ -532,10 +532,10 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($name, $email, $urlID, $network_name, $message) {
-        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, created)
-        values (?,?,?,?,?,now())",
-        array($name, $email, $urlID, $network_name, $message)
+    function insert($name, $email, $urlID, $network_name, $message, $report_type) {
+        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, report_type, created)
+        values (?,?,?,?,?,?,now())",
+        array($name, $email, $urlID, $network_name, $message, $report_type)
         );
         return $this->conn->insert_id;
     }

@@ -30,6 +30,7 @@ CREATE TABLE `isp_reports` (
   `network_name` varchar(64) NOT NULL,
   `created` datetime NOT NULL,
   `message` text,
+  report_type varchar(32), 
   `unblocked` int(11) NOT NULL DEFAULT '0',
   `notified` int(11) NOT NULL DEFAULT '0',
   `last_updated` datetime DEFAULT NULL,

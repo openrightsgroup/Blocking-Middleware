@@ -1210,12 +1210,14 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         }
 
         if ($app['db.ispreport.load']->can_report($url['urlID'], $network_name)) {
+
             $ids[$network_name] = $app['db.ispreport.load']->insert(
                 $data['reporter']['name'],
                 $data['reporter']['email'],
                 $url['urlID'],
                 $network_name,
-                $data['message']
+                $data['message'],
+                $data['report_type']
                 );
             # send email here
 
