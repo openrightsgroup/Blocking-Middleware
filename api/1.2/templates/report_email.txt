@@ -2,6 +2,10 @@
 Website blocking enquiry from {{reporter_email}}, regarding the website at
 {{url}}.
 
-{{message}}
+{{The above website has been incorrectly blocked by your filters.
+
+Please could you look into this and let me know when the block has been lifted.
+
+Thanks}}
 
 
