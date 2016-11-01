@@ -782,7 +782,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	# Fetch results from status summary table, left joining to get last blocked time
 	$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category, l.blocktype,
-        isps.name, max(rp.created)
+        isps.name, max(rp.created), isps.queue_name
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
@@ -806,6 +806,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		$out['blocktype'] = $row[6];
         $out['network_id'] = $row[7];
         $out['last_report_timestamp'] = $row[8];
+        $out['isp_active'] = ($row[9] != null);
 
 		$output[] = $out;
 	}
