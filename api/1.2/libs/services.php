@@ -556,7 +556,7 @@ class DMOZCategoryLoader {
         $key = $this->get_lookup_key($row);
 
         $f = array();
-        $args = array(strlen($row['display_name'])+1);
+        $args = array(strlen($row['display_name'])+2);
         foreach($key as $k => $v) {
             $f[] = "$k = ?";
             $args[] = $v;
