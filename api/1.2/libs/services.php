@@ -554,8 +554,9 @@ class DMOZCategoryLoader {
         // get blocked sites that belong to a category (does not get sites of child categories)
         $row = $this->load($parentid);
         $key = $this->get_lookup_key($row);
+
         $f = array();
-        $k = array(strlen($row['display_name'])+1);
+        $args = array(strlen($row['display_name'])+1);
         foreach($key as $k => $v) {
             $f[] = "$k = ?";
             $args[] = $v;
