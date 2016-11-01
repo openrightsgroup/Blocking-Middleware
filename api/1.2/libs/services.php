@@ -567,6 +567,7 @@ class DMOZCategoryLoader {
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
+            inner join categories on categories.id = url_categories.category_id
             where $where and uls.status = 'blocked'
             group by url
             order by URL, network_name limit 20",
