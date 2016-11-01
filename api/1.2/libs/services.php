@@ -526,7 +526,7 @@ class DMOZCategoryLoader {
 			"select URL from urls
 			inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-			where $where limit 20", $args));
+			where $where limit 20", $args);
 		$out = array();
 		while ($row = $result->fetch_row()) {
 			$out[] = $row[0];
