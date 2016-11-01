@@ -555,7 +555,7 @@ class DMOZCategoryLoader {
         $row = $this->load($parentid);
         $key = $this->get_lookup_key($row);
         $f = array();
-        $k = array();
+        $k = array(strlen($row['display_name'])+1);
         foreach($key as $k => $v) {
             $f[] = "$k = ?";
             $args[] = $v;
@@ -563,13 +563,14 @@ class DMOZCategoryLoader {
         $where = implode(" AND ", $f);
 
         $result = $this->conn->query(
-            "select URL as url, count(distinct network_name) block_count
+            "select URL as url, count(distinct network_name) block_count,
+                url_categories.category_id, substr(display_name, ?) category_title
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
             inner join categories on categories.id = url_categories.category_id
             where $where and uls.status = 'blocked'
-            group by url
+            group by url, url_categories.category_id
             order by URL, network_name limit 20",
             $args
             );
