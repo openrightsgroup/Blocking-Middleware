@@ -509,6 +509,31 @@ class DMOZCategoryLoader {
 		return $out;
 	}
 
+    function load_sites_recurse($parent) {
+        // get sites that belong to a category 
+        # TODO: unicode function
+        $row = $this->load($parent);
+        $key = $this->get_lookup_key($row);
+        $f = array();
+        $k = array();
+        foreach($key as $k => $v) {
+            $f[] = "$k = ?";
+            $args[] = $v;
+        }
+        $where = implode(" AND ", $f);
+
+		$result = $this->conn->query(
+			"select URL from urls
+			inner join url_categories on urls.urlID = url_categories.urlID
+            inner join categories on categories.id = url_categories.category_id
+			where $where limit 20", $args));
+		$out = array();
+		while ($row = $result->fetch_row()) {
+			$out[] = $row[0];
+		}
+		return $out;
+	}
+
     function load_blocks($parentid) {
         // get blocked sites that belong to a category (does not get sites of child categories)
 
@@ -521,6 +546,31 @@ class DMOZCategoryLoader {
             group by url
             order by URL, network_name",
             array($parentid)
+            );
+        return $result;
+    }
+
+    function load_blocks_recurse($parentid) {
+        // get blocked sites that belong to a category (does not get sites of child categories)
+        $row = $this->load($parentid);
+        $key = $this->get_lookup_key($row);
+        $f = array();
+        $k = array();
+        foreach($key as $k => $v) {
+            $f[] = "$k = ?";
+            $args[] = $v;
+        }
+        $where = implode(" AND ", $f);
+
+        $result = $this->conn->query(
+            "select URL as url, count(distinct network_name) block_count
+                from urls
+            inner join url_categories on urls.urlID = url_categories.urlID
+            inner join url_latest_status uls on uls.urlID=urls.urlID
+            where $where and uls.status = 'blocked'
+            group by url
+            order by URL, network_name limit 20",
+            $args
             );
         return $result;
     }

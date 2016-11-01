@@ -1123,7 +1123,11 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
     if (!$cat) {
         return $app->json(array("status"=>"notfound"),404);
     }
-    $res = $app['db.category.load']->load_blocks($parent);
+    if ($req->get('recurse') && $parent) {
+        $res = $app['db.category.load']->load_blocks_recurse($parent);
+    } else {
+        $res = $app['db.category.load']->load_blocks($parent);
+    }
     $sites = array();
     while ($data = $res->fetch_assoc()) {
         $sites[] = $data;
