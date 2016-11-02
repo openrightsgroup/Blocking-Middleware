@@ -564,7 +564,7 @@ class DMOZCategoryLoader {
         $where = implode(" AND ", $f);
 
         if ($filter_active) {
-            $active = "inner join isps on url_latest_status.network_name = isps.name and isps.queue_name is not null";
+            $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
         } else {
             $active = "";
         }
