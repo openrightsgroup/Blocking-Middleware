@@ -1125,7 +1125,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         return $app->json(array("status"=>"notfound"),404);
     }
     if ($req->get('recurse') && $parent) {
-        $res = $app['db.category.load']->load_blocks_recurse($parent);
+        $res = $app['db.category.load']->load_blocks_recurse($parent, $req->get('active', 0));
     } else {
         $res = $app['db.category.load']->load_blocks($parent);
     }
