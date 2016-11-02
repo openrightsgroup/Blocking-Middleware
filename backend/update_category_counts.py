@@ -21,9 +21,20 @@ c = conn.cursor(cursorclass=DictCursor)
 
 st0 = time.time()
 if True:
-    c.execute("create temporary table cat_tmp (primary key(id)) as select url_categories.category_id id, count(distinct uls.urlid) blocked_url_count, count(distinct uls.urlid, uls.network_name) block_count from url_categories inner join url_latest_status uls on uls.urlid = url_categories.urlid where status = 'blocked' group by url_categories.category_id;")
+    c.execute("""create temporary table cat_tmp (primary key(id)) as 
+    select url_categories.category_id id, count(distinct uls.urlid) blocked_url_count, count(distinct uls.urlid, uls.network_name) block_count 
+    from url_categories 
+    inner join url_latest_status uls on uls.urlid = url_categories.urlid 
+    inner join isps on isps.name = uls.network_name and isps.queue_name is not null
+    where status = 'blocked' 
+    group by url_categories.category_id;""")
+
     c.execute("update categories set block_count=0, blocked_url_count=0, total_block_count=0, total_blocked_url_count=0")
-    c.execute("update categories inner join cat_tmp using(id) set categories.block_count = cat_tmp.block_count, categories.blocked_url_count = cat_tmp.blocked_url_count")
+    c.execute("""update categories 
+    inner join cat_tmp using(id) 
+    set 
+    categories.block_count = cat_tmp.block_count, 
+    categories.blocked_url_count = cat_tmp.blocked_url_count""")
     conn.commit()
     
 print "Rebuild time: ", time.time() - st0
