@@ -157,8 +157,7 @@ class UrlLoader {
 
         $output = array();
         while ($data = $res->fetch_assoc()) {
-            $data['dmoz_categories'] = explode('!!', $data['dmoz_categories']);
-            $output[] = $data;
+            $output[] = $data['url'];
         }
 
         return $output;
