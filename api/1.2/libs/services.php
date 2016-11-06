@@ -544,7 +544,7 @@ class DMOZCategoryLoader {
         return $result;
     }
 
-    function load_blocks_recurse($parentid, $filter_active=0) {
+    function load_blocks_recurse($parentid, $page=0, $filter_active=0, $pagesize=20) {
         // get blocked sites that belong to a category (does not get sites of child categories)
         $row = $this->load($parentid);
         $key = $this->get_lookup_key($row);
@@ -563,6 +563,7 @@ class DMOZCategoryLoader {
             $active = "";
         }
 
+        $off = (int)$page * (int)$pagesize;
         $result = $this->conn->query(
             "select URL as url, count(distinct uls.network_name) block_count,
                 url_categories.category_id, substr(display_name, ?) category_title,
@@ -575,7 +576,7 @@ class DMOZCategoryLoader {
             inner join categories on categories.id = url_categories.category_id
             where $where and uls.status = 'blocked'
             group by url, url_categories.category_id
-            order by URL, uls.network_name limit 20",
+            order by URL, uls.network_name limit 20 offset $off",
             $args
             );
         return $result;
