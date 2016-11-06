@@ -1148,7 +1148,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
 #------------
 
 $app->get('/ispreport/candidates', function (Request $req) use ($app) {
-    $data = $app['db.url.load']->get_unreported_blocks();
+    $data = $app['db.url.load']->get_unreported_blocks($req->get('count',10));
 
     return $app->json(array(
         'success' => true,
