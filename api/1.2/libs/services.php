@@ -565,10 +565,12 @@ class DMOZCategoryLoader {
 
         $result = $this->conn->query(
             "select URL as url, count(distinct network_name) block_count,
-                url_categories.category_id, substr(display_name, ?) category_title
+                url_categories.category_id, substr(display_name, ?) category_title,
+                max(isp_reports.created)
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
+            inner join isp_reports on isp_reports.urlid = urls.urlID
             $active
             inner join categories on categories.id = url_categories.category_id
             where $where and uls.status = 'blocked'
