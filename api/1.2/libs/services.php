@@ -145,11 +145,12 @@ class UrlLoader {
         // return <n> unreported blocked sites
 
         $res = $this->conn->query("select 
-                urls.url
+                distinct urls.url
             from urls 
             inner join blocked_dmoz on blocked_dmoz.urlid = urls.urlid
+            inner join url_latest_status uls on uls.urlid = urls.urlid
             left join isp_reports on (isp_reports.urlID = urls.urlID)
-            where isp_reports.urlID is null 
+            where isp_reports.urlID is null and uls.status = 'blocked'
             order by rand() limit " . (int)$count,
             # sort  by rand is horrible, do something better
             array()
