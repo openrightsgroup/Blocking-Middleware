@@ -566,7 +566,7 @@ class DMOZCategoryLoader {
         $result = $this->conn->query(
             "select URL as url, count(distinct uls.network_name) block_count,
                 url_categories.category_id, substr(display_name, ?) category_title,
-                max(isp_reports.created)
+                max(isp_reports.created) last_reported
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
