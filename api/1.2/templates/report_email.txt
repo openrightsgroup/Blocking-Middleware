@@ -1,11 +1,29 @@
+{% if 'unblock' in report_type %}
 
 Website blocking enquiry from {{reporter_email}}, regarding the website at
 {{url}}.
 
 The above website has been incorrectly blocked by your filters.
 
+{{message}}
+
 Please could you look into this and let me know when the block has been lifted.
 
-Thanks
+Thanks, 
+
+{{reporter_name}}
+
+{% else %}
+
+The site {{url}} has been flagged by user {{reporter_name}} ({{reporter_email}}).
+
+Site information:
+{% for rpt in report_type %}
+* {{rpt}}
+{%endfor%}
+
+{{message}}
+
+{% endif %}
 
 
