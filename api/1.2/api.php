@@ -1222,7 +1222,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $url['urlID'],
                 $network_name,
                 $data['message'],
-                $data['report_type']
+                $data['report_type'],
+                $data['send_updates']
                 );
             # send email here
 

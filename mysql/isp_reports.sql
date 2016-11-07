@@ -33,6 +33,7 @@ CREATE TABLE `isp_reports` (
   report_type varchar(32), 
   `unblocked` int(11) NOT NULL DEFAULT '0',
   `notified` int(11) NOT NULL DEFAULT '0',
+  `send_updates` tinyint NOT NULL DEFAULT '0',
   `last_updated` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
