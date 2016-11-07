@@ -67,20 +67,21 @@ function process_result($msg, $queue) {
 
     # send unblock notification email
 
-    $msg = new PHPMailer();
-    $msg->setFrom('blocked@openrightsgroup.org', 'Blocked Admin');
-    $msg->addAddress($report['email'], $report['name']);
-    $msg->Subject = "Site unblocked: " . $url['URL'] . " on " . $report['network_name'];
-    $msg->isHTML(false);
-    $msg->CharSet = 'utf-8';
-    $msg->Body = $twig->render(
-        'unblock_email.txt',
-        array(
-            'report' => $report,
-            'url' => $url
-            )
-        );
-
+    if ($report['send_updates']) {
+        $msg = new PHPMailer();
+        $msg->setFrom('blocked@openrightsgroup.org', 'Blocked Admin');
+        $msg->addAddress($report['email'], $report['name']);
+        $msg->Subject = "Site unblocked: " . $url['URL'] . " on " . $report['network_name'];
+        $msg->isHTML(false);
+        $msg->CharSet = 'utf-8';
+        $msg->Body = $twig->render(
+            'unblock_email.txt',
+            array(
+                'report' => $report,
+                'url' => $url
+                )
+            );
+    }
 
 	return true;
 
