@@ -1228,7 +1228,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
             $msg = new PHPMailer();
             $msg->setFrom(SITE_EMAIL, $data['reporter']['name'] . ' via Blocked.org.uk');
-            //$msg->addBCC(SITE_EMAIL);
+            $msg->addBCC(SITE_EMAIL);
             $msg->addAddress($network['admin_email'], $network['admin_name']);
             $msg->Subject = "Website blocking enquiry - " . $url['URL'];
             $msg->isHTML(false);
