@@ -1223,7 +1223,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $network_name,
                 $data['message'],
                 $data['report_type'],
-                $data['send_updates']
+                (@$data['send_updates'] ? 1 : 0)
                 );
             # send email here
 
