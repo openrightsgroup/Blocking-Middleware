@@ -7,7 +7,8 @@ The above website has been incorrectly blocked by your filters.
 
 {{message|raw}}
 
-Please could you look into this and let me know why this website was blocked and if the block will be lifted.
+Please could you look into this and let me know why this website was blocked
+and if the block will be lifted.
 
 Thanks, 
 
