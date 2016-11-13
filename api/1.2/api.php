@@ -1062,14 +1062,13 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
     
 	checkParameters($req, array('email','signature'));
-
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
 
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
 
-    $cached = $app['service.redis.cache']->get("cat:$parent");
+    $cached = null; #$app['service.redis.cache']->get("cat:$parent");
 
     if ($cached) {
         // cache whole output - may require locking under high traffic
@@ -1085,9 +1084,10 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
             $output['id'] = $parent;
             $output['name'] = $cat1['display_name'];
             $res = $app['db.category.load']->load_children($cat1, $show_empty, $sort);
-            $prev = $app['db.category.load']->get_parent($cat1);
-            $output['parent'] = $prev;
+
+            $output['parent'] = $app['db.category.load']->get_parent($cat1);
             $output['parents'] = $app['db.category.load']->get_parents($cat1);
+
             $output['blocked_url_count'] = $cat1['blocked_url_count'];
             $output['block_count'] = $cat1['block_count'];
             $output['total_blocked_url_count'] = $cat1['total_blocked_url_count'];
@@ -1119,8 +1119,8 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 })->value('parent',0);
 
 $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
-	checkParameters($req, array('email','signature'));
 
+	checkParameters($req, array('email','signature'));
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
 
@@ -1139,6 +1139,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
     }
     return $app->json(array(
         "success" => true, 
+        "id" => $parent,
         "category" => $cat['display_name'], 
         "sites"=> $sites));
 });

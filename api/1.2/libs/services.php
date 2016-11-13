@@ -339,13 +339,15 @@ class DMOZCategoryLoader {
 
         $res = $this->conn->query(
             'select id, name from categories
-            where tree <@ $1
+            where tree @> $1 and id <> $2
             order by tree',
-            array($node['tree'])
+            array($node['tree'], $node['id'])
             );
 
         while ($data = $res->fetch_row()) {
-            $out[] = $data;
+            if ($data[1] != $node['tree']) {
+                $out[] = $data;
+            }
         }
 
         return $out;
@@ -356,7 +358,7 @@ class DMOZCategoryLoader {
         $sql = 'select id
             from categories 
             where tree @> $1
-            order by tree desc limit 1';
+            order by tree desc limit 1 offset 1';
         $q = $this->conn->query($sql, array($node['tree']));
         $row = $q->fetch_assoc();
         return $row['id'];
@@ -387,6 +389,8 @@ class DMOZCategoryLoader {
             from categories 
             where $where
             order by $sort";
+        error_log("SQL: $sql");
+        error_log("Arg: $args[0]");
         return $this->conn->query($sql, $args);
     }
 
@@ -482,10 +486,10 @@ class DMOZCategoryLoader {
         $sql = "select URL as url, count(distinct uls.network_name) block_count,
                 url_categories.category_id, substr(display_name, \$1) category_title,
                 max(isp_reports.created) last_reported
-                from src.urls
+                from urls
             inner join url_categories on urls.urlID = url_categories.urlID
-            inner join src.url_latest_status uls on uls.urlID=urls.urlID
-            left join src.isp_reports on isp_reports.urlid = urls.urlID
+            inner join url_latest_status uls on uls.urlID=urls.urlID
+            left join isp_reports on isp_reports.urlid = urls.urlID
             $active
             inner join categories on categories.id = url_categories.category_id
             where \$2 @> tree and uls.status = 'blocked'
@@ -494,7 +498,7 @@ class DMOZCategoryLoader {
         error_log("SQL: $sql");
         $result = $this->conn->query(
             $sql, 
-            array(strlen($row['display_name']), $row['tree'])
+            array(strlen($row['display_name'])+2, $row['tree'])
             );
         return $result;
     }
