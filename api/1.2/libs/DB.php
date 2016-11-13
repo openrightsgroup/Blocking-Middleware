@@ -152,3 +152,39 @@ function redis_connect($name) {
 
     return $redis;
 }
+
+class PGConnection {
+    function __construct($host, $user, $pass, $db) {
+        $this->conn = pg_connect(
+            "host=$host user=$user password=$pass dbname=$db"
+            );
+    }
+
+    function query($sql, $args) {
+        return new PGResult(
+            pg_query_params($this->conn, $sql, $args)
+            );
+    }
+
+}
+
+class PGResult {
+    function __construct($res) {
+        $this->res = $res;
+    }
+
+    function fetch_row() {
+        return pg_fetch_row($this->res);
+    }
+
+    function fetch_assoc() {
+        return pg_fetch_assoc($this->res);
+    }
+
+}
+
+function get_pg_connection() {
+    global $PG_HOST, $PG_USER, $PG_PASS, $PG_DB;
+
+    return new PGConnection($PG_HOST, $PG_USER, $PG_PASS, $PG_DB);
+}

@@ -314,7 +314,7 @@ class DMOZCategoryLoader {
     }
 
     function load($id) {
-        $res = $this->conn->query("select * from categories where id = ?",
+        $res = $this->conn->query('select * from categories where id = $1',
             array($id));
         $row = $res->fetch_assoc();
         return $row;
@@ -335,83 +335,29 @@ class DMOZCategoryLoader {
     }
 
     function get_parents($node) {
-        // recursive query routine - should cache/pregenerate?
         $out = array();
-        $key = $this->get_lookup_key($node);
-        if (count($key) <= 1) {
-            // bail out if we have been given a toplevel category
-            return array();
+
+        $res = $this->conn->query(
+            'select id, name from categories
+            where tree <@ $1
+            order by tree',
+            array($node['tree'])
+            );
+
+        while ($data = $res->fetch_row()) {
+            $out[] = $data;
         }
-        // build sql criteria & arguments, leaving off the last value
-        for($i=1; $i < count($key); $i++) {
-            $fields[] = "name$i = ?";
-            $args[] = $key["name$i"];
-        }
 
-        do {
-
-            $n = count($fields); //last field index
-            $nf = $n+1; // null field index
-            $sql = ("select id from categories where " . 
-                implode(" AND ", $fields) . 
-                ( $n < 10 ? " AND name$nf is null" : ""));
-            $q = $this->conn->query($sql, $args);
-            $row = $q->fetch_row();
-            $id = $row[0];
-
-            // insert array of (id, name) to output
-            array_unshift($out, array($id, $args[$n-1]));
-
-            // remove last criterion & argument from arrays
-            array_pop($args); array_pop($fields);
-
-
-            if (count($fields) == 0) {
-                // quit when empty
-                break;
-            }
-        // also quit if not found
-        } while ($row);
         return $out;
     }
 
     function get_parent($node) {
-        error_log("node: " . implode(",", array_keys($node)));
-        $key = $this->get_lookup_key($node);
-        error_log("key: " . implode(",", array_keys($key)));
-        $i = count($key);
-        unset($key["name$i"]);
 
-        if (count($key) == 0) {
-            return "0";
-        }
-
-        $cond = array();
-        $args = array();
-        
-        // build where clause and group by clause
-        foreach ($key as $k => $v) {
-            if (is_null($v)) {
-                $cond[] = "$k is null";
-            } else {
-                $cond[] = "$k = ?";
-                $args[] = $v;
-            }
-        }
-        $n = count($key) ;
-        $cond[] = "name$n is not null";
-        $where = implode(" and ", $cond);
-
-        $sql = "select id, display_name,
-            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
-            blocked_url_count,
-            block_count,
-            total_blocked_url_count,
-            total_block_count
+        $sql = 'select id
             from categories 
-            where $where
-            order by display_name";
-        $q = $this->conn->query($sql, $args);
+            where tree @> $1
+            order by tree desc limit 1';
+        $q = $this->conn->query($sql, array($node['tree']));
         $row = $q->fetch_assoc();
         return $row['id'];
     }
@@ -425,37 +371,15 @@ class DMOZCategoryLoader {
             $sort = ltrim($sort,'-') . " desc";
         }
 
-        // get the immediate descendents of a parent category
-        $key = $this->get_lookup_key($parent);
-
-        $cond = array();
-        $args = array();
-        // build where clause and group by clause
-        foreach ($key as $k => $v) {
-            if (is_null($v)) {
-                $cond[] = "$k is null";
-            } else {
-                $cond[] = "$k = ?";
-                $args[] = $v;
-            }
-        }
-        if (count($key) < 9) {
-            $n = count($key)+2;
-            $cond[] = "name$n is null";
-        }
-        if (count($key) < 10) {
-            $n = count($key) + 1;
-            $cond[] = "name$n is not null";
-        }
+        $cond = array('tree ~ $1');
         if (!$show_empty) {
             $cond[] = "total_block_count > 0";
         }
         $where = implode(" and ", $cond);
-            
-    
+        $args = array($parent['tree'] . '.*{1}');
 
         $sql = "select id, display_name,
-            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
+            name, 
             total_blocked_url_count,
             total_block_count,
             blocked_url_count,
@@ -475,13 +399,13 @@ class DMOZCategoryLoader {
             $sort = ltrim($sort,'-') . " desc";
         }
         $sql = "select id, display_name,
-            coalesce(name10,name9,name8,name7,name6,name5,name4,name3,name2,name1) as name,
+            name,
             total_blocked_url_count,
             total_block_count,
             blocked_url_count,
             block_count
             from categories 
-            where name1 is not null and name2 is null " . 
+            where nlevel(tree) = 1 " .
             ($show_empty ? "" : " and total_block_count > 0 ") . 
             "order by $sort";
         return $this->conn->query($sql, array());
@@ -547,15 +471,6 @@ class DMOZCategoryLoader {
     function load_blocks_recurse($parentid, $page=0, $filter_active=0, $pagesize=20) {
         // get blocked sites that belong to a category (does not get sites of child categories)
         $row = $this->load($parentid);
-        $key = $this->get_lookup_key($row);
-
-        $f = array();
-        $args = array(strlen($row['display_name'])+2);
-        foreach($key as $k => $v) {
-            $f[] = "$k = ?";
-            $args[] = $v;
-        }
-        $where = implode(" AND ", $f);
 
         if ($filter_active) {
             $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
@@ -564,20 +479,22 @@ class DMOZCategoryLoader {
         }
 
         $off = (int)$page * (int)$pagesize;
-        $result = $this->conn->query(
-            "select URL as url, count(distinct uls.network_name) block_count,
-                url_categories.category_id, substr(display_name, ?) category_title,
+        $sql = "select URL as url, count(distinct uls.network_name) block_count,
+                url_categories.category_id, substr(display_name, \$1) category_title,
                 max(isp_reports.created) last_reported
-                from urls
+                from src.urls
             inner join url_categories on urls.urlID = url_categories.urlID
-            inner join url_latest_status uls on uls.urlID=urls.urlID
-            left join isp_reports on isp_reports.urlid = urls.urlID
+            inner join src.url_latest_status uls on uls.urlID=urls.urlID
+            left join src.isp_reports on isp_reports.urlid = urls.urlID
             $active
             inner join categories on categories.id = url_categories.category_id
-            where $where and uls.status = 'blocked'
-            group by url, url_categories.category_id
-            order by URL, uls.network_name limit 20 offset $off",
-            $args
+            where \$2 @> tree and uls.status = 'blocked'
+            group by url, url_categories.category_id, substr(display_name, \$1)
+            order by URL limit 20 offset $off";
+        error_log("SQL: $sql");
+        $result = $this->conn->query(
+            $sql, 
+            array(strlen($row['display_name']), $row['tree'])
             );
         return $result;
     }

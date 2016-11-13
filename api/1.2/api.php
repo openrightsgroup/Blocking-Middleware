@@ -29,6 +29,10 @@ $app['service.db'] = $app->share(function() {
 	return new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 });
 
+$app['service.pg'] = $app->share(function(){
+    return get_pg_connection();
+});
+
 $app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
 });
@@ -63,7 +67,7 @@ $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
 };
 $app['db.category.load'] = function($app) {
-	return new DMOZCategoryLoader($app['service.db']);
+	return new DMOZCategoryLoader($app['service.pg']);
 };
 $app['db.ispreport.load'] = function($app) {
 	return new ISPReportLoader($app['service.db']);
