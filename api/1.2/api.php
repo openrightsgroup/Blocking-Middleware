@@ -1131,7 +1131,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
     if ($req->get('recurse') && $parent) {
         $res = $app['db.category.load']->load_blocks_recurse($parent, $req->get('page', 0), $req->get('active', 0), 20);
     } else {
-        $res = $app['db.category.load']->load_blocks($parent);
+        $res = $app['db.category.load']->load_blocks($parent, $req->get('active', 0));
     }
     $sites = array();
     while ($data = $res->fetch_assoc()) {

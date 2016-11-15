@@ -456,15 +456,21 @@ class DMOZCategoryLoader {
 		return $out;
 	}
 
-    function load_blocks($parentid) {
+    function load_blocks($parentid, $filter_active=0) {
         // get blocked sites that belong to a category (does not get sites of child categories)
+        if ($filter_active) {
+            $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
+        } else {
+            $active = "";
+        }
 
         $result = $this->conn->query(
             "select URL as url, count(distinct network_name) block_count
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
-            where url_categories.category_id = ? and uls.status = 'blocked'
+            $filter_active
+            where url_categories.category_id = $1 and uls.status = 'blocked'
             group by url
             order by URL, network_name",
             array($parentid)
