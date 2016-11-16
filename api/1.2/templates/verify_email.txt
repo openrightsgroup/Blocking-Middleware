@@ -1,0 +1,9 @@
+
+Dear {{name}},
+
+Before we send your overblocking reports, we'd like to ask you to verify
+your email address.
+
+Please follow this link (or copy&paste to your web browser):
+
+{{confirm_url}}?token={{token}}

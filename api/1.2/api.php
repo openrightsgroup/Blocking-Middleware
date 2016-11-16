@@ -221,20 +221,12 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         #
         # If contact exists, don't duplicate record, but update joinlist flag
         # and fullname unless they would be cleared
-        $conn->query(
-            "INSERT INTO contacts
-            SET
-                email=?,
-                joinlist=?,
-                fullName=?
-            ON DUPLICATE KEY UPDATE
-                joinlist=IF(joinlist=false, VALUES(joinlist), joinlist),
-                fullName=IF(VALUES(fullName)='', fullName, VALUES(fullName));
-            ",
-            array($req->get('contactemail'), $req->get('joinlist', false), $req->get('fullname'))
-        );
-        # Grab the contact ID to insert into the requests table below
-        $contact = $app['db.contact.load']->load($req->get('contactemail'));
+
+        $contact = $app['db.contact.load']->insert(
+            $req->get('contactemail'), 
+            $req->get('fullname'),
+            $req->get('joinlist', false)
+            );
     }
     else {
         $contact = NULL;
@@ -1195,6 +1187,49 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
+    $contact = $app['db.contact.load']->insert(
+        $data['reporter']['email'],
+        $data['reporter']['name'],
+        false
+        );
+
+
+    if (!$contact['verified']) {
+        $token = md5("B-$contact[id]-" .
+            Middleware::generateSharedSecret(10));
+
+        $conn->query("update contacts set 
+            token = ?  where id = ?",
+            array( $token, $contact['id'])
+            );
+
+
+        $msg = new PHPMailer();
+        $msg->setFrom(SITE_EMAIL, SITE_NAME);
+        $msg->addAddress(
+            $data['reporter']['email'], 
+            $data['reporter']['name']
+            );
+        $msg->Subject = "Confirm your email address";
+        $msg->isHTML(false);
+        $msg->CharSet = "utf-8";
+        $msg->Body = $app['service.template']->render(
+            'verify_email.txt',
+            array(
+                'name' => $data['reporter']['name'],
+                'email' => $data['reporter']['email'],
+                'confirm_url' => VERIFY_URL,
+                'token' => $token,
+                'site_url' => SITE_URL,
+                'site_name' => SITE_NAME,
+                'site_email' => SITE_EMAIL
+            )
+        );
+        if (!$msg->Send()) {
+            error_log("Unable to send message: " . $msg->ErrorInfo);
+        }
+    }
+
     $ids = array();
     $rejected = array();
     foreach($data['networks'] as $network_name) {
@@ -1228,7 +1263,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $network_name,
                 $data['message'],
                 $data['report_type'],
-                (@$data['send_updates'] ? 1 : 0)
+                (@$data['send_updates'] ? 1 : 0),
+                $contact['id']
                 );
             # send email here
 

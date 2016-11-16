@@ -184,6 +184,28 @@ class ContactLoader {
 		return $row;
 	}
 
+    function insert($email, $fullname, $joinlist=false) {
+        $this->conn->query(
+            "INSERT INTO contacts
+            SET
+                email=?,
+                joinlist=?,
+                fullName=?
+            ON DUPLICATE KEY UPDATE
+                joinlist=IF(joinlist=false, VALUES(joinlist), joinlist),
+                fullName=IF(VALUES(fullName)='', fullName, VALUES(fullName));
+            ",
+            array(
+                $contactemail,
+                $joinlist,
+                $fullname
+                )
+        );
+        $contact = $this->load($data['contactemail']);
+        return $contact;
+
+    }
+
 }
 
 class IspLoader {
@@ -516,10 +538,10 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates) {
-        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, report_type, send_updates, created)
-        values (?,?,?,?,?,?,?,now())",
-        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates)
+    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id) {
+        $this->conn->query("insert into isp_reports(name, email, urlID, network_name, message, report_type, send_updates, created, contact_id)
+        values (?,?,?,?,?,?,?,?,now())",
+        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id)
         );
         return $this->conn->insert_id;
     }

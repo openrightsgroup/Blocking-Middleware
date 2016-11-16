@@ -31,6 +31,7 @@ define('SITE_EMAIL', 'blocked@example.com');
 define('SITE_NAME', 'Example.com');
 define('SITE_URL', 'https://www.example.com');
 define('CONFIRM_URL', 'https://www.example.com/confirm');
+define('VERIFY_URL', 'https://www.example.com/verify');
 
 define('FEATURE_SEND_SUBSCRIBE_EMAIL', false); # set to true to enable mail sending
 
