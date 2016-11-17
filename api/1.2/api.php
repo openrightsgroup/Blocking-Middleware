@@ -999,14 +999,15 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 });
 
 $app->post('/verify/email', function (Request $req) use ($app) {
-	checkParameters($req, array('email','signature','token','date'));
+	#checkParameters($req, array('email','signature','token','date'));
 	$user = $app['db.user.load']->load($req->get('email'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-	Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+	#Middleware::checkMessageTimestamp($req->get('date'));
+	#Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
-	if (substr($req->get('token'), 0, 1) == 'A') {
+    $token = $req->get('token');
+	if (substr($token, 0, 1) == 'A') {
 		# URL subscription token
 
 		$conn->autocommit(FALSE);
@@ -1025,7 +1026,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 			);
 			$conn->query("update url_subscriptions set verified = 1, token = null 
 				where verified = 0 and token = ?",
-				array($req->get('token'))
+				array($token)
 			);
 
 			if ($conn->affected_rows != 1) {
@@ -1039,6 +1040,50 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 			$conn->autocommit(TRUE);
 			throw $err;
 		} 
+    } elseif (substr($token, 0, 1) == 'B') {
+        // verifying user after ISP report submit
+        try {
+            $contact = $app['db.contact.load']->loadByToken($token);
+            $conn->query("update contacts set verified = 1, token = null
+                where verified = 0 and token = ?", 
+                array($token)
+                );
+            if ($conn->affected_rows != 1) {
+                throw new TokenLookupError();
+            }
+
+            // now get pending reports
+
+            $res = $conn->query("select * from isp_reports
+                where contact_id = ?",
+                array($contact['id'])
+                );
+            foreach ($res as $row) {
+                $network = $app['db.isp.load']->load($row['network']);
+                $url = $app['db.url.load']->loadByID($row['urlID']);
+
+                sendISPReport(
+                    $row['name'],
+                    $row['email'],
+                    $network, 
+                    $url['URL'],
+                    $row['message'],
+                    explode(",",$report_type)
+                );
+
+            }
+
+
+            
+        } catch (Exception $err) {
+            
+			error_log("Rolling back");
+			$conn->rollback();
+			$conn->autocommit(TRUE);
+			throw $err;
+		} 
+        
+
 	} else {
 		throw new InvalidTokenError();
 	}
@@ -1178,12 +1223,12 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
 	$user = $app['db.user.load']->load($data['auth']['email']);
-    Middleware::checkMessageTimestamp($data['date']);
-    Middleware::verifyUserMessage(
-        $data['url'] . ":" . $data['date'],
-        $user['secret'],
-        $data['auth']['signature']
-        );
+    #Middleware::checkMessageTimestamp($data['date']);
+    #Middleware::verifyUserMessage(
+    #    $data['url'] . ":" . $data['date'],
+    #    $user['secret'],
+    #    $data['auth']['signature']
+    #    );
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
@@ -1195,7 +1240,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
     if (!$contact['verified']) {
-        $token = md5("B-$contact[id]-" .
+        $token = "B" . md5($contact[id] . "-" .
             Middleware::generateSharedSecret(10));
 
         $conn->query("update contacts set 
@@ -1268,26 +1313,14 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 );
             # send email here
 
-            $msg = new PHPMailer();
-            $msg->setFrom(SITE_EMAIL, $data['reporter']['name'] . ' via Blocked.org.uk');
-            $msg->addBCC(SITE_EMAIL);
-            $msg->addAddress($network['admin_email'], $network['admin_name']);
-            $msg->Subject = "Website blocking enquiry - " . $url['URL'];
-            $msg->isHTML(false);
-            $msg->CharSet = 'utf-8';
-            $msg->Body = $app['service.template']->render(
-                'report_email.txt',
-                array(
-                    'reporter_email' => $data['reporter']['email'],
-                    'reporter_name' => $data['reporter']['name'],
-                    'url' => $url['URL'],
-                    'message' => $data['message'],
-                    'report_type' => explode(",", $data['report_type'])
-                    )
-                );
-
-            if(!$msg->send()) {
-                error_log("Unable to send message: " . $msg->ErrorInfo);
+            if ($contact['verified']) {
+                sendISPReport(
+                    $data['reporter']['name'],
+                    $data['reporter']['email'],
+                    $network,
+                    $url['URL'],
+                    $data['report_type']
+                    );
             }
 
 
@@ -1306,6 +1339,31 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
 });
+
+function sendISPReport($name, $email, $network, $url, $message, $report_type) {
+    $msg = new PHPMailer();
+    $msg->setFrom($mail, $name . ' via Blocked.org.uk');
+    $msg->Sender = SITE_EMAIL;
+    $msg->addBCC(SITE_EMAIL);
+    $msg->addAddress($network['admin_email'], $network['admin_name']);
+    $msg->Subject = "Website blocking enquiry - " . $url;
+    $msg->isHTML(false);
+    $msg->CharSet = 'utf-8';
+    $msg->Body = $app['service.template']->render(
+        'report_email.txt',
+        array(
+            'reporter_email' => $email,
+            'reporter_name' => $name,
+            'url' => $url,
+            'message' => $message,
+            'report_type' => explode(",", $report_type)
+            )
+        );
+
+    if(!$msg->send()) {
+        error_log("Unable to send message: " . $msg->ErrorInfo);
+    }
+}
 
 $app->run();
 

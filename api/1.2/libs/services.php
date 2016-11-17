@@ -81,6 +81,18 @@ class UrlLoader {
         
     }
 
+	function loadByID($urlid) {
+		$result = $this->conn->query(
+			"select * from urls where urlID=?",
+			array($urlid)
+			);
+		if ($result->num_rows == 0) {
+			throw new UrlLookupError();
+		}
+		$row = $result->fetch_assoc();
+		return $row;
+	}
+
 	function load($url) {
 		$result = $this->conn->query(
 			"select * from urls where URL=?",
@@ -178,7 +190,19 @@ class ContactLoader {
 			array($email)
 			);
 		if ($result->num_rows == 0) {
-			throw new UrlLookupError();
+			throw new ContactLookupError();
+		}
+		$row = $result->fetch_assoc();
+		return $row;
+	}
+
+	function loadByToken($token) {
+		$result = $this->conn->query(
+			"select * from contacts where token=?",
+			array($token)
+			);
+		if ($result->num_rows == 0) {
+			throw new ContactLookupError();
 		}
 		$row = $result->fetch_assoc();
 		return $row;
@@ -196,12 +220,12 @@ class ContactLoader {
                 fullName=IF(VALUES(fullName)='', fullName, VALUES(fullName));
             ",
             array(
-                $contactemail,
+                $email,
                 $joinlist,
                 $fullname
                 )
         );
-        $contact = $this->load($data['contactemail']);
+        $contact = $this->load($email);
         return $contact;
 
     }
