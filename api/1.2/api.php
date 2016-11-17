@@ -1059,7 +1059,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 array($contact['id'])
                 );
             foreach ($res as $row) {
-                $network = $app['db.isp.load']->load($row['network']);
+                $network = $app['db.isp.load']->load($row['network_name']);
                 $url = $app['db.url.load']->loadByID($row['urlID']);
 
                 sendISPReport(
@@ -1068,7 +1068,8 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                     $network, 
                     $url['URL'],
                     $row['message'],
-                    explode(",",$report_type)
+                    $row['report_type'],
+                    $app['service.template']
                 );
 
             }
@@ -1240,7 +1241,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
     if (!$contact['verified']) {
-        $token = "B" . md5($contact[id] . "-" .
+        $token = "B" . md5($contact['id'] . "-" .
             Middleware::generateSharedSecret(10));
 
         $conn->query("update contacts set 
@@ -1319,7 +1320,9 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     $data['reporter']['email'],
                     $network,
                     $url['URL'],
-                    $data['report_type']
+                    $data['message'],
+                    $data['report_type'],
+                    $app['service.template']
                     );
             }
 
@@ -1340,16 +1343,16 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 });
 
-function sendISPReport($name, $email, $network, $url, $message, $report_type) {
+function sendISPReport($name, $email, $network, $url, $message, $report_type, $renderer) {
     $msg = new PHPMailer();
-    $msg->setFrom($mail, $name . ' via Blocked.org.uk');
+    $msg->setFrom($email, $name . ' via Blocked.org.uk');
     $msg->Sender = SITE_EMAIL;
     $msg->addBCC(SITE_EMAIL);
     $msg->addAddress($network['admin_email'], $network['admin_name']);
     $msg->Subject = "Website blocking enquiry - " . $url;
     $msg->isHTML(false);
     $msg->CharSet = 'utf-8';
-    $msg->Body = $app['service.template']->render(
+    $msg->Body = $renderer->render(
         'report_email.txt',
         array(
             'reporter_email' => $email,
