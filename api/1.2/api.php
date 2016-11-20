@@ -1002,8 +1002,8 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 	#checkParameters($req, array('email','signature','token','date'));
 	$user = $app['db.user.load']->load($req->get('email'));
 
-	#Middleware::checkMessageTimestamp($req->get('date'));
-	#Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+	Middleware::checkMessageTimestamp($req->get('date'));
+	Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
     $token = $req->get('token');
@@ -1224,12 +1224,12 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
 	$user = $app['db.user.load']->load($data['auth']['email']);
-    #Middleware::checkMessageTimestamp($data['date']);
-    #Middleware::verifyUserMessage(
-    #    $data['url'] . ":" . $data['date'],
-    #    $user['secret'],
-    #    $data['auth']['signature']
-    #    );
+    Middleware::checkMessageTimestamp($data['date']);
+    Middleware::verifyUserMessage(
+        $data['url'] . ":" . $data['date'],
+        $user['secret'],
+        $data['auth']['signature']
+        );
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
@@ -1335,6 +1335,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     return $app->json(array(
         'success' => true,
+        'verification_required' => ($contact['verified'] ? false : true,
         'report_ids' => $ids,
         'rejected' => $rejected
     ), 201);
