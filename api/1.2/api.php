@@ -1335,7 +1335,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     return $app->json(array(
         'success' => true,
-        'verification_required' => ($contact['verified'] ? false : true,
+        'verification_required' => ($contact['verified']) ? false : true,
         'report_ids' => $ids,
         'rejected' => $rejected
     ), 201);
