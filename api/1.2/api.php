@@ -1058,7 +1058,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 where contact_id = ?",
                 array($contact['id'])
                 );
-            foreach ($res as $row) {
+            while ($row = $res->fetch_assoc()) {
                 $network = $app['db.isp.load']->load($row['network_name']);
                 $url = $app['db.url.load']->loadByID($row['urlID']);
 
