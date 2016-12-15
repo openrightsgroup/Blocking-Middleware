@@ -529,23 +529,20 @@ class DMOZCategoryLoader {
         $row = $this->load($parentid);
 
         if ($filter_active) {
-            $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
+            $active = "block_count_active";
         } else {
-            $active = "";
+            $active = "block_count_all";
         }
 
         $off = (int)$page * (int)$pagesize;
-        $sql = "select URL as url, 
-                (select count(distinct uls.network_name) from url_latest_status  uls
-                $active
-                where uls.status = 'blocked' and uls.urlid = urls.urlid
-                ) block_count,
+        $sql = "select URL as url, $active block_count,
                 url_categories.category_id, substr(display_name, \$1) category_title,
                 last_reported
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-            where \$2 @> tree and exists(select 1 from url_latest_status uls where uls.status = 'blocked' and uls.urlid = urls.urlid)
+            left join cache_block_count on cache_block_count.urlid = urls.urlid
+            where \$2 @> tree and $active > 0
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(
