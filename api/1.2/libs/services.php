@@ -545,7 +545,7 @@ class DMOZCategoryLoader {
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-            where \$2 @> tree 
+            where \$2 @> tree and block_count > 0
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(
