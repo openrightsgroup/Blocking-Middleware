@@ -535,16 +535,17 @@ class DMOZCategoryLoader {
         }
 
         $off = (int)$page * (int)$pagesize;
-        $sql = "select URL as url, count(distinct uls.network_name) block_count,
+        $sql = "select URL as url, 
+                (select count(distinct uls.network_name) from url_latest_status 
+                $active
+                where uls.status = 'blocked' and uls.urlid = urls.urlid
+                ) block_count,
                 url_categories.category_id, substr(display_name, \$1) category_title,
                 last_reported
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
-            inner join url_latest_status uls on uls.urlID=urls.urlID
-            $active
             inner join categories on categories.id = url_categories.category_id
-            where \$2 @> tree and uls.status = 'blocked'
-            group by url, url_categories.category_id, substr(display_name, \$1), last_reported
+            where \$2 @> tree 
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(
