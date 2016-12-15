@@ -544,7 +544,6 @@ class DMOZCategoryLoader {
             $active
             inner join categories on categories.id = url_categories.category_id
             where \$2 @> tree and uls.status = 'blocked'
-            group by url, url_categories.category_id, substr(display_name, \$1)
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(
