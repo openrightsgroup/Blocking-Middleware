@@ -536,7 +536,7 @@ class DMOZCategoryLoader {
 
         $off = (int)$page * (int)$pagesize;
         $sql = "select URL as url, 
-                (select count(distinct uls.network_name) from url_latest_status 
+                (select count(distinct uls.network_name) from url_latest_status  uls
                 $active
                 where uls.status = 'blocked' and uls.urlid = urls.urlid
                 ) block_count,
