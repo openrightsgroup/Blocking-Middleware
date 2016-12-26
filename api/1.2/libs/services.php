@@ -14,7 +14,7 @@ class UserLoader {
 		if ($result->num_rows == 0) {
 			throw new UserLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 }
@@ -32,7 +32,7 @@ class ProbeLoader {
 		if ($result->num_rows == 0) {
 			throw new ProbeLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 
@@ -42,6 +42,7 @@ class ProbeLoader {
 			"update probes set probeReqSent=probeReqSent+?,lastSeen=now() where uuid=?",
 			array($count, $probe_uuid)
 			);
+    # TODO PG
 		if ($this->conn->affected_rows != 1) {
 			throw new ProbeLookupError();
 		}
@@ -53,6 +54,7 @@ class ProbeLoader {
 			"update probes set probeRespRecv=probeRespRecv+1,lastSeen=now() where uuid=?",
 			array($probe_uuid)
 			);
+    # TODO PG
 		if ($this->conn->affected_rows != 1) {
 			throw new ProbeLookupError();
 		}
@@ -73,6 +75,7 @@ class UrlLoader {
             array($url, md5($url), $source)
         );
         /* returns true/false for whether a row was really inserted. */
+    # TODO PG
         if ($this->conn->affected_rows) {
             return true;
         } else {
@@ -89,7 +92,7 @@ class UrlLoader {
 		if ($result->num_rows == 0) {
 			throw new UrlLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 
@@ -101,7 +104,7 @@ class UrlLoader {
 		if ($result->num_rows == 0) {
 			throw new UrlLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 
@@ -116,7 +119,7 @@ class UrlLoader {
 			from urls where urlID = ?",
 			array($urlid)
 			);
-		$row = $result->fetch_row();
+		$row = $result->fetch(PDO::FETCH_NUM)();
 
 		# if it has never been tested, or the last test < today
 		if ($row[0] == null || $row[1] == 1) {
@@ -139,7 +142,7 @@ class UrlLoader {
 			inner join url_categories on category_id = categories.id
 			where urlID = ?", array($urlID));
 		$out = array();
-		while ($row = $result->fetch_row()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -148,6 +151,7 @@ class UrlLoader {
 	function updateLastPolled($urlid) {
 		$this->conn->query("update urls set lastPolled=now() where urlID=?",
 			array($urlid));
+    # TODO PG
 		if ($this->conn->affected_rows != 1) {
 			throw new UrlLookupError();
 		}
@@ -168,7 +172,7 @@ class UrlLoader {
             );
 
         $output = array();
-        while ($data = $res->fetch_assoc()) {
+        while ($data = $res->fetch()) {
             $output[] = $data['url'];
         }
 
@@ -192,7 +196,7 @@ class ContactLoader {
 		if ($result->num_rows == 0) {
 			throw new ContactLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 
@@ -204,7 +208,7 @@ class ContactLoader {
 		if ($result->num_rows == 0) {
 			throw new ContactLookupError();
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		return $row;
 	}
 
@@ -242,7 +246,7 @@ class IspLoader {
 			"select isps.* from isps left join isp_aliases on isp_aliases.ispID = isps.id where name = ? or alias = ?",
 			array($ispname,$ispname)
 			);
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		if (!$row) {
 			throw new IspLookupError();
 		}
@@ -286,7 +290,7 @@ class IpLookupService {
 		if (!$result) {
 			return null;
 		}
-		$row = $result->fetch_assoc();
+		$row = $result->fetch();
 		if (!$row) {
 			return null;
 		}
@@ -362,7 +366,7 @@ class DMOZCategoryLoader {
     function load($id) {
         $res = $this->conn->query('select * from categories where id = $1',
             array($id));
-        $row = $res->fetch_assoc();
+        $row = $res->fetch();
         return $row;
     }
 
@@ -390,7 +394,7 @@ class DMOZCategoryLoader {
             array($node['tree'], $node['id'])
             );
 
-        while ($data = $res->fetch_row()) {
+        while ($data = $res->fetch(PDO::FETCH_NUM)()) {
             if ($data[1] != $node['tree']) {
                 $out[] = $data;
             }
@@ -406,7 +410,7 @@ class DMOZCategoryLoader {
             where tree @> $1
             order by tree desc limit 1 offset 1';
         $q = $this->conn->query($sql, array($node['tree']));
-        $row = $q->fetch_assoc();
+        $row = $q->fetch();
         return $row['id'];
     }
 
@@ -471,7 +475,7 @@ class DMOZCategoryLoader {
 			inner join url_categories on urls.urlID = url_categories.urlID
 			where category_id = ?", array($parent));
 		$out = array();
-		while ($row = $result->fetch_row()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -496,7 +500,7 @@ class DMOZCategoryLoader {
             inner join categories on categories.id = url_categories.category_id
 			where $where limit 20", $args);
 		$out = array();
-		while ($row = $result->fetch_row()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -573,7 +577,7 @@ class ISPReportLoader {
         where id = ?",
         array($id));
 
-        $row = $res->fetch_assoc();
+        $row = $res->fetch();
         return $row;
     }
 
@@ -581,7 +585,7 @@ class ISPReportLoader {
         $res = $this->conn->query("select count(*) from isp_reports
             where urlid = ? and network_name = ? and unblocked = 0",
             array($urlID, $network_name));
-        $row = $res->fetch_row();
+        $row = $res->fetch(PDO::FETCH_NUM)();
         if ($row[0] == 0) {
             return true;
         } 

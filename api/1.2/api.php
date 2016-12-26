@@ -25,13 +25,9 @@ $app = new Silex\Application();
 $app['debug'] = true;
 
 $app['service.db'] = $app->share(function() {
-	global $dbuser, $dbpass, $dbhost, $dbname;
-	return new APIDB($dbhost, $dbuser, $dbpass, $dbname);
-});
-
-$app['service.pg'] = $app->share(function(){
     return get_pg_connection();
 });
+
 
 $app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
@@ -67,7 +63,7 @@ $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
 };
 $app['db.category.load'] = function($app) {
-	return new DMOZCategoryLoader($app['service.pg']);
+	return new DMOZCategoryLoader($app['service.db']);
 };
 $app['db.ispreport.load'] = function($app) {
 	return new ISPReportLoader($app['service.db']);
@@ -132,7 +128,7 @@ $app->error(function(APIException $e, $code) {
 		case "IspLookupError":
 		case "TokenLookupError":
 			$code = 404;
-			$message = "No matches in DB, please contact ORG support";
+			$message = "$error_class: No matches in DB, please contact ORG support";
 			break;
 		case "InputError":
 			$code = 400;
@@ -265,6 +261,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
     }
 
 	if ($contact != null && $req->get('subscribereports',false) ) {
+        # TODO PG
 		$conn->query(
 			"INSERT INTO url_subscriptions (urlID, contactID, subscribereports, created)
 			VALUES (?,?,?,NOW())
@@ -285,10 +282,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
             array($url['urlID'], $contact['id'])
             );
-        $subscriberow = $r->fetch_row();
+        $subscriberow = $r->fetch(PDO::FETCH_NUM)();
 
         if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
-            # TODO: send verify email
             $msg = new PHPMailer();
             $msg->setFrom(SITE_EMAIL, SITE_NAME);
             $msg->addAddress($req->get('contactemail'));
@@ -381,7 +377,7 @@ $app->post('/register/user', function(Request $req) use ($app) {
 			);
 	}
 	catch (DatabaseError $e) {
-		
+		# TODO PG
 		if ($e->getCode() == 1062) {
 			throw new ConflictError("A user account with this email address has already been registered");
 		} else {
@@ -447,6 +443,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 			);
 	}
 	catch (DatabaseError $e) {
+        # TODO PG
 		if ($e->getCode() == 1062) {
 			throw new ConflictError("A probe with this UUID already exists");
 		} else {
@@ -703,7 +700,7 @@ $app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
 	}
 
 	$out = array();
-	while ($row = $rs->fetch_assoc()) {
+	while ($row = $rs->fetch()) {
 		$out[] = $row;
 	}
 
@@ -726,6 +723,7 @@ $app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
 	$conn->query("UPDATE users set status = ? where email = ?",
 		array($req->get('status'), $user));
 
+    # TODO PG
 	if ($conn->affected_rows == 0) {
 		throw new UserLookupError();
 	}
@@ -754,6 +752,7 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 	$conn->query("UPDATE probes set enabled = ? where uuid = ?",
 		array($req->get('status') == "enabled" ? 1 : 0, $uuid));
 
+    # TODO PG
 	if ($conn->affected_rows == 0) {
 		throw new ProbeLookupError();
 	}
@@ -789,7 +788,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	$output = array();
 
-	while ($row = $result->fetch_row()) {
+	while ($row = $result->fetch(PDO::FETCH_NUM)()) {
 		$out = array('network_name' => $row[0]);
 
 		# get latest status and result
@@ -828,7 +827,7 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 	$rs = $conn->query("select name, value from stats_cache", array());
 	$stats = array();
-	while($row = $rs->fetch_row()) {
+	while($row = $rs->fetch(PDO::FETCH_NUM)()) {
 		$stats[$row[0]] = (int)$row[1];
 	}
 
@@ -853,7 +852,7 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	order by isps.description", array());
 
 	$output = array();
-	while ($row = $rs->fetch_assoc()) {
+	while ($row = $rs->fetch()) {
 		$net = $row['description'];
 		unset($row['description']);
 		$output[$net] = array_map("mkint", $row);
@@ -883,7 +882,7 @@ class StreamResultProcessor {
 		group by l.network_name",
 		array($data['url'], $data['network_name']));
 
-		$row = $result->fetch_row();
+		$row = $result->fetch(PDO::FETCH_NUM)();
 
 		$data['network_name'] = $row[0];
 		$data['status_timestamp'] = $row[2];
@@ -965,7 +964,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		group by l.network_name",
 		array($url));
 
-		while ($row = $result->fetch_row()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
 			$out = array('network_name' => $row[0]);
 
 			# get latest status and result
@@ -1010,13 +1009,13 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 	if (substr($token, 0, 1) == 'A') {
 		# URL subscription token
 
-		$conn->autocommit(FALSE);
-		$conn->query("BEGIN",array());
+		$conn->beginTransaction();
 		try {
 			$result = $conn->query("select contactID from url_subscriptions 
 				where token = ?",
 				array($req->get('token'))
 			);
+    # TODO PG
 			$row = $result->fetch_array();
 			if (!$row) {
 				throw new TokenLookupError();
@@ -1029,15 +1028,14 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 				array($token)
 			);
 
+    # TODO PG
 			if ($conn->affected_rows != 1) {
 				throw new TokenLookupError();
 			}
 			$conn->commit();
-			$conn->autocommit(TRUE);
 		} catch (Exception $err) {
 			error_log("Rolling back");
 			$conn->rollback();
-			$conn->autocommit(TRUE);
 			throw $err;
 		} 
     } elseif (substr($token, 0, 1) == 'B') {
@@ -1048,6 +1046,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 where verified = 0 and token = ?", 
                 array($token)
                 );
+    # TODO PG
             if ($conn->affected_rows != 1) {
                 throw new TokenLookupError();
             }
@@ -1058,7 +1057,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 where contact_id = ?",
                 array($contact['id'])
                 );
-            while ($row = $res->fetch_assoc()) {
+            while ($row = $res->fetch()) {
                 $network = $app['db.isp.load']->load($row['network_name']);
                 $url = $app['db.url.load']->loadByID($row['urlID']);
 
@@ -1080,7 +1079,6 @@ $app->post('/verify/email', function (Request $req) use ($app) {
             
 			error_log("Rolling back");
 			$conn->rollback();
-			$conn->autocommit(TRUE);
 			throw $err;
 		} 
         
@@ -1135,7 +1133,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         }
 
         $cat = array();
-        while ($row = $res->fetch_assoc()) {
+        while ($row = $res->fetch()) {
             $cat[] = array(
                 'id' => $row['id'],
                 'fullname' => $row['display_name'],
@@ -1172,7 +1170,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         $res = $app['db.category.load']->load_blocks($parent, $req->get('active', 0));
     }
     $sites = array();
-    while ($data = $res->fetch_assoc()) {
+    while ($data = $res->fetch()) {
         $sites[] = $data;
     }
     return $app->json(array(
@@ -1289,7 +1287,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 where urlID = ? and network_name = ? and status = 'blocked'",
                 array($url['urlID'], $network_name)
                 );
-            $row = $q->fetch_row();
+            $row = $q->fetch(PDO::FETCH_NUM)();
             if (!$row) {
                 $rejected[$network_name] = "Not blocked on this network";
                 continue;

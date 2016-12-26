@@ -24,62 +24,6 @@ include_once "config.php";
 	$APIVersion = "1.2";
 	$Salt = "PASSWORD SALT";	
 
-	function db_connect() {
-		global $dbhost, $dbuser, $dbpass, $dbname;
-		$conn = mysql_connect($dbhost, $dbuser, $dbpass) or die ('Error connecting to mysql');
-		mysql_select_db($dbname);
-		return $conn;
-	}
-
-	#db_connect();
-
-	class APIDB extends mysqli {
-
-		function query($sql, $args, $mode=MYSQLI_STORE_RESULT) {
-			$ret = parent::query($this->escape($sql, $args), $mode);
-			if (!$ret) {
-			 	throw new DatabaseError($this->error, $this->errno);
-			}
-			return $ret;
-		}
-
-		function get_autocommit() {
-			$result = $this->query("select @@autocommit",array());
-			$row = $result->fetch_row();
-			return $row[0];
-		}
-
-		function escape($sql, $args) {
-			// a sloppy positional escape function
-			// because I really hate having to type escape_string so many times
-			$n = 0;
-			$startpos = 0;
-			// startpos is used to that we don't get confused by escaped data that contains
-			// the placeholder
-			while (($startpos = strpos($sql, '?', $startpos)) !== false) {
-                if (is_null($args[$n])) {
-                    // escape_string() seems to parse PHP NULL into 0, which breaks foreign key
-                    // constraints when inserted into a nullable FK target column on a child record.
-                    // (Or, worse: links the child record to the parent record with ID 0!)
-                    //
-                    // To avoid this just replace PHP NULL with the string 'NULL' instead.
-                    $esc = 'NULL';
-                } else {
-                    // OK to parse with escape_string()
-                    $esc = "'" . $this->escape_string($args[$n]) . "'";
-                }
-                $sql = substr_replace($sql, $esc, $startpos, 1);
-				$n++;
-				$startpos += strlen($esc);  // move startpos past the end of the escaped string
-			}
-			if ($n != count($args)) {
-				$c = count($args);
-				throw new Exception("APIDB::escape: number of placeholders ($n) does not match number of arguments ($c)");
-			}
-			return $sql;
-		}
-
-	}
 			
 
 class ResultSetIterator implements Iterator {
@@ -153,38 +97,30 @@ function redis_connect($name) {
     return $redis;
 }
 
-class PGConnection {
-    function __construct($host, $user, $pass, $db) {
-        $this->conn = pg_connect(
-            "host=$host user=$user password=$pass dbname=$db"
-            );
+class PGConnection extends PDO {
+    function autocommit($value) {
+        throw new DatabaseError("AutoCommit is not supported");
     }
 
-    function query($sql, $args) {
-        return new PGResult(
-            pg_query_params($this->conn, $sql, $args)
-            );
-    }
-
-}
-
-class PGResult {
-    function __construct($res) {
-        $this->res = $res;
-    }
-
-    function fetch_row() {
-        return pg_fetch_row($this->res);
-    }
-
-    function fetch_assoc() {
-        return pg_fetch_assoc($this->res);
+    function query($sql, $args=null) {
+        if (is_null($args)) {
+            $args = array();
+        }
+        $q = $this->prepare($sql, PDO::FETCH_ASSOC);
+        if (!$q) {
+            throw new DatabaseError($this->errorInfo()[2]);
+        }
+        if (!$q->execute($args)) {
+            throw new DatabaseError($q->errorInfo()[2]);
+        }
+        return $q
     }
 
 }
 
-function get_pg_connection() {
+
+function db_connect() {
     global $PG_HOST, $PG_USER, $PG_PASS, $PG_DB;
 
-    return new PGConnection($PG_HOST, $PG_USER, $PG_PASS, $PG_DB);
+    return new PGConnection("pgsql:host=$PG_HOST user=$PG_USER password=$PG_PASS dbname=$PG_DB);
 }
