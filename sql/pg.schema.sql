@@ -338,7 +338,8 @@ CREATE TABLE probes (
     secret character varying(128),
     type character varying(10) NOT NULL,
     ispublic smallint DEFAULT 1 NOT NULL,
-    enabled smallint DEFAULT 1 NOT NULL
+    enabled smallint DEFAULT 1 NOT NULL,
+    lastseen timestamp with time zone
 );
 
 
