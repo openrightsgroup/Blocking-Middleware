@@ -119,7 +119,7 @@ class UrlLoader {
 			from urls where urlID = ?",
 			array($urlid)
 			);
-		$row = $result->fetch(PDO::FETCH_NUM)();
+		$row = $result->fetch(PDO::FETCH_NUM);
 
 		# if it has never been tested, or the last test < today
 		if ($row[0] == null || $row[1] == 1) {
@@ -142,7 +142,7 @@ class UrlLoader {
 			inner join url_categories on category_id = categories.id
 			where urlID = ?", array($urlID));
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -394,7 +394,7 @@ class DMOZCategoryLoader {
             array($node['tree'], $node['id'])
             );
 
-        while ($data = $res->fetch(PDO::FETCH_NUM)()) {
+        while ($data = $res->fetch(PDO::FETCH_NUM)) {
             if ($data[1] != $node['tree']) {
                 $out[] = $data;
             }
@@ -475,7 +475,7 @@ class DMOZCategoryLoader {
 			inner join url_categories on urls.urlID = url_categories.urlID
 			where category_id = ?", array($parent));
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -500,7 +500,7 @@ class DMOZCategoryLoader {
             inner join categories on categories.id = url_categories.category_id
 			where $where limit 20", $args);
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -585,7 +585,7 @@ class ISPReportLoader {
         $res = $this->conn->query("select count(*) from isp_reports
             where urlid = ? and network_name = ? and unblocked = 0",
             array($urlID, $network_name));
-        $row = $res->fetch(PDO::FETCH_NUM)();
+        $row = $res->fetch(PDO::FETCH_NUM);
         if ($row[0] == 0) {
             return true;
         } 

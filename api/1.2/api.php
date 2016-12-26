@@ -282,7 +282,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
             array($url['urlID'], $contact['id'])
             );
-        $subscriberow = $r->fetch(PDO::FETCH_NUM)();
+        $subscriberow = $r->fetch(PDO::FETCH_NUM);
 
         if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
             $msg = new PHPMailer();
@@ -786,7 +786,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	$output = array();
 
-	while ($row = $result->fetch(PDO::FETCH_NUM)()) {
+	while ($row = $result->fetch(PDO::FETCH_NUM)) {
 		$out = array('network_name' => $row[0]);
 
 		# get latest status and result
@@ -825,7 +825,7 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 	$rs = $conn->query("select name, value from stats_cache", array());
 	$stats = array();
-	while($row = $rs->fetch(PDO::FETCH_NUM)()) {
+	while($row = $rs->fetch(PDO::FETCH_NUM)) {
 		$stats[$row[0]] = (int)$row[1];
 	}
 
@@ -880,7 +880,7 @@ class StreamResultProcessor {
 		group by l.network_name",
 		array($data['url'], $data['network_name']));
 
-		$row = $result->fetch(PDO::FETCH_NUM)();
+		$row = $result->fetch(PDO::FETCH_NUM);
 
 		$data['network_name'] = $row[0];
 		$data['status_timestamp'] = $row[2];
@@ -962,7 +962,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		group by l.network_name",
 		array($url));
 
-		while ($row = $result->fetch(PDO::FETCH_NUM)()) {
+		while ($row = $result->fetch(PDO::FETCH_NUM)) {
 			$out = array('network_name' => $row[0]);
 
 			# get latest status and result
@@ -1013,7 +1013,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 				where token = ?",
 				array($req->get('token'))
 			);
-			$row = $result->fetch(PDO::FETCH_NUM)();
+			$row = $result->fetch(PDO::FETCH_NUM);
 			if (!$row) {
 				throw new TokenLookupError();
 			}
@@ -1282,7 +1282,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 where urlID = ? and network_name = ? and status = 'blocked'",
                 array($url['urlID'], $network_name)
                 );
-            $row = $q->fetch(PDO::FETCH_NUM)();
+            $row = $q->fetch(PDO::FETCH_NUM);
             if (!$row) {
                 $rejected[$network_name] = "Not blocked on this network";
                 continue;
