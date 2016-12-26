@@ -42,8 +42,8 @@ class ProbeLoader {
 			"update probes set probeReqSent=probeReqSent+?,lastSeen=now() where uuid=?",
 			array($count, $probe_uuid)
 			);
-    # TODO PG
-		if ($this->conn->affected_rows != 1) {
+
+		if ($result->rowCount() != 1) {
 			throw new ProbeLookupError();
 		}
 	}
@@ -54,8 +54,8 @@ class ProbeLoader {
 			"update probes set probeRespRecv=probeRespRecv+1,lastSeen=now() where uuid=?",
 			array($probe_uuid)
 			);
-    # TODO PG
-		if ($this->conn->affected_rows != 1) {
+
+		if ($result->rowCount() != 1) {
 			throw new ProbeLookupError();
 		}
 	}
@@ -70,13 +70,13 @@ class UrlLoader {
     function insert($url, $source="user") {
         /* Insert user record.  Does not return ID, because of insert-ignore, and 
         because URLs are uniquely indexes only on the first 767 chars */
-        $this->conn->query(
+        $result = $this->conn->query(
             "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
             array($url, md5($url), $source)
         );
         /* returns true/false for whether a row was really inserted. */
-    # TODO PG
-        if ($this->conn->affected_rows) {
+
+        if ($result->rowCount()) {
             return true;
         } else {
             return false;
@@ -149,10 +149,10 @@ class UrlLoader {
 	}
 
 	function updateLastPolled($urlid) {
-		$this->conn->query("update urls set lastPolled=now() where urlID=?",
+		$result = $this->conn->query("update urls set lastPolled=now() where urlID=?",
 			array($urlid));
-    # TODO PG
-		if ($this->conn->affected_rows != 1) {
+
+		if ($result->rowCount() != 1) {
 			throw new UrlLookupError();
 		}
 	}

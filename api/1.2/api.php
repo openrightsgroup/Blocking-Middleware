@@ -720,11 +720,10 @@ $app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
 	checkAdministrator($adminuser);
 
 	$conn = $app['service.db'];
-	$conn->query("UPDATE users set status = ? where email = ?",
+	$result = $conn->query("UPDATE users set status = ? where email = ?",
 		array($req->get('status'), $user));
 
-    # TODO PG
-	if ($conn->affected_rows == 0) {
+	if ($result->rowCount() == 0) {
 		throw new UserLookupError();
 	}
 
@@ -749,11 +748,10 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 	}
 
 	$conn = $app['service.db'];
-	$conn->query("UPDATE probes set enabled = ? where uuid = ?",
+	$result = $conn->query("UPDATE probes set enabled = ? where uuid = ?",
 		array($req->get('status') == "enabled" ? 1 : 0, $uuid));
 
-    # TODO PG
-	if ($conn->affected_rows == 0) {
+	if ($result->rowCount() == 0) {
 		throw new ProbeLookupError();
 	}
 
@@ -1023,13 +1021,12 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 			$conn->query("update contacts set verified = 1 where id = ?",
 				array($row[0])
 			);
-			$conn->query("update url_subscriptions set verified = 1, token = null 
+			$result = $conn->query("update url_subscriptions set verified = 1, token = null 
 				where verified = 0 and token = ?",
 				array($token)
 			);
 
-    # TODO PG
-			if ($conn->affected_rows != 1) {
+			if ($result->rowCount() != 1) {
 				throw new TokenLookupError();
 			}
 			$conn->commit();
@@ -1042,12 +1039,11 @@ $app->post('/verify/email', function (Request $req) use ($app) {
         // verifying user after ISP report submit
         try {
             $contact = $app['db.contact.load']->loadByToken($token);
-            $conn->query("update contacts set verified = 1, token = null
+            $result = $conn->query("update contacts set verified = 1, token = null
                 where verified = 0 and token = ?", 
                 array($token)
                 );
-    # TODO PG
-            if ($conn->affected_rows != 1) {
+            if ($result->rowCount() != 1) {
                 throw new TokenLookupError();
             }
 
