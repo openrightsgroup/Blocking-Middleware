@@ -3,7 +3,7 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = new db_connect()
 
 list($amqp, $ch) = amqp_connect_full();
 
@@ -72,7 +72,7 @@ function createqueue($name,  $key, $ttl=0, $recreate=false) {
 }
 
 $result = $conn->query("select name, queue_name from isps where queue_name is not null", array());
-while ($isp = $result->fetch_assoc()) {
+while ($isp = $result->fetch()) {
 	if (strpos($isp['name'], ',') !== false) {
 		continue;
 	}
