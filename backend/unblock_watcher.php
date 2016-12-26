@@ -1,7 +1,5 @@
 <?php
 
-# long running MySQL connections
-ini_set('mysqli.reconnect',1);
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
 include_once __DIR__ . "/../api/1.2/libs/amqp.php";
@@ -27,7 +25,7 @@ $twig = new Twig_Environment($loader, array(
     'debug' => true
 ));
 
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 $urlloader = new UrlLoader($conn);
 $isploader = new ISPLoader($conn);
 
@@ -51,7 +49,7 @@ function process_result($msg, $queue) {
     and network_name = ?", 
     array($url['urlID'], $isp['name'])
     );
-    $report = $res->fetch_assoc();
+    $report = $res->fetch();
 
     if (!$report) {
         print "No report found for {$url[urlID]}\n";

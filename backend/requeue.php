@@ -3,7 +3,7 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 
 define('MAXQ', 2250);
 define('MINQ', 250);
@@ -21,7 +21,7 @@ function send_urls($result) {
     global $ex, $conn;
 
     $c = 0;
-    while ($row = $result->fetch_row()) {
+    while ($row = $result->fetch(PDO::FETCH_NUM)) {
         $msg = array('url' => $row[1], 'hash' => $row[2]);
         $ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
         $conn->query("update urls set lastpolled = now() where urlid = ?", array($row[0]));

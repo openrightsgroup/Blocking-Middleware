@@ -22,7 +22,7 @@ if (@$argv[1] == "--help") {
 
 $date = date('Y-m-d');
 
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 
 function send_update($contact, $results) {
     global $twig, $conn, $argv, $date;
@@ -77,7 +77,7 @@ $r = $conn->query("select url_subscriptions.*,
 
 $last = null;
 $contact = null;
-while ($sub = $r->fetch_assoc()) {
+while ($sub = $r->fetch()) {
     // group subscriptions by contact
     if ($last != $sub['contactID']) {
 
@@ -103,7 +103,7 @@ while ($sub = $r->fetch_assoc()) {
         order by network_name, created",
         array($sub['urlID'], $lastnotify));
 
-    while ($data = $r2->fetch_assoc()) {
+    while ($data = $r2->fetch()) {
         print_r($data);
         $results[$sub['url']][$data['network_name']][] = array(
             'old_status' => $data['old_status'],

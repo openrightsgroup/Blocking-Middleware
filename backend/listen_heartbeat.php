@@ -10,7 +10,7 @@ $ch = amqp_connect();
 $q = new AMQPQueue($ch);
 $q->setName('heartbeat');
 
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 
 function process_result($msg, $queue) {
 	global $conn;

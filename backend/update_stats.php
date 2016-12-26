@@ -1,7 +1,7 @@
 <?php
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 
 if(count($argv) == 1) {
 	echo "Required arg: <counters|isps>\n";
@@ -11,26 +11,26 @@ if(count($argv) == 1) {
 if ($argv[1] == 'counters') {
 
 	$result = $conn->query(" select count(*) from urls where not (source = 'dmoz' and lastPolled is null)", array());
-	$row = $result->fetch_row();
+	$row = $result->fetch(PDO::FETCH_NUM);
 
 	$stats = array(
 		'urls_reported' => $row[0],
 		);
 
 	$result = $conn->query("select count(distinct urlid) from results",array());
-	$row = $result->fetch_row();
+	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['urls_tested'] = $row[0];
 
 	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where source = 'alexa'",array());
-	$row = $result->fetch_row();
+	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_sample_size'] = $row[0];
 
 	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and source='alexa'", array());
-	$row = $result->fetch_row();
+	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_detected'] = $row[0];
 
 	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and filter_level in ('','default') and source='alexa'", array());
-	$row = $result->fetch_row();
+	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_detected_default_filter'] = $row[0];
 
 	print_r($stats);
@@ -54,7 +54,7 @@ if ($argv[1] == 'counters') {
 	group by network_name, url_latest_status.status
 	order by network_name, url_latest_status.status", array());
 
-	$row = $rs->fetch_assoc();
+	$row = $rs->fetch();
 	
 	while ($row) {
 		$last = $row['network_name'];
@@ -73,22 +73,37 @@ if ($argv[1] == 'counters') {
 				$out[ $row['status'] ] = $row['ct'];
 				@$out['total'] += $row['ct'];
 			}
-			$row = $rs->fetch_assoc();
+			$row = $rs->fetch();
 		} while ($row && $row['network_name'] == $last);
 
 		print_r($out);
 
-		$conn->query("replace into isp_stats_cache(network_name, ok, blocked, timeout, error, dnsfail, total)
-		values (?,?,?,?,?,?,?)", 
-		array($last, 
-			$out['ok'],
-			$out['blocked'],
-			$out['timeout'],
-			$out['error'],
-			$out['dnsfail'],
-			$out['total']
-			)
-		);
+        $q = $conn->query("update isp_stats_cache set ok = ?, blocked=?, timeout=?, error=?, dnsfail=?, total=?
+        where network_name = ?",
+        array(
+            $out['ok'],
+            $out['blocked'],
+            $out['timeout'],
+            $out['error'],
+            $out['dnsfail'],
+            $out['total'],
+            $last
+            )
+        );
+        if ($q->rowCount() == 0) {
+
+            $q = $conn->query("insert into isp_stats_cache(network_name, ok, blocked, timeout, error, dnsfail, total)
+            values (?,?,?,?,?,?,?)", 
+            array($last, 
+                $out['ok'],
+                $out['blocked'],
+                $out['timeout'],
+                $out['error'],
+                $out['dnsfail'],
+                $out['total']
+                )
+            );
+        }
 
 	} while ($row);
 	

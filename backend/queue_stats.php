@@ -2,7 +2,7 @@
 
 include __DIR__ . "/../api/1.2/libs/DB.php";
 
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect();
 
 if (($fp = popen("/usr/sbin/rabbitmqctl list_queues","r")) == NULL) {
 	fwrite(stderr, "Unable to get Queue list\n");

@@ -2,7 +2,7 @@
 <?php
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
-$conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+$conn = db_connect()
 
 
 
@@ -18,13 +18,13 @@ if (@$argv[1] == '--all') {
 $end_date = date('Y-m-d');
 
 $result = $conn->query("select url, network_name, created, old_status, new_status
-from url_status_changes stat inner join urls using(urlID)
-where stat.created >= date_sub(?, interval 1 day) and stat.created < ?
+from url_status_changes stat inner join urls on urls.urlid = url_status_changes.urlid
+where stat.created >= ?  and stat.created < (? + interval '1 days')
 order by created", array($start_date, $end_date));
 
 $fp = fopen('php://stdout','w');
 fputcsv($fp, array("URL","Network","Date Changed","Old Status","New Status"));
-while ($row = $result->fetch_array(MYSQLI_NUM)) {
+while ($row = $result->fetch(PDO::FETCH_NUM)) {
 	fputcsv($fp, $row);
 }
 
