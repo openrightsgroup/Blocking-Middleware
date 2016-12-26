@@ -3,11 +3,38 @@
 --
 
 SET statement_timeout = 0;
-SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- Name: ltree; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
+
 
 SET search_path = public, pg_catalog;
 
@@ -107,7 +134,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: cache_block_count; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: cache_block_count; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE cache_block_count (
@@ -118,10 +145,10 @@ CREATE TABLE cache_block_count (
 );
 
 
-ALTER TABLE public.cache_block_count OWNER TO blocked;
+ALTER TABLE public.cache_block_count OWNER TO root;
 
 --
--- Name: categories; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: categories; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE categories (
@@ -137,10 +164,96 @@ CREATE TABLE categories (
 );
 
 
-ALTER TABLE public.categories OWNER TO blocked;
+ALTER TABLE public.categories OWNER TO root;
 
 --
--- Name: isp_reports; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: contacts; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE contacts (
+    id integer NOT NULL,
+    email character varying(128) NOT NULL,
+    verified smallint DEFAULT 0 NOT NULL,
+    joinlist smallint DEFAULT 0 NOT NULL,
+    fullname character varying(60),
+    createdat timestamp with time zone,
+    token character varying(36)
+);
+
+
+ALTER TABLE public.contacts OWNER TO root;
+
+--
+-- Name: contacts_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE contacts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.contacts_id_seq OWNER TO root;
+
+--
+-- Name: contacts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE contacts_id_seq OWNED BY contacts.id;
+
+
+--
+-- Name: isp_aliases; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE isp_aliases (
+    id integer NOT NULL,
+    ispid integer NOT NULL,
+    alias character varying(64) NOT NULL,
+    created timestamp with time zone
+);
+
+
+ALTER TABLE public.isp_aliases OWNER TO root;
+
+--
+-- Name: isp_aliases_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE isp_aliases_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.isp_aliases_id_seq OWNER TO root;
+
+--
+-- Name: isp_aliases_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE isp_aliases_id_seq OWNED BY isp_aliases.id;
+
+
+--
+-- Name: isp_cache; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE isp_cache (
+    ip character varying(128) NOT NULL,
+    network character varying(64) NOT NULL,
+    created timestamp with time zone
+);
+
+
+ALTER TABLE public.isp_cache OWNER TO root;
+
+--
+-- Name: isp_reports; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE isp_reports (
@@ -159,10 +272,28 @@ CREATE TABLE isp_reports (
 );
 
 
-ALTER TABLE public.isp_reports OWNER TO blocked;
+ALTER TABLE public.isp_reports OWNER TO root;
 
 --
--- Name: isps; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: isp_stats_cache; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE isp_stats_cache (
+    network_name character varying(64) NOT NULL,
+    ok integer DEFAULT 0 NOT NULL,
+    blocked integer DEFAULT 0 NOT NULL,
+    timeout integer DEFAULT 0 NOT NULL,
+    error integer DEFAULT 0 NOT NULL,
+    dnsfail integer DEFAULT 0 NOT NULL,
+    last_updated timestamp with time zone,
+    total integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.isp_stats_cache OWNER TO root;
+
+--
+-- Name: isps; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE isps (
@@ -177,10 +308,170 @@ CREATE TABLE isps (
 );
 
 
-ALTER TABLE public.isps OWNER TO blocked;
+ALTER TABLE public.isps OWNER TO root;
 
 --
--- Name: results; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: org_categories; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE org_categories (
+    id integer NOT NULL,
+    name character varying(64) NOT NULL
+);
+
+
+ALTER TABLE public.org_categories OWNER TO root;
+
+--
+-- Name: org_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE org_categories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.org_categories_id_seq OWNER TO root;
+
+--
+-- Name: org_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE org_categories_id_seq OWNED BY org_categories.id;
+
+
+--
+-- Name: probes; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE probes (
+    id integer NOT NULL,
+    uuid character varying(32) NOT NULL,
+    userid integer,
+    secret character varying(128),
+    type character varying(10) NOT NULL,
+    ispublic smallint DEFAULT 1 NOT NULL,
+    enabled smallint DEFAULT 1 NOT NULL
+);
+
+
+ALTER TABLE public.probes OWNER TO root;
+
+--
+-- Name: probes_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE probes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.probes_id_seq OWNER TO root;
+
+--
+-- Name: probes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE probes_id_seq OWNED BY probes.id;
+
+
+--
+-- Name: queue_length; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE queue_length (
+    created timestamp with time zone NOT NULL,
+    isp character varying(64) NOT NULL,
+    type character varying(8) NOT NULL,
+    length integer
+);
+
+
+ALTER TABLE public.queue_length OWNER TO root;
+
+--
+-- Name: requests; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE requests (
+    id integer NOT NULL,
+    urlid integer NOT NULL,
+    userid integer NOT NULL,
+    contactid integer,
+    submission_info text,
+    created timestamp with time zone,
+    allowcontact smallint DEFAULT 0 NOT NULL,
+    information text
+);
+
+
+ALTER TABLE public.requests OWNER TO root;
+
+--
+-- Name: requests_additional_data; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE requests_additional_data (
+    id integer NOT NULL,
+    request_id integer NOT NULL,
+    name character varying(64),
+    value character varying(255) NOT NULL,
+    created timestamp with time zone
+);
+
+
+ALTER TABLE public.requests_additional_data OWNER TO root;
+
+--
+-- Name: requests_additional_data_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE requests_additional_data_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.requests_additional_data_id_seq OWNER TO root;
+
+--
+-- Name: requests_additional_data_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE requests_additional_data_id_seq OWNED BY requests_additional_data.id;
+
+
+--
+-- Name: requests_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE requests_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.requests_id_seq OWNER TO root;
+
+--
+-- Name: requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE requests_id_seq OWNED BY requests.id;
+
+
+--
+-- Name: results; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE results (
@@ -199,10 +490,58 @@ CREATE TABLE results (
 );
 
 
-ALTER TABLE public.results OWNER TO blocked;
+ALTER TABLE public.results OWNER TO root;
 
 --
--- Name: url_categories; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: site_description; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE site_description (
+    id integer NOT NULL,
+    urlid integer NOT NULL,
+    created timestamp with time zone,
+    description text
+);
+
+
+ALTER TABLE public.site_description OWNER TO root;
+
+--
+-- Name: site_description_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE site_description_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.site_description_id_seq OWNER TO root;
+
+--
+-- Name: site_description_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE site_description_id_seq OWNED BY site_description.id;
+
+
+--
+-- Name: stats_cache; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE stats_cache (
+    name character varying(64) NOT NULL,
+    value integer,
+    last_updated timestamp with time zone
+);
+
+
+ALTER TABLE public.stats_cache OWNER TO root;
+
+--
+-- Name: url_categories; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE url_categories (
@@ -212,7 +551,7 @@ CREATE TABLE url_categories (
 );
 
 
-ALTER TABLE public.url_categories OWNER TO blocked;
+ALTER TABLE public.url_categories OWNER TO root;
 
 --
 -- Name: url_latest_status_id_seq; Type: SEQUENCE; Schema: public; Owner: root
@@ -229,7 +568,7 @@ CREATE SEQUENCE url_latest_status_id_seq
 ALTER TABLE public.url_latest_status_id_seq OWNER TO root;
 
 --
--- Name: url_latest_status; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: url_latest_status; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE url_latest_status (
@@ -243,10 +582,87 @@ CREATE TABLE url_latest_status (
 );
 
 
-ALTER TABLE public.url_latest_status OWNER TO blocked;
+ALTER TABLE public.url_latest_status OWNER TO root;
 
 --
--- Name: urls; Type: TABLE; Schema: public; Owner: blocked; Tablespace: 
+-- Name: url_status_changes; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE url_status_changes (
+    id integer NOT NULL,
+    urlid integer NOT NULL,
+    network_name character varying(64) NOT NULL,
+    old_status character varying(16),
+    new_status character varying(16),
+    created timestamp with time zone,
+    notified smallint DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.url_status_changes OWNER TO root;
+
+--
+-- Name: url_status_changes_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE url_status_changes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.url_status_changes_id_seq OWNER TO root;
+
+--
+-- Name: url_status_changes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE url_status_changes_id_seq OWNED BY url_status_changes.id;
+
+
+--
+-- Name: url_subscriptions; Type: TABLE; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE TABLE url_subscriptions (
+    id integer NOT NULL,
+    urlid integer NOT NULL,
+    contactid integer NOT NULL,
+    subscribereports smallint DEFAULT 0,
+    created timestamp with time zone,
+    token character varying(36) NOT NULL,
+    verified smallint DEFAULT 0 NOT NULL,
+    last_notification timestamp with time zone
+);
+
+
+ALTER TABLE public.url_subscriptions OWNER TO root;
+
+--
+-- Name: url_subscriptions_id_seq; Type: SEQUENCE; Schema: public; Owner: root
+--
+
+CREATE SEQUENCE url_subscriptions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.url_subscriptions_id_seq OWNER TO root;
+
+--
+-- Name: url_subscriptions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
+--
+
+ALTER SEQUENCE url_subscriptions_id_seq OWNED BY url_subscriptions.id;
+
+
+--
+-- Name: urls; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE urls (
@@ -261,10 +677,73 @@ CREATE TABLE urls (
 );
 
 
-ALTER TABLE public.urls OWNER TO blocked;
+ALTER TABLE public.urls OWNER TO root;
 
 --
--- Name: cache_block_count_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY contacts ALTER COLUMN id SET DEFAULT nextval('contacts_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY isp_aliases ALTER COLUMN id SET DEFAULT nextval('isp_aliases_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY org_categories ALTER COLUMN id SET DEFAULT nextval('org_categories_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY probes ALTER COLUMN id SET DEFAULT nextval('probes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY requests ALTER COLUMN id SET DEFAULT nextval('requests_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY requests_additional_data ALTER COLUMN id SET DEFAULT nextval('requests_additional_data_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY site_description ALTER COLUMN id SET DEFAULT nextval('site_description_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY url_status_changes ALTER COLUMN id SET DEFAULT nextval('url_status_changes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY url_subscriptions ALTER COLUMN id SET DEFAULT nextval('url_subscriptions_id_seq'::regclass);
+
+
+--
+-- Name: cache_block_count_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY cache_block_count
@@ -272,7 +751,7 @@ ALTER TABLE ONLY cache_block_count
 
 
 --
--- Name: categories_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: categories_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY categories
@@ -280,7 +759,55 @@ ALTER TABLE ONLY categories
 
 
 --
--- Name: isps_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: contacts_email_key; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY contacts
+    ADD CONSTRAINT contacts_email_key UNIQUE (email);
+
+
+--
+-- Name: contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY contacts
+    ADD CONSTRAINT contacts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: isp_aliases_alias_key; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY isp_aliases
+    ADD CONSTRAINT isp_aliases_alias_key UNIQUE (alias);
+
+
+--
+-- Name: isp_aliases_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY isp_aliases
+    ADD CONSTRAINT isp_aliases_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: isp_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY isp_cache
+    ADD CONSTRAINT isp_cache_pkey PRIMARY KEY (ip, network);
+
+
+--
+-- Name: isp_stats_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY isp_stats_cache
+    ADD CONSTRAINT isp_stats_cache_pkey PRIMARY KEY (network_name);
+
+
+--
+-- Name: isps_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY isps
@@ -288,7 +815,55 @@ ALTER TABLE ONLY isps
 
 
 --
--- Name: results_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: org_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY org_categories
+    ADD CONSTRAINT org_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: probes_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY probes
+    ADD CONSTRAINT probes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: probes_uuid_key; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY probes
+    ADD CONSTRAINT probes_uuid_key UNIQUE (uuid);
+
+
+--
+-- Name: queue_length_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY queue_length
+    ADD CONSTRAINT queue_length_pkey PRIMARY KEY (type, isp, created);
+
+
+--
+-- Name: requests_additional_data_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY requests_additional_data
+    ADD CONSTRAINT requests_additional_data_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: requests_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY requests
+    ADD CONSTRAINT requests_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: results_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY results
@@ -296,7 +871,23 @@ ALTER TABLE ONLY results
 
 
 --
--- Name: url_latest_status_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: site_description_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY site_description
+    ADD CONSTRAINT site_description_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: stats_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY stats_cache
+    ADD CONSTRAINT stats_cache_pkey PRIMARY KEY (name);
+
+
+--
+-- Name: url_latest_status_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY url_latest_status
@@ -304,7 +895,31 @@ ALTER TABLE ONLY url_latest_status
 
 
 --
--- Name: urls_pkey; Type: CONSTRAINT; Schema: public; Owner: blocked; Tablespace: 
+-- Name: url_status_changes_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY url_status_changes
+    ADD CONSTRAINT url_status_changes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: url_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY url_subscriptions
+    ADD CONSTRAINT url_subscriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: url_subscriptions_token_key; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
+--
+
+ALTER TABLE ONLY url_subscriptions
+    ADD CONSTRAINT url_subscriptions_token_key UNIQUE (token);
+
+
+--
+-- Name: urls_pkey; Type: CONSTRAINT; Schema: public; Owner: root; Tablespace: 
 --
 
 ALTER TABLE ONLY urls
@@ -312,59 +927,103 @@ ALTER TABLE ONLY urls
 
 
 --
--- Name: cat_tree; Type: INDEX; Schema: public; Owner: blocked; Tablespace: 
+-- Name: cat_tree; Type: INDEX; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE INDEX cat_tree ON categories USING gist (tree);
 
 
 --
--- Name: isp_name; Type: INDEX; Schema: public; Owner: blocked; Tablespace: 
+-- Name: isp_aliases_ispid; Type: INDEX; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE INDEX isp_aliases_ispid ON isp_aliases USING btree (ispid);
+
+
+--
+-- Name: isp_name; Type: INDEX; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE UNIQUE INDEX isp_name ON isps USING btree (name);
 
 
 --
--- Name: results_url_network; Type: INDEX; Schema: public; Owner: blocked; Tablespace: 
+-- Name: results_url_network; Type: INDEX; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE INDEX results_url_network ON results USING btree (urlid, network_name);
 
 
 --
--- Name: uls_url_network; Type: INDEX; Schema: public; Owner: blocked; Tablespace: 
+-- Name: site_description_urlid; Type: INDEX; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE INDEX site_description_urlid ON site_description USING btree (urlid);
+
+
+--
+-- Name: uls_url_network; Type: INDEX; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE UNIQUE INDEX uls_url_network ON url_latest_status USING btree (urlid, network_name);
 
 
 --
--- Name: trig_isp_reports_insert; Type: TRIGGER; Schema: public; Owner: blocked
+-- Name: url_status_changes_created; Type: INDEX; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE INDEX url_status_changes_created ON url_status_changes USING btree (created);
+
+
+--
+-- Name: urlsub_contact; Type: INDEX; Schema: public; Owner: root; Tablespace: 
+--
+
+CREATE UNIQUE INDEX urlsub_contact ON url_subscriptions USING btree (urlid, contactid);
+
+
+--
+-- Name: trig_isp_reports_insert; Type: TRIGGER; Schema: public; Owner: root
 --
 
 CREATE TRIGGER trig_isp_reports_insert AFTER INSERT ON isp_reports FOR EACH ROW EXECUTE PROCEDURE trig_isp_reports_insert();
 
 
 --
--- Name: trig_result_insert; Type: TRIGGER; Schema: public; Owner: blocked
+-- Name: trig_result_insert; Type: TRIGGER; Schema: public; Owner: root
 --
 
 CREATE TRIGGER trig_result_insert AFTER INSERT ON results FOR EACH ROW EXECUTE PROCEDURE trig_result_insert();
 
 
 --
--- Name: trig_uls_ins; Type: TRIGGER; Schema: public; Owner: blocked
+-- Name: trig_uls_ins; Type: TRIGGER; Schema: public; Owner: root
 --
 
 CREATE TRIGGER trig_uls_ins AFTER INSERT ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins_upd();
 
 
 --
--- Name: trig_uls_upd; Type: TRIGGER; Schema: public; Owner: blocked
+-- Name: trig_uls_upd; Type: TRIGGER; Schema: public; Owner: root
 --
 
 CREATE TRIGGER trig_uls_upd AFTER UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins_upd();
+
+
+--
+-- Name: isp_aliases_ispid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY isp_aliases
+    ADD CONSTRAINT isp_aliases_ispid_fkey FOREIGN KEY (ispid) REFERENCES isps(id) ON DELETE CASCADE;
+
+
+--
+-- Name: requests_contactid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY requests
+    ADD CONSTRAINT requests_contactid_fkey FOREIGN KEY (contactid) REFERENCES contacts(id) ON DELETE SET NULL;
 
 
 --
