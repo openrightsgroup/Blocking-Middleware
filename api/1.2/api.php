@@ -1013,8 +1013,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 				where token = ?",
 				array($req->get('token'))
 			);
-    # TODO PG
-			$row = $result->fetch_array();
+			$row = $result->fetch(PDO::FETCH_NUM)();
 			if (!$row) {
 				throw new TokenLookupError();
 			}
