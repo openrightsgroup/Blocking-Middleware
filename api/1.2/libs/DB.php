@@ -2,29 +2,26 @@
 
 include_once "config.php";
 
+include_once "exceptions.php";
 
-	include_once "exceptions.php";
-	
+date_default_timezone_set('UTC');
+/* PHPs date functions are unfortunate.  Now that we're in daylight savings
+the timestamps that are being passed as message auth tokens are in UTC.  PHP's
+strtotime function uses the local time zone (now BST) to parse the timestamps, 
+putting them an hour out.
 
-	
-	date_default_timezone_set('UTC');
-	/* PHPs date functions are unfortunate.  Now that we're in daylight savings
-	the timestamps that are being passed as message auth tokens are in UTC.  PHP's
-	strtotime function uses the local time zone (now BST) to parse the timestamps, 
-	putting them an hour out.
-
-	Since all our message timestamps are UTC, we set the default here.  Unfortunately,
-	the database will use local time.  Something to keep in mind when interpreting results!
-	*/
+Since all our message timestamps are UTC, we set the default here.  Unfortunately,
+the database will use local time.  Something to keep in mind when interpreting results!
+*/
 	
 /*	$memcache = new Memcache;
 	$memcache->addServer('127.0.0.1', 11211);
 	$MemcacheShard = 0;
 */	
-	$APIVersion = "1.2";
-	$Salt = "PASSWORD SALT";	
+$APIVersion = "1.2";
+$Salt = "PASSWORD SALT";	
 
-			
+define('ERR_DUPLICATE', 23505);
 
 class ResultSetIterator implements Iterator {
     /* Compatibility obj for PHP 5.3, so that mysql result sets
@@ -108,10 +105,12 @@ class PGConnection extends PDO {
         }
         $q = $this->prepare($sql, PDO::FETCH_ASSOC);
         if (!$q) {
-            throw new DatabaseError($this->errorInfo()[2]);
+            $err = $this->errorInfo();
+            throw new DatabaseError($err[2], $err[0]);
         }
         if (!$q->execute($args)) {
-            throw new DatabaseError($q->errorInfo()[2]);
+            $err = $this->errorInfo();
+            throw new DatabaseError($err[2], $err[0]);
         }
         return $q;
     }

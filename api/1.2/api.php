@@ -375,8 +375,7 @@ $app->post('/register/user', function(Request $req) use ($app) {
 			);
 	}
 	catch (DatabaseError $e) {
-		# TODO PG
-		if ($e->getCode() == 1062) {
+		if ($e->getCode() == ERR_DUPLICATE) {
 			throw new ConflictError("A user account with this email address has already been registered");
 		} else {
 			throw $e;
@@ -441,8 +440,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 			);
 	}
 	catch (DatabaseError $e) {
-        # TODO PG
-		if ($e->getCode() == 1062) {
+		if ($e->getCode() == ERR_DUPLICATE) {
 			throw new ConflictError("A probe with this UUID already exists");
 		} else {
 			throw $e;
