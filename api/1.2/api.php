@@ -263,24 +263,21 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$result = $conn->query(
             "SELECT insert_url_subscription(?,?,?)",
-			array($url['urlid'], $contact['id'], $req->get('subscribereports', false) 
-            )
-		);
+			array($url['urlid'], $contact['id'], $req->get('subscribereports', false) )
+            );
         $row = $result->fetch(PDO::FETCH_NUM);
+        error_log("Inserted subscription: {$row[0]}");
 
 		# create verification token for email subscribe
 		# needs an update because we're using the row ID as a salt of sorts
 
 		# should probably handle duplicated tokens here (just because it's possible)
-		$conn->query("update url_subscriptions set token = 'A'||md5(id || '-' || urlID || '-' || contactid || '-' || ?)
-			where id = ?",
+		$r = $conn->query("update url_subscriptions set token = 'A'||md5(id || '-' || urlID || '-' || contactid || '-' || ?)
+			where id = ? returning token",
 			array(Middleware::generateSharedSecret(10), $row[0])
 			);
-        $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
-            array($url['urlid'], $contact['id'])
-            );
         $subscriberow = $r->fetch(PDO::FETCH_NUM);
-        $conn->commit();
+        error_log("generated token: {$subscriberow[0]}");
 
         if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
             $msg = new PHPMailer();
@@ -1033,6 +1030,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
     } elseif (substr($token, 0, 1) == 'B') {
         // verifying user after ISP report submit
         try {
+            $conn->beginTransaction();
             $contact = $app['db.contact.load']->loadByToken($token);
             $result = $conn->query("update contacts set verified = 1, token = null
                 where verified = 0 and token = ?", 
@@ -1064,7 +1062,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 
             }
 
-
+            $conn->commit();
             
         } catch (Exception $err) {
             
