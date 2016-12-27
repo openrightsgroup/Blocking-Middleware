@@ -324,11 +324,23 @@ CREATE TABLE isp_stats_cache (
 
 
 --
+-- Name: isps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE isps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: isps; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE isps (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('isps_id_seq'::regclass) NOT NULL,
     name character varying(64),
     description text,
     queue_name text,
@@ -1065,13 +1077,6 @@ CREATE UNIQUE INDEX urls_url ON urls USING btree (url);
 --
 
 CREATE UNIQUE INDEX urlsub_contact ON url_subscriptions USING btree (urlid, contactid);
-
-
---
--- Name: isps_insert_ignore; Type: RULE; Schema: public; Owner: -
---
-
-CREATE RULE isps_insert_ignore AS ON INSERT TO isps WHERE (EXISTS (SELECT 1 FROM isps WHERE ((isps.name)::text = (new.name)::text))) DO INSTEAD NOTHING;
 
 
 --

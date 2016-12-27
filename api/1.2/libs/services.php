@@ -247,13 +247,13 @@ class IspLoader {
 		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
 		// TODO: tidy up module dependency
 		$result = $this->conn->query(
-			"insert into isps(name,created, description) values (?, now(), ?)",
-			array($title, $title)
+			"insert into isps(name,created, description) values (?, now(), ?) returning id as id",
+			array($title, $title),
+            PDO::FETCH_NUM
 			);
-		if (!$result) {
-			throw new DatabaseError();
-		}
-		$ispid = $this->conn->insert_id;
+		
+        $row = $result->fetch();
+		$ispid = $row[0];
 		$this->conn->query("insert into isp_aliases(ispid, alias, created)
 			values (?, ?, now())",
 			array($ispid, $name)
@@ -567,12 +567,13 @@ class ISPReportLoader {
     }
 
     function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id) {
-        $this->conn->query("insert into isp_reports
+        $q = $this->conn->query("insert into isp_reports
         (name, email, urlID, network_name, message, report_type, send_updates, contact_id, created)
-        values (?,?,?,?,?,?,?,?,now())",
+        values (?,?,?,?,?,?,?,?,now()) returning id as id",
         array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id)
         );
-        return $this->conn->insert_id;
+        $row = $q->fetch();
+        return $row['id'];
     }
 
     function load($id) {
