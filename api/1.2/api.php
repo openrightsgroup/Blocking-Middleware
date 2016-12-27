@@ -693,7 +693,7 @@ $app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
 	}
 
 	$out = array();
-	while ($row = $rs->fetch()) {
+    foreach($rs as $row) {
 		$out[] = $row;
 	}
 
@@ -775,11 +775,13 @@ $app->get('/status/url', function (Request $req) use ($app) {
         left join isp_reports rp on rp.network_name = l.network_name and rp.urlID = l.urlID
 		where l.urlID = ? and isps.show_results = 1
 		group by l.network_name",
-		array($url['urlid']));
+		array($url['urlid']),
+        PDO::FETCH_NUM
+        );
 
 	$output = array();
 
-	while ($row = $result->fetch(PDO::FETCH_NUM)) {
+    foreach ($result as $row) {
 		$out = array('network_name' => $row[0]);
 
 		# get latest status and result
@@ -816,9 +818,9 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 
-	$rs = $conn->query("select name, value from stats_cache", array());
+	$rs = $conn->query("select name, value from stats_cache", array(), PDO::FETCH_NUM);
 	$stats = array();
-	while($row = $rs->fetch(PDO::FETCH_NUM)) {
+    foreach ($rs as $row) {
 		$stats[$row[0]] = (int)$row[1];
 	}
 
@@ -843,7 +845,7 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	order by isps.description", array());
 
 	$output = array();
-	while ($row = $rs->fetch()) {
+    foreach ($rs as $row) {
 		$net = $row['description'];
 		unset($row['description']);
 		$output[$net] = array_map("mkint", $row);
@@ -953,9 +955,11 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
 		where urls.url = ? and isps.show_results = 1
 		group by l.network_name",
-		array($url));
+		array($url),
+        PDO::FETCH_NUM
+        );
 
-		while ($row = $result->fetch(PDO::FETCH_NUM)) {
+        foreach ($result as $row) {
 			$out = array('network_name' => $row[0]);
 
 			# get latest status and result
@@ -1046,7 +1050,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 where contact_id = ?",
                 array($contact['id'])
                 );
-            while ($row = $res->fetch()) {
+            foreach ($res as $row) {
                 $network = $app['db.isp.load']->load($row['network_name']);
                 $url = $app['db.url.load']->loadByID($row['urlid']);
 
@@ -1122,7 +1126,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
         }
 
         $cat = array();
-        while ($row = $res->fetch()) {
+        foreach ($res as $row) {
             $cat[] = array(
                 'id' => $row['id'],
                 'fullname' => $row['display_name'],
@@ -1159,7 +1163,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         $res = $app['db.category.load']->load_blocks($parent, $req->get('active', 0));
     }
     $sites = array();
-    while ($data = $res->fetch()) {
+    foreach ($res as $data) {
         $sites[] = $data;
     }
     return $app->json(array(

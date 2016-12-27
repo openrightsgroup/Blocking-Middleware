@@ -135,9 +135,12 @@ class UrlLoader {
 		$result = $this->conn->query(
 			"select display_name from categories
 			inner join url_categories on category_id = categories.id
-			where urlID = ?", array($urlID));
+			where urlID = ?", 
+            array($urlID),
+            PDO::FETCH_NUM
+            );
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)) {
+        foreach ($result as $row) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -167,7 +170,7 @@ class UrlLoader {
             );
 
         $output = array();
-        while ($data = $res->fetch()) {
+        foreach ($res as $data) {
             $output[] = $data['url'];
         }
 
@@ -384,10 +387,11 @@ class DMOZCategoryLoader {
             'select id, name from categories
             where tree @> $1 and id <> $2
             order by tree',
-            array($node['tree'], $node['id'])
+            array($node['tree'], $node['id']),
+            PDO::FETCH_NUM
             );
 
-        while ($data = $res->fetch(PDO::FETCH_NUM)) {
+        foreach ($res as $data) {
             if ($data[1] != $node['tree']) {
                 $out[] = $data;
             }
@@ -466,9 +470,12 @@ class DMOZCategoryLoader {
 		$result = $this->conn->query(
 			"select URL from urls
 			inner join url_categories on urls.urlID = url_categories.urlID
-			where category_id = ?", array($parent));
+			where category_id = ?", 
+            array($parent), 
+            PDO::FETCH_NUM
+            );
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)) {
+        foreach ($result as $row) {
 			$out[] = $row[0];
 		}
 		return $out;
@@ -491,9 +498,12 @@ class DMOZCategoryLoader {
 			"select URL from urls
 			inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-			where $where limit 20", $args);
+			where $where limit 20", 
+            $args,
+            PDO::FETCH_NUM
+            );
 		$out = array();
-		while ($row = $result->fetch(PDO::FETCH_NUM)) {
+        foreach ($result as $row) {
 			$out[] = $row[0];
 		}
 		return $out;
