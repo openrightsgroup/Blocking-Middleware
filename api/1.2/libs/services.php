@@ -214,19 +214,11 @@ class ContactLoader {
 
     function insert($email, $fullname, $joinlist=false) {
         $this->conn->query(
-            "INSERT INTO contacts
-            SET
-                email=?,
-                joinlist=?,
-                fullName=?
-            ON DUPLICATE KEY UPDATE
-                joinlist=IF(joinlist=false, VALUES(joinlist), joinlist),
-                fullName=IF(VALUES(fullName)='', fullName, VALUES(fullName));
-            ",
+            "select insert_contact(?,?,?)",
             array(
                 $email,
-                $joinlist,
                 $fullname
+                $joinlist,
                 )
         );
         $contact = $this->load($email);
@@ -299,12 +291,18 @@ class IpLookupService {
 
 	function write_cache($ip, $network) {
 		error_log("Writing cache entry for $ip, $network");
-		$this->conn->query(
-			"insert into isp_cache(ip, network, created) 
-			values (?, ?, now())
-			on duplicate key update created = current_date",
-		array($ip, $network)
-		);
+        $this->conn->beginTransaction();
+        $q = $this->conn->query(
+            "update isp_cache set created = now() where ip = ? and network = ?",
+            array($ip, $network)
+            );
+        if ($q->rowCount() == 0) {
+            $this->conn->query(
+            "insert into isp_cache(ip, network, created) values (?, ?, now())",
+            array($ip, $network)
+            );
+        }
+        $this->conn->commit();
 		error_log("Cache write complete");
 	}
 

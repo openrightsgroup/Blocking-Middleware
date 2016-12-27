@@ -39,6 +39,23 @@ COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
 SET search_path = public, pg_catalog;
 
 --
+-- Name: insert_contact(character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION insert_contact(p_email character varying, p_fullname character varying, p_joinlist integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+update contacts set joinlist = (p_joinlist::bool or joinlist::int::bool)::int, fullname=case when p_fullname = '' then fullname else p_fullname end where email = p_email;
+IF NOT FOUND
+then
+insert into contacts(email, fullname, joinlist) values (p_email, p_fullname, p_joinlist);
+end if;
+end;
+$$;
+
+
+--
 -- Name: insert_url_subscription(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
