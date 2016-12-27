@@ -39,6 +39,30 @@ COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
 SET search_path = public, pg_catalog;
 
 --
+-- Name: enum_url_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE enum_url_status AS ENUM (
+    'ok',
+    'disallowed-by-robots-txt',
+    'disallowed-mime-type',
+    'disallowed-content-length'
+);
+
+
+--
+-- Name: enum_user_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE enum_user_status AS ENUM (
+    'pending',
+    'ok',
+    'suspended',
+    'banned'
+);
+
+
+--
 -- Name: insert_contact(character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -521,6 +545,15 @@ CREATE TABLE stats_cache (
 
 
 --
+-- Name: test; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE test (
+    "testID" integer
+);
+
+
+--
 -- Name: url_categories; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -628,19 +661,70 @@ ALTER SEQUENCE url_subscriptions_id_seq OWNED BY url_subscriptions.id;
 
 
 --
+-- Name: urls_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE urls_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: urls; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE urls (
-    urlid integer NOT NULL,
+    urlid integer DEFAULT nextval('urls_id_seq'::regclass) NOT NULL,
     url text,
     hash character varying(32),
     source character varying(32),
     lastpolled timestamp with time zone,
     inserted timestamp with time zone,
-    status character varying(32),
+    status enum_url_status DEFAULT 'ok'::enum_url_status,
     last_reported timestamp with time zone
 );
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE users (
+    id integer NOT NULL,
+    email character varying(128) NOT NULL,
+    password character varying(255),
+    preference text,
+    fullname character varying(60),
+    ispublic smallint DEFAULT 1,
+    countrycode character varying(3),
+    probehmac character varying(32),
+    status enum_user_status DEFAULT 'ok'::enum_user_status,
+    secret character varying(128),
+    createdat timestamp with time zone,
+    administrator smallint DEFAULT 0
+);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE users_id_seq OWNED BY users.id;
 
 
 --
@@ -704,6 +788,13 @@ ALTER TABLE ONLY url_status_changes ALTER COLUMN id SET DEFAULT nextval('url_sta
 --
 
 ALTER TABLE ONLY url_subscriptions ALTER COLUMN id SET DEFAULT nextval('url_subscriptions_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regclass);
 
 
 --
@@ -891,6 +982,22 @@ ALTER TABLE ONLY urls
 
 
 --
+-- Name: users_email_key; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: cat_tree; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -926,6 +1033,13 @@ CREATE INDEX site_description_urlid ON site_description USING btree (urlid);
 
 
 --
+-- Name: source; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX source ON urls USING btree (source);
+
+
+--
 -- Name: uls_url_network; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -940,10 +1054,31 @@ CREATE INDEX url_status_changes_created ON url_status_changes USING btree (creat
 
 
 --
+-- Name: urls_url; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX urls_url ON urls USING btree (url);
+
+
+--
 -- Name: urlsub_contact; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX urlsub_contact ON url_subscriptions USING btree (urlid, contactid);
+
+
+--
+-- Name: isps_insert_ignore; Type: RULE; Schema: public; Owner: -
+--
+
+CREATE RULE isps_insert_ignore AS ON INSERT TO isps WHERE (EXISTS (SELECT 1 FROM isps WHERE ((isps.name)::text = (new.name)::text))) DO INSTEAD NOTHING;
+
+
+--
+-- Name: urls_insert_ignore; Type: RULE; Schema: public; Owner: -
+--
+
+CREATE RULE urls_insert_ignore AS ON INSERT TO urls WHERE (EXISTS (SELECT 1 FROM urls WHERE (urls.url = new.url))) DO INSTEAD NOTHING;
 
 
 --

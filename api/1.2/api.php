@@ -25,7 +25,7 @@ $app = new Silex\Application();
 $app['debug'] = true;
 
 $app['service.db'] = $app->share(function() {
-    return get_pg_connection();
+    return db_connect();
 });
 
 
@@ -240,13 +240,13 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$url = $app['db.url.load']->load($urltext);
 
 	# always record the request, even if we didn't queue it
-    $conn->query(
+    $q = $conn->query(
         "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
-            values (?,?,?,?,?,?,now())",
-        array($url['urlID'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
+            values (?,?,?,?,?,?,now()) returning id as id",
+        array($url['urlid'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
     );
 
-	$request_id = $conn->insert_id;
+	$request_id = $q->fetchColumn();
     if ($req->get('additional_data')) {
         $additional = array();
         parse_str($req->get('additional_data'), $additional);
@@ -262,9 +262,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	if ($contact != null && $req->get('subscribereports',false) ) {
 		$result = $conn->query(
-            "SELECT insert_url_subscriptions(?,?,?)",
-			array($url['urlID'], $contact['id'], $req->get('subscribereports', false) 
-            );
+            "SELECT insert_url_subscription(?,?,?)",
+			array($url['urlid'], $contact['id'], $req->get('subscribereports', false) 
+            )
 		);
         $row = $result->fetch(PDO::FETCH_NUM);
 
@@ -272,12 +272,12 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		# needs an update because we're using the row ID as a salt of sorts
 
 		# should probably handle duplicated tokens here (just because it's possible)
-		$conn->query("update url_subscriptions set token = 'A'||md5(id || '-' || urlid || '-' || contactid || '-' || ?)
+		$conn->query("update url_subscriptions set token = 'A'||md5(id || '-' || urlID || '-' || contactid || '-' || ?)
 			where id = ?",
 			array(Middleware::generateSharedSecret(10), $row[0])
 			);
         $r = $conn->query("select token from url_subscriptions where urlID = ? and contactID = ?",
-            array($url['urlID'], $contact['id'])
+            array($url['urlid'], $contact['id'])
             );
         $subscriberow = $r->fetch(PDO::FETCH_NUM);
         $conn->commit();
@@ -312,7 +312,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	# beware shortcut logic - checkLastPolled is not evaluated for new urls
 	# checkLastPolled also updates the timestamp
-	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlID'])) {
+	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlid'])) {
 
 		$queued = true;
 
@@ -778,7 +778,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         left join isp_reports rp on rp.network_name = l.network_name and rp.urlID = l.urlID
 		where l.urlID = ? and isps.show_results = 1
 		group by l.network_name",
-		array($url['urlID']));
+		array($url['urlid']));
 
 	$output = array();
 
@@ -800,7 +800,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		$output[] = $out;
 	}
 
-	$categories = $app['db.url.load']->load_categories($url['urlID']);
+	$categories = $app['db.url.load']->load_categories($url['urlid']);
 
 	return $app->json(array(
 		'success' => true, 
@@ -951,7 +951,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		# Fetch results from status summary table, left joining to get last blocked time
 		$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
 		from url_latest_status l 
-		inner join urls on urls.urlid = l.urlid
+		inner join urls on urls.urlID = l.urlID
 		inner join isps on isps.name = l.network_name
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
 		where urls.url = ? and isps.show_results = 1
@@ -1050,7 +1050,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 );
             while ($row = $res->fetch()) {
                 $network = $app['db.isp.load']->load($row['network_name']);
-                $url = $app['db.url.load']->loadByID($row['urlID']);
+                $url = $app['db.url.load']->loadByID($row['urlid']);
 
                 sendISPReport(
                     $row['name'],
@@ -1276,7 +1276,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         if ($network_name != "ORG") {
             $q = $app['service.db']->query("select id from url_latest_status
                 where urlID = ? and network_name = ? and status = 'blocked'",
-                array($url['urlID'], $network_name)
+                array($url['urlid'], $network_name)
                 );
             $row = $q->fetch(PDO::FETCH_NUM);
             if (!$row) {
@@ -1289,12 +1289,12 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             continue;
         }
 
-        if ($app['db.ispreport.load']->can_report($url['urlID'], $network_name)) {
+        if ($app['db.ispreport.load']->can_report($url['urlid'], $network_name)) {
 
             $ids[$network_name] = $app['db.ispreport.load']->insert(
                 $data['reporter']['name'],
                 $data['reporter']['email'],
-                $url['urlID'],
+                $url['urlid'],
                 $network_name,
                 $data['message'],
                 $data['report_type'],

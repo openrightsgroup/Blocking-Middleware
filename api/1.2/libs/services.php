@@ -11,10 +11,10 @@ class UserLoader {
 			array($email)
 			);
 
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new UserLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 }
@@ -29,10 +29,10 @@ class ProbeLoader {
 			"select * from probes where uuid=?",
 			array($probe_uuid)
 			);
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new ProbeLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 
@@ -68,10 +68,10 @@ class UrlLoader {
 	}
 
     function insert($url, $source="user") {
-        /* Insert user record.  Does not return ID, because of insert-ignore, and 
-        because URLs are uniquely indexes only on the first 767 chars */
+        /* Insert user record.  Does not return ID. 
+        AN insert rule emulates INSERT IGNORE */
         $result = $this->conn->query(
-            "insert ignore into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
+            "insert into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
             array($url, md5($url), $source)
         );
         /* returns true/false for whether a row was really inserted. */
@@ -89,10 +89,10 @@ class UrlLoader {
 			"select * from urls where urlID=?",
 			array($urlid)
 			);
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new UrlLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 
@@ -101,21 +101,18 @@ class UrlLoader {
 			"select * from urls where URL=?",
 			array($url)
 			);
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new UrlLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 
 	function checkLastPolled($urlid) {
-		# save autocommit state
-		$automode = $this->conn->get_autocommit();
-		# set autocommit off to allow transaction
-		$this->conn->autocommit(false);
 		# test lastPolled date in the database
+        $this->conn->beginTransaction();
 		$result = $this->conn->query(
-			"select lastPolled, date_add(lastPolled, INTERVAL 1 DAY) < now()
+			"select lastPolled, lastPolled+ INTERVAL '1 DAY' < now()
 			from urls where urlID = ?",
 			array($urlid)
 			);
@@ -131,8 +128,6 @@ class UrlLoader {
 		}
 		# finish transaction with stored result.
 		$this->conn->commit();
-		#restore autocommit mode
-		$this->conn->autocommit($automode);
 		return $ret;
 	}
 
@@ -163,7 +158,7 @@ class UrlLoader {
         $res = $this->conn->query("select 
                 urls.url
             from urls 
-            inner join blocked_dmoz on blocked_dmoz.urlid = urls.urlid
+            inner join blocked_dmoz on blocked_dmoz.urlID = urls.urlID
             left join isp_reports on (isp_reports.urlID = urls.urlID)
             where isp_reports.urlID is null 
             order by rand() limit " . (int)$count,
@@ -193,10 +188,10 @@ class ContactLoader {
 			"select * from contacts where email=?",
 			array($email)
 			);
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new ContactLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 
@@ -205,10 +200,10 @@ class ContactLoader {
 			"select * from contacts where token=?",
 			array($token)
 			);
-		if ($result->num_rows == 0) {
+		$row = $result->fetch();
+		if (!$row) {
 			throw new ContactLookupError();
 		}
-		$row = $result->fetch();
 		return $row;
 	}
 
@@ -217,8 +212,8 @@ class ContactLoader {
             "select insert_contact(?,?,?)",
             array(
                 $email,
-                $fullname
-                $joinlist,
+                $fullname,
+                $joinlist
                 )
         );
         $contact = $this->load($email);
@@ -249,7 +244,7 @@ class IspLoader {
 		$title = preg_replace('/[^A-Za-z0-9 \-].*$/','',$name);
 		// TODO: tidy up module dependency
 		$result = $this->conn->query(
-			"insert ignore into isps(name,created, description) values (?, now(), ?)",
+			"insert into isps(name,created, description) values (?, now(), ?)",
 			array($title, $title)
 			);
 		if (!$result) {
@@ -276,7 +271,7 @@ class IpLookupService {
 		error_log("Checking cache for $ip");
 		$result = $this->conn->query(
 			"select network from isp_cache where ip = ? and 
-			created >= date_sub(current_date, interval 7 day)",
+			created >= current_date  - interval '7 day'",
 			array($ip)
 			);
 		if (!$result) {
@@ -543,7 +538,7 @@ class DMOZCategoryLoader {
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-            left join cache_block_count on cache_block_count.urlid = urls.urlid
+            left join cache_block_count on cache_block_count.urlID = urls.urlID
             where \$2 @> tree and $active > 0
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
@@ -581,7 +576,7 @@ class ISPReportLoader {
 
     function can_report($urlID, $network_name) {
         $res = $this->conn->query("select count(*) from isp_reports
-            where urlid = ? and network_name = ? and unblocked = 0",
+            where urlID = ? and network_name = ? and unblocked = 0",
             array($urlID, $network_name));
         $row = $res->fetch(PDO::FETCH_NUM);
         if ($row[0] == 0) {
@@ -609,7 +604,7 @@ class ResultProcessorService {
 			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created) 
 			values (?,?,?,?,?,?,?,?,?,now())",
 			array(
-				$url['urlID'],$probe['id'], $result['config'],$result['ip_network'],
+				$url['urlid'],$probe['id'], $result['config'],$result['ip_network'],
 				$result['status'],$result['http_status'], $result['network_name'],
 				@$result['category'],@$result['blocktype']
 			)
@@ -617,7 +612,7 @@ class ResultProcessorService {
 
 		$this->conn->query(
 			"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
-			array($url['urlID'])
+			array($url['urlid'])
 			);
 
 		$this->probe_loader->updateRespRecv($probe['uuid']);
