@@ -3,7 +3,7 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
-$conn = new db_connect()
+$conn = db_connect();
 
 list($amqp, $ch) = amqp_connect_full();
 

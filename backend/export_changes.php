@@ -2,7 +2,7 @@
 <?php
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
-$conn = db_connect()
+$conn = db_connect();
 
 
 

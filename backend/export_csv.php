@@ -2,7 +2,7 @@
 
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
-$conn = db_connect()
+$conn = db_connect();
 
 $result = $conn->query(
 "select url, urls.inserted url_submitted, network_name, filter_level, results.status, results.created, http_status, config, results.category, results.blocktype from results inner join urls using (urlid)");
