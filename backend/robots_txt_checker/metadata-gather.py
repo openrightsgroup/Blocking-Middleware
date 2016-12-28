@@ -4,7 +4,7 @@ import os
 import sys
 import json
 import logging
-import MySQLdb
+import psycopg2
 import urlparse
 import robotparser
 import ConfigParser
@@ -83,8 +83,8 @@ def main():
     assert(len(cfg.read(['config.ini'])) == 1)
 
     # create MySQL connection
-    mysqlopts = dict(cfg.items('mysql'))
-    conn = MySQLdb.connect(**mysqlopts)
+    pgopts = dict(cfg.items('db'))
+    conn = psycopg2.connect(**pgopts)
 
     # Create AMQP connection
     amqpopts = dict(cfg.items('amqp'))
