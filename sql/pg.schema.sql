@@ -195,11 +195,23 @@ CREATE TABLE cache_block_count (
 
 
 --
+-- Name: categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE categories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: categories; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE categories (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('categories_id_seq'::regclass) NOT NULL,
     display_name text,
     org_category_id integer,
     block_count integer,
@@ -495,11 +507,23 @@ ALTER SEQUENCE requests_id_seq OWNED BY requests.id;
 
 
 --
+-- Name: results_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE results_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: results; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE results (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('results_id_seq'::regclass) NOT NULL,
     urlid integer,
     probeid integer,
     config integer,
@@ -566,11 +590,23 @@ CREATE TABLE test (
 
 
 --
+-- Name: url_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE url_categories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: url_categories; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE url_categories (
-    id integer,
+    id integer DEFAULT nextval('url_categories_id_seq'::regclass),
     urlid integer,
     category_id integer
 );

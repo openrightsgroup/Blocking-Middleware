@@ -774,7 +774,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
         left join isp_reports rp on rp.network_name = l.network_name and rp.urlID = l.urlID
 		where l.urlID = ? and isps.show_results = 1
-		group by l.network_name",
+		group by isps.description, l.status, l.created, l.category, l.blocktype, isps.name, isps.queue_name",
 		array($url['urlid']),
         PDO::FETCH_NUM
         );
