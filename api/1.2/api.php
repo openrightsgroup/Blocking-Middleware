@@ -803,7 +803,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	return $app->json(array(
 		'success' => true, 
-		"url" => $url['URL'], 
+		"url" => $url['url'], 
 		"results" => $output,
 		"url-status" => $url['status'],
 		"categories" => $categories,
@@ -1058,7 +1058,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                     $row['name'],
                     $row['email'],
                     $network, 
-                    $url['URL'],
+                    $url['url'],
                     $row['message'],
                     $row['report_type'],
                     $app['service.template']
@@ -1310,7 +1310,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     $data['reporter']['name'],
                     $data['reporter']['email'],
                     $network,
-                    $url['URL'],
+                    $url['url'],
                     $data['message'],
                     $data['report_type'],
                     $app['service.template']
