@@ -15,7 +15,7 @@ $ex->setName('org.results');
 $q = new AMQPQueue($ch);
 $q->setName('results');
 
-$conn = new db_connect();
+$conn = db_connect();
 
 $processor = new ResultProcessorService(
 	$conn,
