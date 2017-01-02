@@ -103,26 +103,9 @@ CREATE FUNCTION record_change(p_urlid integer, p_network_name character varying,
     LANGUAGE plpgsql
     AS $$
 begin
-if p_oldstatus <> p_newstatus then
+if p_oldstatus <> p_newstatus or p_oldstatus is null then
 insert into url_status_changes(urlid, network_name, old_status, new_status, created) values (p_urlid, p_network_name,  p_oldstatus, p_newstatus, p_created);
 end if;
-END;
-$$;
-
-
---
--- Name: record_new(integer, character varying, character varying, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION record_new(p_urlid integer, p_network_name character varying, p_status character varying, p_created timestamp with time zone) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-begin
-if not exists(select 1 from url_latest_status uls where uls.network_name = p_network_name and uls.urlid = p_urlid)
-then
-insert into url_status_changes(urlid, network_name, old_status, new_status, created) values (p_urlid, p_network_name, null, p_status, p_created);
-end if;
-
 END;
 $$;
 
@@ -190,36 +173,36 @@ CREATE FUNCTION trig_uls_after_ins_upd() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
+if TG_OP = 'UPDATE'
+then
+perform record_change(NEW.urlid, NEW.network_name,OLD.status, NEW.status, NEW.created);
+else
+perform record_change(NEW.urlid, NEW.network_name,NULL, NEW.status, NEW.created);
+end if;
 perform update_cache_block_count(NEW.urlid);
 return NEW; END;
 $$;
 
 
 --
--- Name: trig_uls_ins(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trig_uls_ins_upd(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION trig_uls_ins() RETURNS trigger
+CREATE FUNCTION trig_uls_ins_upd() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-perform record_new(NEW.urlid, NEW.network_name, NEW.status, NEW.created);
+if NEW.status = 'blocked'
+then
+  if TG_OP = 'INSERT' or (TG_OP = 'UPDATE' AND OLD.first_blocked is NULL ) 
+  then    
+    select NEW.created into NEW.first_blocked ;
+  end if;
+  select NEW.created into NEW.last_blocked ;
+
+end if;
 return NEW;
-END;
-$$;
-
-
---
--- Name: trig_uls_upd(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION trig_uls_upd() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-perform record_change(NEW.urlid, NEW.network_name,OLD.status, NEW.status, NEW.created);
-return NEW;
-END;
+END; 
 $$;
 
 
@@ -703,7 +686,9 @@ CREATE TABLE url_latest_status (
     status text,
     created timestamp with time zone,
     category character varying(64),
-    blocktype character varying(16)
+    blocktype character varying(16),
+    first_blocked timestamp with time zone,
+    last_blocked timestamp with time zone
 );
 
 
@@ -1215,17 +1200,10 @@ CREATE TRIGGER trig_uls_after_ins_upd AFTER INSERT OR UPDATE ON url_latest_statu
 
 
 --
--- Name: trig_uls_ins; Type: TRIGGER; Schema: public; Owner: -
+-- Name: trig_uls_ins_upd; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trig_uls_ins BEFORE INSERT ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins();
-
-
---
--- Name: trig_uls_upd; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trig_uls_upd BEFORE UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_upd();
+CREATE TRIGGER trig_uls_ins_upd BEFORE INSERT OR UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins_upd();
 
 
 --
