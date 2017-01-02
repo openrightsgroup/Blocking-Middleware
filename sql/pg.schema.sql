@@ -111,6 +111,20 @@ $$;
 
 
 --
+-- Name: trig_categories_ins_upd(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION trig_categories_ins_upd() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+select to_tsvector('english', NEW.name) into NEW.name_fts;
+return NEW;
+END;
+$$;
+
+
+--
 -- Name: trig_isp_reports_insert(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -269,7 +283,8 @@ CREATE TABLE categories (
     total_block_count integer,
     total_blocked_url_count integer,
     tree ltree,
-    name text
+    name text,
+    name_fts tsvector
 );
 
 
@@ -1109,6 +1124,13 @@ CREATE INDEX cat_tree ON categories USING gist (tree);
 
 
 --
+-- Name: categories_name_fts; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX categories_name_fts ON categories USING gin (name_fts);
+
+
+--
 -- Name: isp_aliases_ispid; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1176,6 +1198,13 @@ CREATE UNIQUE INDEX urlsub_contact ON url_subscriptions USING btree (urlid, cont
 --
 
 CREATE RULE urls_insert_ignore AS ON INSERT TO urls WHERE (EXISTS (SELECT 1 FROM urls WHERE (urls.url = new.url))) DO INSTEAD NOTHING;
+
+
+--
+-- Name: trig_categories_ins_upd; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trig_categories_ins_upd BEFORE INSERT OR UPDATE ON categories FOR EACH ROW EXECUTE PROCEDURE trig_categories_ins_upd();
 
 
 --

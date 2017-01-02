@@ -1090,6 +1090,21 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 #-----------
 # DMOZ category functions
 #-----------
+$app->get('/category/search', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','search'));
+    $search = $req->get('search');
+	$user = $app['db.user.load']->load($req->get('email'));
+	#Middleware::verifyUserMessage($search, $user['secret'], $req->get('signature'));
+
+    $output = array('success' => true, categories => array());
+
+    foreach($app['db.category.load']->search($search) as $row) {
+        $output['categories'][] = $row;
+    }
+
+    return $app->json($output);
+
+});
 
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
     
@@ -1149,6 +1164,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 
 
 })->value('parent',0);
+
 
 $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
 

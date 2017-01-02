@@ -556,6 +556,15 @@ class DMOZCategoryLoader {
             );
         return $result;
     }
+
+    function search($name) {
+        $q = $this->conn->query("select id, display_name, name 
+            from categories where name_fts @@ to_tsquery(?)
+            order by name",
+            array($name . ":*")
+            );
+        return $q;
+    }
 }
 
 
