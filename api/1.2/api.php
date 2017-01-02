@@ -240,10 +240,19 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$url = $app['db.url.load']->load($urltext);
 
 	# always record the request, even if we didn't queue it
+    $args = array(
+            $url['urlid'], 
+            $row['id'], 
+            ($contact ? $contact['id'] : null), 
+            $req->get('additional_data'), 
+            $req->get('information'), 
+            $req->get('allowcontact', 0)
+            );
+    error_log(implode(",", $args));
     $q = $conn->query(
         "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
             values (?,?,?,?,?,?,now()) returning id as id",
-        array($url['urlid'], $row['id'], $contact['id'], $req->get('additional_data'), $req->get('information'), $req->get('allowcontact', false))
+        $args
     );
 
 	$request_id = $q->fetchColumn();
@@ -862,13 +871,11 @@ class StreamResultProcessor {
 		$data =(array)json_decode($msg->getBody());
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $this->conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
+	$result = $this->conn->query("select isps.description, l.status, l.created, l.last_blocked, l.first_blocked, l.category 
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
 		inner join urls on urls.urlID = l.urlID
-		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
-		where urls.url = ? and l.network_name = ?
-		group by l.network_name",
+		where urls.url = ? and l.network_name = ?",
 		array($data['url'], $data['network_name']));
 
 		$row = $result->fetch(PDO::FETCH_NUM);
@@ -944,27 +951,27 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 
 		$conn = $app['service.db'];
 		# Fetch results from status summary table, left joining to get last blocked time
-		$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category 
+		$result = $conn->query("select isps.description, l.status, l.created, l.last_blocked, l.first_blocked, l.category 
 		from url_latest_status l 
 		inner join urls on urls.urlID = l.urlID
 		inner join isps on isps.name = l.network_name
-		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
-		where urls.url = ? and isps.show_results = 1
-		group by l.network_name",
+		where urls.url = ? and isps.show_results = 1 ",
 		array($url),
         PDO::FETCH_NUM
         );
 
         foreach ($result as $row) {
-			$out = array('network_name' => $row[0]);
+			$out = array(
+                'network_name' => $row[0],
 
 			# get latest status and result
 
-			$out['status'] = $row[1];
-			$out['status_timestamp'] = $row[2];
-			$out['last_blocked_timestamp'] = $row[3];
-			$out['first_blocked_timestamp'] = $row[4];
-			$out['category'] = $row[5];
+                'status' =>  $row[1],
+                'status_timestamp' =>  $row[2],
+                'last_blocked_timestamp' =>  $row[3],
+                'first_blocked_timestamp' =>  $row[4],
+                'category' =>  $row[5]
+                );
 
 			print json_encode($out) . "\n";
 			ob_flush();
