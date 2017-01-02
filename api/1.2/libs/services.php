@@ -360,7 +360,7 @@ class DMOZCategoryLoader {
     }
 
     function load($id) {
-        $res = $this->conn->query('select * from categories where id = $1',
+        $res = $this->conn->query('select * from categories where id = ?',
             array($id));
         $row = $res->fetch();
         return $row;
@@ -385,7 +385,7 @@ class DMOZCategoryLoader {
 
         $res = $this->conn->query(
             'select id, name from categories
-            where tree @> $1 and id <> $2
+            where tree @> ? and id <> ?
             order by tree',
             array($node['tree'], $node['id']),
             PDO::FETCH_NUM
@@ -404,7 +404,7 @@ class DMOZCategoryLoader {
 
         $sql = 'select id
             from categories 
-            where tree @> $1
+            where tree @> ?
             order by tree desc limit 1 offset 1';
         $q = $this->conn->query($sql, array($node['tree']));
         $row = $q->fetch();
@@ -420,7 +420,7 @@ class DMOZCategoryLoader {
             $sort = ltrim($sort,'-') . " desc";
         }
 
-        $cond = array('tree ~ $1');
+        $cond = array('tree ~ ?');
         if (!$show_empty) {
             $cond[] = "total_block_count > 0";
         }
@@ -436,8 +436,6 @@ class DMOZCategoryLoader {
             from categories 
             where $where
             order by $sort";
-        error_log("SQL: $sql");
-        error_log("Arg: $args[0]");
         return $this->conn->query($sql, $args);
     }
 
@@ -523,7 +521,7 @@ class DMOZCategoryLoader {
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
             $filter_active
-            where url_categories.category_id = $1 and uls.status = 'blocked'
+            where url_categories.category_id = ? and uls.status = 'blocked'
             group by url
             order by URL, network_name",
             array($parentid)
@@ -543,13 +541,13 @@ class DMOZCategoryLoader {
 
         $off = (int)$page * (int)$pagesize;
         $sql = "select URL as url, $active block_count,
-                url_categories.category_id, substr(display_name, \$1) category_title,
+                url_categories.category_id, substr(display_name, ?) category_title,
                 last_reported
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
             left join cache_block_count on cache_block_count.urlID = urls.urlID
-            where \$2 @> tree and $active > 0
+            where ? @> tree and $active > 0
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(

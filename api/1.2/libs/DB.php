@@ -50,12 +50,13 @@ class PGConnection extends PDO {
         $q = $this->prepare($sql);
         if (!$q) {
             $err = $this->errorInfo();
-            error_log("Error SQL: $sql");
+            error_log("Prepare Error SQL: $sql");
             throw new DatabaseError($err[2], $err[0]);
         }
         $q->setFetchMode($fetch_mode);
         if (!$q->execute($args)) {
-            $err = $this->errorInfo();
+            $err = $q->errorInfo();
+            error_log("Execute SQL: $sql");
             throw new DatabaseError($err[2], $err[0]);
         }
         return $q;
