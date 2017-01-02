@@ -96,6 +96,38 @@ return subid; END; $$;
 
 
 --
+-- Name: record_change(integer, character varying, character varying, character varying, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION record_change(p_urlid integer, p_network_name character varying, p_oldstatus character varying, p_newstatus character varying, p_created timestamp with time zone) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+if p_oldstatus <> p_newstatus then
+insert into url_status_changes(urlid, network_name, old_status, new_status, created) values (p_urlid, p_network_name,  p_oldstatus, p_newstatus, p_created);
+end if;
+END;
+$$;
+
+
+--
+-- Name: record_new(integer, character varying, character varying, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION record_new(p_urlid integer, p_network_name character varying, p_status character varying, p_created timestamp with time zone) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+if not exists(select 1 from url_latest_status uls where uls.network_name = p_network_name and uls.urlid = p_urlid)
+then
+insert into url_status_changes(urlid, network_name, old_status, new_status, created) values (p_urlid, p_network_name, null, p_status, p_created);
+end if;
+
+END;
+$$;
+
+
+--
 -- Name: trig_isp_reports_insert(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -117,42 +149,77 @@ CREATE FUNCTION trig_result_insert() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-UPDATE url_latest_status SET
-status = NEW.status, created = NEW.created, category = NEW.category, blocktype = NEW.blocktype
-WHERE urlid = NEW.urlid and network_name = NEW.network_name;
+ if NEW.status = 'blocked'
+ then
+   update urls set first_blocked = NEW.created where urls.urlid = NEW.urlid and first_blocked is null;
+   update urls set last_blocked = NEW.created where urls.urlid = NEW.urlid;
+ end if;
 
-IF NOT FOUND
-THEN
-insert into url_latest_status (
- status ,
- created ,
- category ,
- blocktype ,
- urlid ,
- network_name )
-values (
-NEW.status,
-NEW.created,
-NEW.category,
-NEW.blocktype,
-NEW.urlid,
-NEW.network_name
-);
-END IF; RETURN NEW;
+ UPDATE url_latest_status SET
+ status = NEW.status, created = NEW.created, category = NEW.category, blocktype = NEW.blocktype
+ WHERE urlid = NEW.urlid and network_name = NEW.network_name;
+ 
+ IF NOT FOUND
+ THEN
+ insert into url_latest_status (
+  status ,
+  created ,
+  category ,
+  blocktype ,
+  urlid ,
+  network_name )
+ values (
+ NEW.status,
+ NEW.created,
+ NEW.category,
+ NEW.blocktype,
+ NEW.urlid,
+ NEW.network_name
+ );
+ END IF; 
+ RETURN NEW;
 END;
 $$;
 
 
 --
--- Name: trig_uls_ins_upd(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trig_uls_after_ins_upd(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION trig_uls_ins_upd() RETURNS trigger
+CREATE FUNCTION trig_uls_after_ins_upd() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
 perform update_cache_block_count(NEW.urlid);
 return NEW; END;
+$$;
+
+
+--
+-- Name: trig_uls_ins(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION trig_uls_ins() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+perform record_new(NEW.urlid, NEW.network_name, NEW.status, NEW.created);
+return NEW;
+END;
+$$;
+
+
+--
+-- Name: trig_uls_upd(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION trig_uls_upd() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+perform record_change(NEW.urlid, NEW.network_name,OLD.status, NEW.status, NEW.created);
+return NEW;
+END;
 $$;
 
 
@@ -404,7 +471,8 @@ CREATE TABLE probes (
     type character varying(10) NOT NULL,
     ispublic smallint DEFAULT 1 NOT NULL,
     enabled smallint DEFAULT 1 NOT NULL,
-    lastseen timestamp with time zone
+    lastseen timestamp with time zone,
+    proberesprecv integer DEFAULT 0
 );
 
 
@@ -732,7 +800,10 @@ CREATE TABLE urls (
     lastpolled timestamp with time zone,
     inserted timestamp with time zone,
     status enum_url_status DEFAULT 'ok'::enum_url_status,
-    last_reported timestamp with time zone
+    last_reported timestamp with time zone,
+    first_blocked timestamp with time zone,
+    last_blocked timestamp with time zone,
+    polledsuccess integer DEFAULT 0
 );
 
 
@@ -1137,17 +1208,24 @@ CREATE TRIGGER trig_result_insert AFTER INSERT ON results FOR EACH ROW EXECUTE P
 
 
 --
+-- Name: trig_uls_after_ins_upd; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trig_uls_after_ins_upd AFTER INSERT OR UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_after_ins_upd();
+
+
+--
 -- Name: trig_uls_ins; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trig_uls_ins AFTER INSERT ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins_upd();
+CREATE TRIGGER trig_uls_ins BEFORE INSERT ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins();
 
 
 --
 -- Name: trig_uls_upd; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trig_uls_upd AFTER UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_ins_upd();
+CREATE TRIGGER trig_uls_upd BEFORE UPDATE ON url_latest_status FOR EACH ROW EXECUTE PROCEDURE trig_uls_upd();
 
 
 --

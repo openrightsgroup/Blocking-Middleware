@@ -767,34 +767,30 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	$conn = $app['service.db'];
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $conn->query("select isps.description, l.status, l.created, max(r.created), min(r.created), l.category, l.blocktype,
-        isps.name, max(rp.created), isps.queue_name
+	$result = $conn->query("select isps.description, l.status, l.created,  l.category, l.blocktype,
+        isps.name, isps.queue_name
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
-		left join results r on r.network_name = l.network_name and r.urlID = l.urlID and r.status = 'blocked' 
-        left join isp_reports rp on rp.network_name = l.network_name and rp.urlID = l.urlID
-		where l.urlID = ? and isps.show_results = 1
-		group by isps.description, l.status, l.created, l.category, l.blocktype, isps.name, isps.queue_name",
-		array($url['urlid']),
-        PDO::FETCH_NUM
+		where l.urlID = ? and isps.show_results = 1",
+		array($url['urlid'])
         );
 
 	$output = array();
 
     foreach ($result as $row) {
-		$out = array('network_name' => $row[0]);
+		$out = array(
+            'network_name' => $row['description'],
 
-		# get latest status and result
-
-		$out['status'] = $row[1];
-		$out['status_timestamp'] = $row[2];
-		$out['last_blocked_timestamp'] = $row[3];
-		$out['first_blocked_timestamp'] = $row[4];
-		$out['category'] = $row[5];
-		$out['blocktype'] = $row[6];
-        $out['network_id'] = $row[7];
-        $out['last_report_timestamp'] = $row[8];
-        $out['isp_active'] = ($row[9] != null);
+            'status' =>  $row['status'],
+            'status_timestamp' =>  $row['created'],
+            'last_blocked_timestamp' =>  $url['last_blocked'],
+            'first_blocked_timestamp' =>  $url['first_blocked'],
+            'category' =>  $row['category'],
+            'blocktype' =>  $row['blocktype'],
+            'network_id' =>  $row['name'],
+            'last_report_timestamp' =>  $url['last_reported'],
+            'isp_active' =>  ($row['queue_name'] != null)
+        );
 
 		$output[] = $out;
 	}
