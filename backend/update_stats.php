@@ -17,27 +17,41 @@ if ($argv[1] == 'counters') {
 		'urls_reported' => $row[0],
 		);
 
-	$result = $conn->query("select count(distinct urlid) from results",array());
+	$result = $conn->query("select count(distinct urlid) from url_latest_status",array());
 	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['urls_tested'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where source = 'alexa'",array());
+	$result = $conn->query("select count(distinct urlid) from url_latest_status inner join urls using (urlid) 
+        where source = 'alexa'",
+        array()
+        );
 	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_sample_size'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and source='alexa'", array());
+	$result = $conn->query("select count(distinct urlid) from url_latest_status inner join urls using (urlid) 
+        where url_latest_status.status = 'blocked' and source='alexa'", 
+        array()
+        );
 	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_detected'] = $row[0];
 
-	$result = $conn->query("select count(distinct urlid) from results inner join urls using (urlid) where results.status = 'blocked' and filter_level in ('','default') and source='alexa'", array());
+	$result = $conn->query("select count(distinct urlid) from url_latest_status 
+        inner join isps on isps.name = url_latest_status.network_name
+        inner join urls using (urlid) 
+        where url_latest_status.status = 'blocked' and filter_level in ('','default') and source='alexa'",
+        array()
+        );
 	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_detected_default_filter'] = $row[0];
 
 	print_r($stats);
 
 	foreach($stats as $name => $value) {
+        $conn->query("delete from stats_cache where name = ?",
+            array($name)
+            );
 		$conn->query(
-			"replace into stats_cache (name, value) values (?,?)",
+			"insert into stats_cache (name, value) values (?,?)",
 			array($name, $value)
 			);
 	}
