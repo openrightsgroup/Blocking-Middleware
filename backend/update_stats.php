@@ -107,5 +107,4 @@ if ($argv[1] == 'counters') {
 
 	} while ($row);
 	
-	$conn->commit();
 }
