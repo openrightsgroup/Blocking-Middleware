@@ -46,6 +46,8 @@ if ($argv[1] == 'counters') {
 
 	print_r($stats);
 
+    $conn->beginTransaction();
+
 	foreach($stats as $name => $value) {
         $conn->query("delete from stats_cache where name = ?",
             array($name)
