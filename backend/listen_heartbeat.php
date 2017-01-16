@@ -23,7 +23,6 @@ function process_result($msg, $queue) {
 	$conn->query("update probes set lastSeen = ? where uuid = ?", 
 		array($data['date'], $data['probe_uuid'])
 	);
-	$conn->commit();
 }
 
 $q->consume("process_result");
