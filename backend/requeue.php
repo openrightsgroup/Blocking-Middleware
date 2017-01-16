@@ -39,7 +39,7 @@ $c = send_urls($result);
 print "$c urls sent.\n";
 
 $result = $conn->query("select urlid, url, hash from urls 
-	where (lastpolled < date_sub(now(), interval 7 day)) and 
+	where (lastpolled < (now() - interval '7 day')) and 
 	source not in ('social','dmoz') and status = 'ok' order by lastpolled limit 100", array());
 
 print "Sending URLs (previously tested)...\n";
@@ -48,7 +48,7 @@ print "$c urls sent.\n";
 
 $result = $conn->query("select distinct urlid, url, hash from urls
     inner join isp_reports using (urlID)
-    where (lastpolled < date_sub(now(), interval 1 day)) and
+    where (lastpolled < (now() - interval '1 day')) and
     status = 'ok' order by lastpolled limit 100", array());
 
 print "Sending URLs (reported)...\n";
@@ -69,7 +69,7 @@ WHERE uls.status = 'blocked' AND urls.status = 'ok' AND source = 'dmoz';
 
 $result = $conn->query("select urlid, url, hash from urls
     inner join blocked_dmoz using (urlID)
-    where (lastpolled < date_sub(now(), interval 1 day)) 
+    where (lastpolled < (now() - interval '1 day')) 
     order by lastpolled limit 50", array());
 
 print "Sending URLs (blocked dmoz)...\n";
