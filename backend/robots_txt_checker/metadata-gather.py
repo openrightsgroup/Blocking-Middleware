@@ -49,7 +49,7 @@ class MetadataGatherer(object):
         # now fetch the page to extract data
         try:
             descdata = {}
-            req2 = requests.get(data['url'], headers=self.headers)
+            req2 = requests.get(data['url'], headers=self.headers, timeout=5)
             if req2.headers.get('content-type').startswith('text/html'):
                 doc = bs4.BeautifulSoup(req2.content)
 
