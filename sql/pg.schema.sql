@@ -73,7 +73,7 @@ BEGIN
 update contacts set joinlist = (p_joinlist::bool or joinlist::int::bool)::int, fullname=case when p_fullname = '' then fullname else p_fullname end where email = p_email;
 IF NOT FOUND
 then
-insert into contacts(email, fullname, joinlist) values (p_email, p_fullname, p_joinlist);
+insert into contacts(email, fullname, joinlist, created) values (p_email, p_fullname, p_joinlist, now());
 end if;
 end;
 $$;
