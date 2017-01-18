@@ -560,7 +560,7 @@ class DMOZCategoryLoader {
     function search($name, $results=10) {
         $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
             from categories where name_fts @@ ?
-            order by total_blocked_url_count, name " . ($results ? "limit " . (int)$results : ''),
+            order by total_blocked_url_count desc, name " . ($results ? "limit " . (int)$results : ''),
             array(strtolower($name) . ":*")
             );
         return $q;
