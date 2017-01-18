@@ -558,9 +558,9 @@ class DMOZCategoryLoader {
     }
 
     function search($name) {
-        $q = $this->conn->query("select id, display_name, name 
-            from categories where name_fts @@ to_tsquery(?)
-            order by name",
+        $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
+            from categories where name_fts @@ ?
+            order by total_blocked_url_count, name",
             array($name . ":*")
             );
         return $q;
