@@ -1265,3 +1265,14 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
+create or replace function fmtime(x timestamptz) returns varchar AS $$ 
+begin
+return to_char(x, 'YYYY-MM-DD HH24:MI:SS');
+end;
+$$ language plpgsql
+
+create or replace function fmtime(x timestamp) returns varchar AS $$ 
+begin
+return to_char(x, 'YYYY-MM-DD HH24:MI:SS');
+end;
+$$ language plpgsql

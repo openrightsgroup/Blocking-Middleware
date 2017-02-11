@@ -775,8 +775,9 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	$conn = $app['service.db'];
 
-	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $conn->query("select isps.description, l.status, to_char(l.created, 'YYYY-MM-DD HH24:MI:SS') created,  l.category, l.blocktype,
+	# Fetch results from status summary table
+	$result = $conn->query("select isps.description, l.status, fmtime(l.created) created,  l.category, l.blocktype,
+        fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked, fmtime(last_reported) as last_reported,
         isps.name, isps.queue_name
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
