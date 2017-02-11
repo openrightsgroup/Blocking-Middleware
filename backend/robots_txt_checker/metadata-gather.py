@@ -40,6 +40,9 @@ class MetadataGatherer(object):
             select urlID, now(), %s from urls where url = %s""",
                 [json.dumps(data), url]
             )
+        if data.get('title'):
+            c.execute("update urls set title=%s where url = %s",
+                [data['title'], url])
         c.close()
         self.conn.commit()
 

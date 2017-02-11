@@ -803,7 +803,8 @@ CREATE TABLE urls (
     last_reported timestamp with time zone,
     first_blocked timestamp with time zone,
     last_blocked timestamp with time zone,
-    polledsuccess integer DEFAULT 0
+    polledsuccess integer DEFAULT 0,
+    title varchar(255)
 );
 
 

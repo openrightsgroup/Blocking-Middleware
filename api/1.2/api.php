@@ -810,6 +810,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	return $app->json(array(
 		'success' => true, 
 		"url" => $url['url'], 
+        "title" => $url['title'],
 		"results" => $output,
 		"url-status" => $url['status'],
 		"categories" => $categories,
