@@ -873,7 +873,9 @@ class StreamResultProcessor {
 		$data =(array)json_decode($msg->getBody());
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $this->conn->query("select isps.description, l.status, l.created, l.last_blocked, l.first_blocked, l.category 
+	$result = $this->conn->query("select isps.description, l.status, 
+        fmtime(l.created) created, fmtime(l.last_blocked) last_blocked, 
+        fmtime(l.first_blocked) first_blocked, l.category 
 		from url_latest_status l 
 		inner join isps on isps.name = l.network_name
 		inner join urls on urls.urlID = l.urlID
@@ -952,11 +954,11 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		ob_flush();
 
 		$conn = $app['service.db'];
-		# Fetch results from status summary table, left joining to get last blocked time
+		# Fetch results from status summary table
 		$result = $conn->query("select isps.description, l.status, 
-        to_char(l.created, 'YYYY-MM-DD HH24:MI:SS') created, 
-        to_char(l.last_blocked, 'YYYY-MM-DD HH24:MI:SS') last_blocked, 
-        to_char(l.first_blocked, 'YYYY-MM-DD HH24:MI:SS') first_blocked, 
+        fmtime(l.created) created, 
+        fmtime(l.last_blocked) last_blocked, 
+        fmtime(l.first_blocked) first_blocked, 
         l.category 
 		from url_latest_status l 
 		inner join urls on urls.urlID = l.urlID
