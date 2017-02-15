@@ -1272,16 +1272,16 @@ create or replace function fmtime(x timestamptz) returns varchar AS $$
 begin
 return to_char(x, 'YYYY-MM-DD HH24:MI:SS');
 end;
-$$ language plpgsql
+$$ language plpgsql immutable;
 
 create or replace function fmtime(x timestamp) returns varchar AS $$ 
 begin
 return to_char(x, 'YYYY-MM-DD HH24:MI:SS');
 end;
-$$ language plpgsql
+$$ language plpgsql immutable;
 
 create or replace function makearray(x varchar) returns varchar[] as $$
 BEGIN
 return array_prepend('{}'::varchar[], x);
 END;
-$$ language plpgsql;
+$$ language plpgsql immutable;
