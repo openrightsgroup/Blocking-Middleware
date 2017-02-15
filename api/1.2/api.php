@@ -230,8 +230,6 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$urltext = normalize_url($req->get('url'));
 
-	# there is some badness here - URL is uniquely indexed to only the first 
-	# 767 characters
 
     $newurl = $app['db.url.load']->insert($urltext, $req->get('source','user'));
 

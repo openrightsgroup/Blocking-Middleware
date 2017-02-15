@@ -804,7 +804,8 @@ CREATE TABLE urls (
     first_blocked timestamp with time zone,
     last_blocked timestamp with time zone,
     polledsuccess integer DEFAULT 0,
-    title varchar(255)
+    title varchar(255),
+    tags varchar[] default '{}'::varchar[]
 );
 
 
@@ -1165,6 +1166,7 @@ CREATE INDEX site_description_urlid ON site_description USING btree (urlid);
 
 CREATE INDEX source ON urls USING btree (source);
 
+CREATE INDEX tags on urls using gin(tags);
 
 --
 -- Name: uls_url_network; Type: INDEX; Schema: public; Owner: -; Tablespace: 
@@ -1277,3 +1279,9 @@ begin
 return to_char(x, 'YYYY-MM-DD HH24:MI:SS');
 end;
 $$ language plpgsql
+
+create or replace function makearray(x varchar) returns varchar[] as $$
+BEGIN
+return array_prepend('{}'::varchar[], x);
+END;
+$$ language plpgsql;

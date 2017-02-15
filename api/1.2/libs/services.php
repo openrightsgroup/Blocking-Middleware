@@ -71,14 +71,17 @@ class UrlLoader {
         /* Insert user record.  Does not return ID. 
         AN insert rule emulates INSERT IGNORE */
         $result = $this->conn->query(
-            "insert into urls (URL, hash, source, lastPolled, inserted) values (?,?,?,now(), now())",
-            array($url, md5($url), $source)
+            "insert into urls (URL, hash, source, tags, lastPolled, inserted) values (?,?,?, makearray(?) now(), now() )",
+            array($url, md5($url), $source, $source)
         );
         /* returns true/false for whether a row was really inserted. */
 
         if ($result->rowCount()) {
             return true;
         } else {
+            // add tag if not already listed for this URL
+            $this->conn->query("update urls set tags = array_append(tags, ?) where not makearray(?) && tags and url = ?",
+                array($source, $source, $url));
             return false;
         }
         
