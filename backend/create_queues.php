@@ -71,7 +71,7 @@ function createqueue($name,  $key, $ttl=0, $recreate=false) {
     }
 }
 
-$result = $conn->query("select name, queue_name from isps where queue_name is not null", array());
+$result = $conn->query("select name, queue_name, isp_type from isps where queue_name is not null", array());
 while ($isp = $result->fetch()) {
 	if (strpos($isp['name'], ',') !== false) {
 		continue;
@@ -82,6 +82,10 @@ while ($isp = $result->fetch()) {
 
 	#createqueue('url.'.$isp['queue_name'].'.ooni',  'url.public', AMQP_PUBLIC_QUEUE_TIMEOUT);
 	delete_queue('url.'.$isp['queue_name'].'.ooni');
+
+    if ($isp['isp_type'] == 'fixed') {
+        createqueue('url.'.$isp['queue_name'].'.fixed', 'url.fixed', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
+    }
 
     #createqueue('admin.view.' . $isp['queue_name'], 'admin.view.#');
 }

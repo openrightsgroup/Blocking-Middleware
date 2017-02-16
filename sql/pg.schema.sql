@@ -61,6 +61,10 @@ CREATE TYPE enum_user_status AS ENUM (
     'banned'
 );
 
+CREATE TYPE enum_isp_type AS ENUM(
+    'fixed',
+    'mobile'
+);
 
 --
 -- Name: insert_contact(character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: -
@@ -424,7 +428,8 @@ CREATE TABLE isps (
     created timestamp with time zone,
     show_results integer,
     admin_email text,
-    admin_name text
+    admin_name text,
+    isp_type enum_isp_type
 );
 
 
@@ -1282,6 +1287,6 @@ $$ language plpgsql immutable;
 
 create or replace function makearray(x varchar) returns varchar[] as $$
 BEGIN
-return array_prepend('{}'::varchar[], x);
+return array_append('{}'::varchar[], x);
 END;
 $$ language plpgsql immutable;

@@ -6,12 +6,12 @@ to suit the local environment.  config.php is gitignored, and can't
 be committed.
 */
 
-/* MySQL database config */
+/* Postgres database config */
 
-$dbhost = 'localhost';
-$dbuser = 'root';
-$dbpass = '';
-$dbname = 'bowdlerize';
+$PG_HOST = 'localhost';
+$PG_USER = 'root';
+$PG_PASS = '';
+$PG_DB = 'bowdlerize';
 
 /* AMQP Config */
 

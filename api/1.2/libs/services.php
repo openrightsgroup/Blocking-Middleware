@@ -71,7 +71,7 @@ class UrlLoader {
         /* Insert user record.  Does not return ID. 
         AN insert rule emulates INSERT IGNORE */
         $result = $this->conn->query(
-            "insert into urls (URL, hash, source, tags, lastPolled, inserted) values (?,?,?, makearray(?) now(), now() )",
+            "insert into urls (URL, hash, source, tags, lastPolled, inserted) values (?,?,?, makearray(?), now(), now() )",
             array($url, md5($url), $source, $source)
         );
         /* returns true/false for whether a row was really inserted. */
