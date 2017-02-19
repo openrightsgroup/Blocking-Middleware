@@ -384,7 +384,8 @@ CREATE TABLE isp_reports (
     unblocked integer,
     notified integer,
     send_updates integer,
-    last_updated timestamp with time zone
+    last_updated timestamp with time zone,
+    contact_id int
 );
 
 
