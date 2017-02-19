@@ -1255,6 +1255,9 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         false
         );
 
+    if (!isset($data['networks']) || count($data['networks']) == 0) {
+        $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
+    }
 
     if (!$contact['verified']) {
         $token = "B" . md5($contact['id'] . "-" .
