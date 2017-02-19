@@ -219,7 +219,7 @@ class ContactLoader {
             array(
                 $email,
                 $fullname,
-                $joinlist
+                $joinlist ? 1 : 0
                 )
         );
         $contact = $this->load($email);
