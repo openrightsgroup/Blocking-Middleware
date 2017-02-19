@@ -613,7 +613,7 @@ class ISPReportLoader {
                 url_latest_status.urlid = ? and url_latest_status.created > now() - interval '14 day'
                 and url_latest_status.status = 'blocked'
                 and (isp_reports.id is null or isp_reports.unblocked = 1)",
-            array($urlid));
+            array($urlID));
         $networks = array();
         foreach ($res as $row) {
             $networks[] = $row['network_name'];
