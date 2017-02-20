@@ -1259,7 +1259,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
     }
 
-    if (!$contact['verified'] && !(count($data['networks']) == 1 && $data['networks'][0] == 'ORG') {
+    if (!$contact['verified'] && !(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
         // reports sent to ORG only are exempt from validation
         $token = "B" . md5($contact['id'] . "-" .
             Middleware::generateSharedSecret(10));
