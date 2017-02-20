@@ -1334,7 +1334,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 );
             # send email here
 
-            if ($contact['verified'] || $network == 'ORG') {
+            if ($contact['verified'] || $network_name == 'ORG') {
                 sendISPReport(
                     $data['reporter']['name'],
                     $data['reporter']['email'],
