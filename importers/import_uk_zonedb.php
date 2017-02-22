@@ -17,7 +17,18 @@ if (!$fp) {
 $conn = db_connect();
 $loader = new UrlLoader($conn);
 
+if (@$argv[2]) {
+    $offset = $argv[2];
+} else {
+    $offset = 0;
+}
+
+$n = 0;
 while ($line = fgetcsv($fp)) {
+    $n ++;
+    if ($n < $offset) {
+        continue;
+    }
     if ($line[1] != "co.uk") {
         continue;
     }
@@ -35,7 +46,6 @@ while ($line = fgetcsv($fp)) {
     }
     $isnew = $loader->insert("http://$domain", $argv[2]);
 
-
     if ($isnew) {
         print "Inserted: $domain\n";
         $msgbody = json_encode(array('url'=>"http://$domain", 'hash'=>md5($domain)));
@@ -43,7 +53,7 @@ while ($line = fgetcsv($fp)) {
         $ch = amqp_connect();
         $ex = new AMQPExchange($ch);
         $ex->setName('org.blocked');
-        $ex->publish($msgbody, "url.fixed", AMQP_NOPARAM);
+        $ex->publish($msgbody, "check.fixed", AMQP_NOPARAM);
         print "Queued\n";
     }
 }
