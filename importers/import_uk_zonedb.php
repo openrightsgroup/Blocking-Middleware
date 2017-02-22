@@ -14,8 +14,10 @@ function check_queues() {
     $proc = popen($cmd, "r");
     $maxlen = 0;
     while ($line = fgets($proc)) {
-        list($name, $len) = str_split(trim($line), "\t");
-        $maxlen = $len > $maxlen ? $len : $maxlen;
+        if (strpos($line, ".fixed") !== FALSE || strpos($line, "check") !== FALSE) {
+            list($name, $len) = str_split(trim($line), "\t");
+            $maxlen = $len > $maxlen ? $len : $maxlen;
+        }
     }
     pclose($proc);
 
