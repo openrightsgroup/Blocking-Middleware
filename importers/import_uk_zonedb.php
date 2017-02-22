@@ -17,8 +17,8 @@ if (!$fp) {
 $conn = db_connect();
 $loader = new UrlLoader($conn);
 
-if (@$argv[2]) {
-    $offset = $argv[2];
+if (@$argv[3]) {
+    $offset = $argv[3];
 } else {
     $offset = 0;
 }
