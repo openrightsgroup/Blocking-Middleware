@@ -1195,6 +1195,9 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         "success" => true, 
         "id" => $parent,
         "category" => $cat['display_name'], 
+        "name" => $cat['name'], 
+        "total_blocked_url_count" => $cat['total_blocked_url_count'],
+        "total_block_count" => $cat['total_block_count'],
         "sites"=> $sites));
 });
 
