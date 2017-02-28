@@ -812,6 +812,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		"results" => $output,
 		"url-status" => $url['status'],
 		"categories" => $categories,
+        'last_report_timestamp' =>  $url['last_reported'],
 	));
 });
 
