@@ -27,6 +27,7 @@
 
     RewriteRule ^category api.php [NC,L,qsa]
     RewriteRule ^category/sites api.php [NC,L,qsa]
+    RewriteRule ^category/random api.php [NC,L,qsa]
 
     RewriteRule ^ispreport/candidates api.php [NC,L,qsa]
     RewriteRule ^ispreport/submit api.php [NC,L,qsa]
