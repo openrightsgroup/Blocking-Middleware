@@ -167,7 +167,7 @@ class UrlLoader {
             inner join blocked_dmoz on blocked_dmoz.urlID = urls.urlID
             left join isp_reports on (isp_reports.urlID = urls.urlID)
             where isp_reports.urlID is null 
-            order by rand() limit " . (int)$count,
+            order by random() limit " . (int)$count,
             # sort  by rand is horrible, do something better
             array()
             );
