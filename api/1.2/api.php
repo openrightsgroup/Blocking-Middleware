@@ -1105,11 +1105,27 @@ $app->get('/category/search', function(Request $req) use ($app) {
 
     $output = array('success' => true, categories => array());
 
-    foreach($app['db.category.load']->search($search) as $row) {
+    foreach($app['db.category.load']->search($search, 20) as $row) {
         $output['categories'][] = $row;
     }
 
     return $app->json($output);
+
+});
+
+$app->get('/category/random', function (Request $req) use ($app) {
+    checkParameters($req, array('email','signature'));
+    $user = $app['db.user.load']->load($req->get('email'));
+
+    $output = array('success' => true);
+
+    $row = $app['db.category.load']->random();
+
+    $output['id'] = $row['id'];
+    $output['name'] = $row['name'];
+
+    return $app->json($output);
+
 
 });
 

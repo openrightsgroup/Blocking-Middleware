@@ -568,6 +568,14 @@ class DMOZCategoryLoader {
             );
         return $q;
     }
+
+    function random() {
+        $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
+            from categories where total_blocked_url_count > 0 order by random()", array());
+        $row = $q->fetch();
+
+        return $row;
+    }
 }
 
 
