@@ -571,7 +571,8 @@ class DMOZCategoryLoader {
 
     function random() {
         $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
-            from categories where total_blocked_url_count > 0 order by random()", array());
+            from categories where total_blocked_url_count > 0 
+            order by random() * log(total_blocked_url_count) desc limit 1", array());
         $row = $q->fetch();
 
         return $row;
