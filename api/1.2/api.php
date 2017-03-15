@@ -1227,7 +1227,18 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
 #------------
 
 $app->get('/ispreport/candidates', function (Request $req) use ($app) {
-    $data = $app['db.url.load']->get_unreported_blocks($req->get('count',10));
+    #$data = $app['db.url.load']->get_unreported_blocks($req->get('count',10));
+
+    $redis = $app['service.redis.cache'];
+    $data = array();
+    for ($i = 0; $i < $req->get('count',10); $i++) {
+        $url = $redis->lPop('randomlinks');
+        if (!$url) {
+            break;
+        }
+        $data[] = $url;
+    }
+
 
     return $app->json(array(
         'success' => true,
