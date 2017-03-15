@@ -569,13 +569,13 @@ class DMOZCategoryLoader {
         return $q;
     }
 
-    function random() {
+    function random($count=1) {
         $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
             from categories where total_blocked_url_count > 0 
-            order by random() limit 1", array());
-        $row = $q->fetch();
+            order by random() limit " . (int)$count, array());
+        
 
-        return $row;
+        return $q;
     }
 }
 

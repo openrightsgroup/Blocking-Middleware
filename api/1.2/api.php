@@ -1119,7 +1119,12 @@ $app->get('/category/random', function (Request $req) use ($app) {
 
     $output = array('success' => true);
 
-    $row = $app['db.category.load']->random();
+    /*
+    $q = $app['db.category.load']->random(1);
+    $row = $q->fetchone();
+    */
+
+    $row = $app['service.redis.cache']->lPop("randomcat");
 
     $output['id'] = $row['id'];
     $output['name'] = $row['name'];

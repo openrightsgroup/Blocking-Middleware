@@ -11,13 +11,25 @@ $key = "randomlinks";
 
 $loader = new UrlLoader($conn);
 
-if ($redis->lLen($key) > $argv[2]) {
-    exit(0);
+if ($redis->lLen($key) < $argv[2]) {
+
+    $links = $loader->get_unreported_blocks($argv[1]);
+
+    foreach ($links as $url) {
+        $redis->rPush($key, $url);
+    }
+
 }
 
-$links = $loader->get_unreported_blocks($argv[1]);
+$key = "randomcat";
+$loader = new DMOZCategoryLoader($conn);
 
-foreach ($links as $url) {
-    $redis->rPush($key, $url);
+if ($redis->lLen($key) < $argv[2]) {
+
+    $cats = $loader->random($argv[1]);
+
+    foreach ($cats as $cat) {
+        $redis->rPush($key, $cat);
+    }
+
 }
-
