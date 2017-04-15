@@ -664,3 +664,26 @@ class ResultProcessorService {
 		$this->probe_loader->updateRespRecv($probe['uuid']);
 	}
 }
+
+class AMQPQueueService {
+    function __construct($amqp, $submit_routing_key) {
+        $this->amqp = amqp;
+        $this->submit_routing_key = $submit_routing_key;
+    }
+
+    function publish_url($urltext) {
+        $msgbody = json_encode(array(
+            'url'=>$urltext, 
+            'hash'=>md5($urltext)
+            ));
+
+        $ch = $this->amqp;
+        $ex = new AMQPExchange($ch);
+        $ex->setName('org.blocked');
+        $ex->publish(
+            $msgbody, $this->submit_routing_key, AMQP_NOPARAM, 
+            array('priority'=>2)
+        );
+    }
+}
+

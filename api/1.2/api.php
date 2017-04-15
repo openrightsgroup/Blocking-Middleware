@@ -37,6 +37,13 @@ $app['service.amqp'] = $app->share(function() {
 	return amqp_connect();
 });
 
+$app['service.queue'] = $app->share(function($app) {
+    global $SUBMIT_ROUTING_KEY;
+
+    return new AMQPQueueService($app['service.amqp'], 
+        $SUBMIT_ROUTING_KEY)
+});
+
 $loader = new Twig_Loader_Filesystem("templates");
 $app['service.template'] = new Twig_Environment($loader, array(
     'cache' => false,
@@ -192,8 +199,6 @@ $app->after(function(Request $request, Response $response) {
 $app->post('/submit/url', function(Request $req) use ($app) {
 	/* Add a URL for testing */
 	$conn = $app['service.db'];
-	
-	global $SUBMIT_ROUTING_KEY;
 
 	checkParameters($req, array('email','signature','url'));
 
@@ -320,12 +325,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 		$queued = true;
 
-		$msgbody = json_encode(array('url'=>$urltext, 'hash'=>md5($urltext)));
-
-		$ch = $app['service.amqp'];
-		$ex = new AMQPExchange($ch);
-		$ex->setName('org.blocked');
-		$ex->publish($msgbody, $SUBMIT_ROUTING_KEY, AMQP_NOPARAM, array('priority'=>2));
+        $app['service.queue']->publish_url($urltext);
 
 	} else {
 		$queued = false;
