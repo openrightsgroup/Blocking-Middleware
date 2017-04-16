@@ -44,6 +44,12 @@ $app['service.queue'] = $app->share(function($app) {
         $SUBMIT_ROUTING_KEY);
 });
 
+$app['service.elastic'] = $app->share(function($app) {
+    global $ELASTIC;
+
+    return new ElasticService($ELASTIC);
+});
+
 $loader = new Twig_Loader_Filesystem("templates");
 $app['service.template'] = new Twig_Environment($loader, array(
     'cache' => false,
@@ -1100,13 +1106,27 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 $app->get('/category/search', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','search'));
     $search = $req->get('search');
-	$user = $app['db.user.load']->load($req->get('email'));
+	#$user = $app['db.user.load']->load($req->get('email'));
 	#Middleware::verifyUserMessage($search, $user['secret'], $req->get('signature'));
 
-    $output = array('success' => true, categories => array());
+    $output = array('success' => true, 'categories' => array());
 
-    foreach($app['db.category.load']->search($search, 20) as $row) {
-        $output['categories'][] = $row;
+    #foreach($app['db.category.load']->search($search, 20) as $row) {
+    #    $output['categories'][] = $row;
+    #}
+
+    $data = $app['service.elastic']->query($search . "*", '/categories',
+        array(
+            array('total_blocked_url_count' => 'desc')
+            )
+        );
+    foreach($data as $src) {
+        $output['categories'][] = array(
+            'id' => $src->id,
+            'display_name' => implode('/', $src->display_name),
+            'name' => $src->name,
+            'total_blocked_url_count' => $src->total_blocked_url_count
+            );
     }
 
     return $app->json($output);

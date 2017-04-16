@@ -1,5 +1,7 @@
 <?php
 
+require "HTTP/Request2.php";
+
 class UserLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
@@ -687,3 +689,35 @@ class AMQPQueueService {
     }
 }
 
+
+class ElasticService {
+    function __construct($addr) {
+        $this->addr = $addr;
+    }
+
+    function query($term, $index = '', $sort=null) {
+        $search = array( 
+            'query' => array(
+                'query_string' => array(
+                    'query' => $term
+                )
+            )
+        );
+        if ($sort) {
+            $search['sort'] = $sort;
+        }
+        $req = new HTTP_Request2($this->addr . $index . '/_search');
+        $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
+            ->setBody(json_encode($search))
+            ->setHeader('Content-type: application/json')
+            ->send();
+
+        $data = json_decode($rsp->getBody());
+        $out = array();
+        foreach($data->hits->hits as $hit) {
+            $out[] = $hit->_source;
+        }
+        return $out;
+
+    }
+}
