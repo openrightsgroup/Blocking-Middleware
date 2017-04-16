@@ -4,9 +4,55 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "8b0144f0c307d8efb54860ce36c6a190",
-    "content-hash": "df5baaa8baa18aeaaae04ef7ef40c768",
+    "hash": "592dee5f59820271100d5c1ca1a2e7f1",
+    "content-hash": "dc0bd761b38ad5531d511ea4b4324ad8",
     "packages": [
+        {
+            "name": "pear/http2",
+            "version": "v1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pear/HTTP2.git",
+                "reference": "b87527415aa1439d5abc2c620a37f0047c3b1568"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pear/HTTP2/zipball/b87527415aa1439d5abc2c620a37f0047c3b1568",
+                "reference": "b87527415aa1439d5abc2c620a37f0047c3b1568",
+                "shasum": ""
+            },
+            "require-dev": {
+                "pear/pear-core": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "HTTP2": "./"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "include-path": [
+                "./"
+            ],
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Wallner",
+                    "email": "mike@php.net",
+                    "role": "Lead"
+                },
+                {
+                    "name": "Philippe Jausions",
+                    "email": "jausions@php.net",
+                    "role": "Lead"
+                }
+            ],
+            "description": "Miscellaneous HTTP utilities",
+            "homepage": "http://pear.php.net/package/HTTP2",
+            "time": "2016-08-10 19:11:15"
+        },
         {
             "name": "phpmailer/phpmailer",
             "version": "v5.2.15",
