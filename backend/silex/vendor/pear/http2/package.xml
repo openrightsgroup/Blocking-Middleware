@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.9.4" version="2.0"
+         xmlns="http://pear.php.net/dtd/package-2.0"
+         xmlns:tasks="http://pear.php.net/dtd/tasks-1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd"
+>
+ <name>HTTP2</name>
+ <channel>pear.php.net</channel>
+ <summary>Miscellaneous HTTP utilities</summary>
+ <description>The HTTP class is a class with static methods for doing
+miscellaneous HTTP related stuff like date formatting,
+language negotiation or HTTP redirection.</description>
+ <lead>
+  <name>Michael Wallner</name>
+  <user>mike</user>
+  <email>mike@php.net</email>
+  <active>yes</active>
+ </lead>
+ <lead>
+  <name>Philippe Jausions</name>
+  <user>jausions</user>
+  <email>jausions@php.net</email>
+  <active>no</active>
+ </lead>
+ <date>2016-08-10</date>
+ <time>21:10:00</time>
+ <version>
+  <release>1.1.2</release>
+  <api>1.1.0</api>
+ </version>
+ <stability>
+  <release>stable</release>
+  <api>stable</api>
+ </stability>
+ <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+ <notes>
+  - Fix coding style
+  - Add composer.json
+ </notes>
+
+ <contents>
+  <dir baseinstalldir="/" name="/">
+   <file name="HTTP2.php" role="php">
+    <tasks:replace type="package-info" from="@version@" to="version" />
+   </file>
+
+   <file name="HTTP2/Exception.php" role="php">
+    <tasks:replace type="package-info" from="@version@" to="version" />
+   </file>
+
+   <file name="phpunit.xml" role="test" />
+
+   <file name="tests/absoluteURI.inc" role="test" />
+   <file name="tests/negotiateCharset.phpt" role="test" />
+   <file name="tests/negotiateCharset2.phpt" role="test" />
+   <file name="tests/negotiateLanguage.phpt" role="test" />
+   <file name="tests/negotiateMimeType.phpt" role="test" />
+   <file name="tests/test1a.phpt" role="test" />
+   <file name="tests/test2a.phpt" role="test" />
+   <file name="tests/test3a.phpt" role="test" />
+   <file name="tests/test4a.phpt" role="test" />
+   <file name="tests/test5a.phpt" role="test" />
+   <file name="tests/test6a.phpt" role="test" />
+   <file name="tests/parseLinks_array.phpt" role="test" />
+   <file name="tests/parseLinks_multiple.phpt" role="test" />
+   <file name="tests/parseLinks_real.phpt" role="test" />
+   <file name="tests/parseLinks_rel-no-quote.phpt" role="test" />
+   <file name="tests/parseLinks_rfc5988-examples-1.phpt" role="test" />
+   <file name="tests/parseLinks_rfc5988-examples-2.phpt" role="test" />
+   <file name="tests/parseLinks_rfc5988-examples-3.phpt" role="test" />
+   <file name="tests/parseLinks_rfc5988-examples-4.phpt" role="test" />
+
+   <file name="build.xml" role="data" />
+
+   <file name="LICENSE" role="doc" />
+   <file name="README.rst" role="doc" />
+  </dir>
+ </contents>
+
+ <dependencies>
+  <required>
+   <php>
+    <min>5.4.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.7.1</min>
+   </pearinstaller>
+   <package>
+    <name>PEAR</name>
+    <channel>pear.php.net</channel>
+   </package>
+   <extension>
+    <name>pcre</name>
+   </extension>
+  </required>
+ </dependencies>
+ <phprelease />
+
+ <changelog>
+
+  <release>
+   <version>
+    <release>1.1.2</release>
+    <api>1.1.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2016-08-10</date>
+   <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+   <notes>
+    - Fix coding style
+    - Add composer.json
+   </notes>
+  </release>
+
+  <release>
+   <version>
+    <release>1.1.1</release>
+    <api>1.1.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2013-10-23</date>
+   <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+   <notes>
+    - Fix parsing arguments values without quotes
+   </notes>
+  </release>
+
+  <release>
+   <version>
+    <release>1.1.0</release>
+    <api>1.1.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2013-10-07</date>
+   <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+   <notes>
+    - Support RFC 5988 (Web Linking) via new parseLinks() method
+   </notes>
+  </release>
+
+  <release>
+   <version>
+    <release>1.0.0</release>
+    <api>1.0.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2013-07-17</date>
+   <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+   <notes>
+    - Fix docblocks and coding style
+    - Mark stable
+   </notes>
+  </release>
+
+  <release>
+   <version>
+    <release>0.1.0</release>
+    <api>0.1.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2012-01-16</date>
+   <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+   <notes>
+Fork from HTTP
+PHP5-ify
+Make API non static
+   </notes>
+  </release>
+
+ </changelog>
+</package>

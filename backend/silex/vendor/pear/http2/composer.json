@@ -1,0 +1,34 @@
+{
+    "name": "pear/http2",
+    "description": "Miscellaneous HTTP utilities",
+    "type": "library",
+    "authors": [
+        {
+            "email": "mike@php.net",
+            "name": "Michael Wallner",
+            "role": "Lead"
+        },
+        {
+            "email": "jausions@php.net",
+            "name": "Philippe Jausions",
+            "role": "Lead"
+        }
+    ],
+    "license": "BSD-2-Clause",
+    "homepage": "http://pear.php.net/package/HTTP2",
+    "support": {
+        "issues": "http://pear.php.net/bugs/search.php?cmd=display&package_name[]=HTTP2",
+        "source": "https://github.com/pear/HTTP2"
+    },
+    "autoload": {
+        "psr-0": {
+            "HTTP2": "./"
+        }
+    },
+    "include-path": [
+        "./"
+    ],
+    "require-dev": {
+        "pear/pear-core": "*"
+    }
+}
