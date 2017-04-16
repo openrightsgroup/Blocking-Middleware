@@ -15,5 +15,7 @@ return array(
     'Silex' => array($vendorDir . '/silex/silex/src'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log'),
     'Pimple' => array($vendorDir . '/pimple/pimple/lib'),
+    'PEAR' => array($vendorDir . '/pear/pear_exception'),
+    'HTTP_Request2' => array($vendorDir . '/pear/http_request2'),
     'HTTP2' => array($vendorDir . '/pear/http2'),
 );
