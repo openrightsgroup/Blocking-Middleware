@@ -667,7 +667,7 @@ class ResultProcessorService {
 
 class AMQPQueueService {
     function __construct($amqp, $submit_routing_key) {
-        $this->amqp = amqp;
+        $this->amqp = $amqp;
         $this->submit_routing_key = $submit_routing_key;
     }
 

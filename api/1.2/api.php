@@ -41,7 +41,7 @@ $app['service.queue'] = $app->share(function($app) {
     global $SUBMIT_ROUTING_KEY;
 
     return new AMQPQueueService($app['service.amqp'], 
-        $SUBMIT_ROUTING_KEY)
+        $SUBMIT_ROUTING_KEY);
 });
 
 $loader = new Twig_Loader_Filesystem("templates");
@@ -251,7 +251,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
             $req->get('information'), 
             $req->get('allowcontact', 0)
             );
-    error_log(implode(",", $args));
+
     $q = $conn->query(
         "insert into requests (urlID, userID, contactID, submission_info, information, allowcontact, created)
             values (?,?,?,?,?,?,now()) returning id as id",
