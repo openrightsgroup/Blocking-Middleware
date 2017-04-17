@@ -37,10 +37,15 @@ def categories(conn):
 
     for row in c:
         parts = row['display_name'].split('/')
-        data = { x: row[x] for x in ('id','name','block_count','blocked_url_count',
-            'total_block_count','total_blocked_url_count')}
-        data['display_name'] = parts
-            
+        data = { 
+            'id': row['id'],
+            'name': row['name'],
+            'block_count': row['block_count'],
+            'blocked_url_count': row['blocked_url_count'],
+            'total_block_count': row['total_block_count'],
+            'total_blocked_url_count': row['total_blocked_url_count'],
+            'display_name':  parts
+        }
 
         r = requests.put(args.elastic + '/categories/category/{0}'.format(row['id']),
             data=json.dumps(data),
@@ -60,7 +65,9 @@ def urls(conn):
         from urls
         inner join site_description using (urlid)
         where urlid in (select urlid from url_latest_status where status = 'blocked')
+        order by urlid
         """)
+    logging.info("Found: %s", c.rowcount)
     for row in c:
         data = {
             'id': row['urlid'],
@@ -69,15 +76,18 @@ def urls(conn):
             'url': row['url'], 
             'source': row['source']
             }
-        desc = json.loads(row['description'])
-        if 'keywords' in desc:
-            parts = desc['keywords'].split(',')
-            if len(parts) > 1:
-                data['keywords'] = [x.strip() for x in parts]
-            else:
-                data['keywords'] = [x.strip() for x in desc['keywords'].split()]
-        if 'description' in desc:
-            data['description'] = desc['description']
+        try:
+            desc = json.loads(row['description'])
+            if 'keywords' in desc:
+                parts = desc['keywords'].split(',')
+                if len(parts) > 1:
+                    data['keywords'] = [x.strip() for x in parts]
+                else:
+                    data['keywords'] = [x.strip() for x in desc['keywords'].split()]
+            if 'description' in desc:
+                data['description'] = desc['description']
+        except Exception,v:
+            logging.warn("URL error: %s from %s", repr(v), row['urlid'])
 
         r = requests.put(args.elastic + '/urls/url/{0}'.format(row['urlid']),
             data=json.dumps(data),
@@ -104,9 +114,10 @@ if __name__ == '__main__':
     logging.basicConfig(
         level=logging.INFO if args.verbose else logging.WARN,
         datefmt="[%Y-%m-%d %H:%M:%S]",
-        format='%(asctime)s\t%(levelname)s\t%(message)s'
+        format='%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s'
         )
     logging.getLogger("urllib3").setLevel(logging.ERROR)
+    logging.getLogger("requests.packages").setLevel(logging.ERROR)
 
     conn = psycopg2.connect(args.db)
 
