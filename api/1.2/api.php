@@ -202,6 +202,20 @@ $app->after(function(Request $request, Response $response) {
 
 /* URL Endpoints */
 
+$app->get('/search/url', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','q'));
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($search, $user['secret'], $req->get('signature'));
+
+    $q = $req->get('q');
+
+    $data = $app['service.elastic']->query($q . "*", '/urls');
+
+    return $app->json($data);
+
+
+});
+
 $app->post('/submit/url', function(Request $req) use ($app) {
 	/* Add a URL for testing */
 	$conn = $app['service.db'];
