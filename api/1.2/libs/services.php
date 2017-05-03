@@ -1,7 +1,5 @@
 <?php
 
-require "HTTP/Request2.php";
-
 class UserLoader {
 	function __construct($conn) {
 		$this->conn = $conn;

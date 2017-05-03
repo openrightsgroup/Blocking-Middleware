@@ -204,14 +204,16 @@ $app->after(function(Request $request, Response $response) {
 
 $app->get('/search/url', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','q'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($search, $user['secret'], $req->get('signature'));
-
     $q = $req->get('q');
+	$user = $app['db.user.load']->load($req->get('email'));
+	#Middleware::checkMessageTimestamp($req->get('date'));
+	#Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
+
 
     $data = $app['service.elastic']->query($q . "*", '/urls');
+    $output = array('success' => true, 'sites' => $data);
 
-    return $app->json($data);
+    return $app->json($output);
 
 
 });
