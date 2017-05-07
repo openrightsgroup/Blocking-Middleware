@@ -205,13 +205,22 @@ $app->after(function(Request $request, Response $response) {
 $app->get('/search/url', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','q'));
     $q = $req->get('q');
+    $page = $req->get('page', 0);
 	$user = $app['db.user.load']->load($req->get('email'));
 	#Middleware::checkMessageTimestamp($req->get('date'));
 	#Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
 
 
-    $data = $app['service.elastic']->query($q . "*", '/urls');
-    $output = array('success' => true, 'sites' => $data);
+    $data = $app['service.elastic']->query($q . "*", '/urls', null, $page);
+    $output = array(
+        'success' => true, 
+        'sites' => $data->results, 
+        'count' => $data->count
+        );
+    foreach($output['sites'] as $site) {
+       $urldata = $app['db.url.load']->loadByID($site->id);
+       $site->last_reported = $urldata['last_reported'];
+    }
 
     return $app->json($output);
 
@@ -1136,7 +1145,7 @@ $app->get('/category/search', function(Request $req) use ($app) {
             array('total_blocked_url_count' => 'desc')
             )
         );
-    foreach($data as $src) {
+    foreach($data->results as $src) {
         $output['categories'][] = array(
             'id' => $src->id,
             'display_name' => implode('/', $src->display_name),

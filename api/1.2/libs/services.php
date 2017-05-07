@@ -693,7 +693,7 @@ class ElasticService {
         $this->addr = $addr;
     }
 
-    function query($term, $index = '', $sort=null) {
+    function query($term, $index = '', $sort=null, $page=0, $pagesize=20) {
         $search = array( 
             'query' => array(
                 'query_string' => array(
@@ -704,6 +704,8 @@ class ElasticService {
         if ($sort) {
             $search['sort'] = $sort;
         }
+        $search['from'] = $page * $pagesize;
+        $search['size'] = $pagesize;
         $req = new HTTP_Request2($this->addr . $index . '/_search');
         $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
             ->setBody(json_encode($search))
@@ -711,10 +713,12 @@ class ElasticService {
             ->send();
 
         $data = json_decode($rsp->getBody());
-        $out = array();
+        $out = new stdClass();
+        $out->results = array();
         foreach($data->hits->hits as $hit) {
-            $out[] = $hit->_source;
+            $out->results[] = $hit->_source;
         }
+        $out->count = $data->hits->total;
         return $out;
 
     }
