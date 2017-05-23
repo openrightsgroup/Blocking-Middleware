@@ -917,6 +917,8 @@ class StreamResultProcessor {
 		$data['network_name'] = $row[0];
 		$data['status_timestamp'] = $row[2];
 		$data['last_blocked_timestamp'] = $row[3];
+		$data['first_blocked_timestamp'] = $row[4];
+		$data['category'] = $row[5];
 
 		print json_encode($data) . "\n\n";
 
