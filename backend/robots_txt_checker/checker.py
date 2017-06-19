@@ -5,17 +5,24 @@ import sys
 import json
 import logging
 import psycopg2
+import argparse
 import urlparse
 import robotparser
 import ConfigParser
 
 import requests
-#import requests_cache
 
 import amqplib.client_0_8 as amqp
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', dest='verbose', action='store_true', default=False,
+    help="Verbose operation")
+parser.add_argument('-c', dest='config', default='config.ini', help="Path to config file")
+
+args = parser.parse_args()
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.INFO if args.verbose else logging.WARN,
     format="%(asctime)s\t%(levelname)s\t%(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S]",
     )
@@ -103,7 +110,7 @@ class BlockedRobotsTxtChecker(object):
 
         # pass the message to the regular location
         msgsend = amqp.Message(msg.body)
-        new_key = msg.routing_key.replace('check','url')
+        new_key = msg.routing_key.replace(self.config.get('daemon','queue'),'url')
         self.ch.basic_publish(msgsend, self.config.get('daemon','exchange'), new_key)
         logging.info("Message sent with new key: %s", new_key)
         return True
@@ -113,7 +120,7 @@ def main():
 
     # set up cache for robots.txt content
     cfg = ConfigParser.ConfigParser()
-    assert(len(cfg.read(['config.ini'])) == 1)
+    assert(len(cfg.read([args.config])) == 1)
 
     #requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
 
