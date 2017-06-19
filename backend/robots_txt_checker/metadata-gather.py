@@ -5,12 +5,13 @@ import sys
 import json
 import logging
 import psycopg2
+import resource
 import urlparse
 import robotparser
 import ConfigParser
 
 import requests
-import requests_cache
+#import requests_cache
 import bs4
 
 import amqplib.client_0_8 as amqp
@@ -32,6 +33,7 @@ class MetadataGatherer(object):
         self.conn = conn
         self.ch = ch
         self.headers = {'User-agent': self.config.get('daemon','useragent')}
+        self.count = 0
 
     def save_description(self, url, data):
         c = self.conn.cursor()
@@ -59,23 +61,30 @@ class MetadataGatherer(object):
                 try:
                     descdata['title'] = doc.find('title').text
                 except Exception,v:
-                    logging.info("Unable to extract title: %s", repr(v))
+                    logging.debug("Unable to extract title: %s", repr(v))
 
                 for field in ('keywords','description','twitter:site'):
                     try:
                         descdata[field] = doc.find('meta', {'name':field})['content']
                     except Exception,v:
-                        logging.info("Unable to extract %s: %s", field, repr(v))
+                        logging.debug("Unable to extract %s: %s", field, repr(v))
 
                 for field in ('og:title','og:description'):
                     try:
                         descdata[field] = doc.find('meta', {'property':field})['content']
                     except Exception,v:
-                        logging.info("Unable to extract %s: %s", field, repr(v))
+                        logging.debug("Unable to extract %s: %s", field, repr(v))
 
                 self.save_description(data['url'], descdata)
         except Exception,v:
             logging.warn("Error in page data retrieval: %s", repr(v))
+
+        self.count += 1
+        logging.info("URL: %s; rss: %s; count: %s", data['url'], resource.getrusage(0).ru_maxrss, self.count)
+
+        if self.count > 500:
+            logging.warn("Exiting after 500 requests")
+            sys.exit(0)
 
         return True
 
@@ -93,12 +102,14 @@ def main():
     amqpopts = dict(cfg.items('amqp'))
     amqpconn = amqp.Connection( **amqpopts)
     ch = amqpconn.channel()
+    ch.basic_qos(0,10,False)
 
     gather = MetadataGatherer(cfg, conn, ch)
 
     ch.queue_declare("metadata", durable=True, auto_delete=False)
     ch.queue_bind("metadata", "org.blocked", "url.org")
     ch.queue_bind("metadata", "org.blocked", "url.public")
+    ch.queue_bind("metadata", "org.blocked", "url.fixed")
 
     # create consumer, enter mainloop
     ch.basic_consume("metadata", consumer_tag='metadata1', callback=gather.get_metadata)
