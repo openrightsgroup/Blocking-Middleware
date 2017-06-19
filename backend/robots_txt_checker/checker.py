@@ -10,7 +10,7 @@ import robotparser
 import ConfigParser
 
 import requests
-import requests_cache
+#import requests_cache
 
 import amqplib.client_0_8 as amqp
 
@@ -63,7 +63,7 @@ class BlockedRobotsTxtChecker(object):
         logging.info("Using robots url: %s", url)
         try:
             # fetch robots.txt
-            robots_txt = requests.get(url, headers=self.headers)
+            robots_txt = requests.get(url, headers=self.headers, timeout=5)
             # pass the content to the robots.txt parser
             rbp = robotparser.RobotFileParser()
             rbp.parse(robots_txt.text.splitlines())
@@ -83,7 +83,7 @@ class BlockedRobotsTxtChecker(object):
 
         # now do a head request for size and mime type
         try:
-            req = requests.head(data['url'], headers=self.headers)
+            req = requests.head(data['url'], headers=self.headers, timeout=5)
             logging.info("Got mime: %s", req.headers['content-type'])
             if not req.headers['content-type'].startswith('text/'):
                 logging.warn("Disallowed MIME: %s", req.headers['content-type'])
@@ -115,7 +115,7 @@ def main():
     cfg = ConfigParser.ConfigParser()
     assert(len(cfg.read(['config.ini'])) == 1)
 
-    requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
+    #requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
 
     # create MySQL connection
     pgopts = dict(cfg.items('db'))
