@@ -4,7 +4,6 @@ import os
 import sys
 import json
 import logging
-import psycopg2
 import argparse
 import urlparse
 import robotparser
@@ -15,14 +14,14 @@ import requests
 import amqplib.client_0_8 as amqp
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', dest='verbose', action='store_true', default=False,
-    help="Verbose operation")
+parser.add_argument('-v', dest='verbose', action='store_true', default=False, help="Verbose operation")
+parser.add_argument('--debug', action='store_true', default=False, help="very verbose operation")
 parser.add_argument('-c', dest='config', default='config.ini', help="Path to config file")
-
+parser.add_argument('--receive', action='store_true', default=False, help="Receive status updates from queue")
 args = parser.parse_args()
 
 logging.basicConfig(
-    level=logging.INFO if args.verbose else logging.WARN,
+    level=logging.DEBUG if args.debug else logging.INFO if args.verbose else logging.WARN,
     format="%(asctime)s\t%(levelname)s\t%(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S]",
     )
@@ -56,10 +55,29 @@ class BlockedRobotsTxtChecker(object):
         return urlparse.urlunparse( parts[:2] + ('/robots.txt','','','') )
 
     def set_url_status(self, url, status):
+        if self.config.has_option('daemon', 'status-queue'):
+            self.set_url_status_amqp(url, status)
+        else:
+            self.set_url_status_db(url, status)
+
+    def set_url_status_db(self, url, status):
         c = self.conn.cursor()
         c.execute("""update urls set status = %s where url = %s""", [ status, url])
         c.close()
         self.conn.commit()
+
+    def set_url_status_amqp(self, url, status):
+        logging.debug("Sending status message")
+        msg = {'url': url, 'status': status}
+        msgsend = amqp.Message(json.dumps(msg))
+        self.ch.basic_publish(msgsend, self.config.get('daemon', 'exchange'), 'status')
+
+    def receive_status(self, msg):
+        data = json.loads(msg.body)
+        self.ch.basic_ack(msg.delivery_tag)
+        self.set_url_status_db(data['url'], data['status'])
+        logging.info("Set status: %s, url: %s", data['status'], data['url'])
+        return True
 
     def check_robots(self,msg):
         data = json.loads(msg.body)
@@ -122,11 +140,14 @@ def main():
     cfg = ConfigParser.ConfigParser()
     assert(len(cfg.read([args.config])) == 1)
 
-    #requests_cache.install_cache('robots-txt',expire=cfg.getint('daemon','cache_ttl'))
-
     # create MySQL connection
-    pgopts = dict(cfg.items('db'))
-    conn = psycopg2.connect(**pgopts)
+    print cfg.has_option('daemon', 'status-queue'), args.receive
+    if cfg.has_option('daemon', 'status-queue') and not args.receive:
+        conn = None
+    else:
+        import psycopg2
+        pgopts = dict(cfg.items('db'))
+        conn = psycopg2.connect(**pgopts)
 
     # Create AMQP connection
     amqpopts = dict(cfg.items('amqp'))
@@ -136,7 +157,13 @@ def main():
     checker = BlockedRobotsTxtChecker(cfg, conn, ch)
 
     # create consumer, enter mainloop
-    ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='checker1', callback=checker.check_robots)
+    if args.receive:
+        ch.queue_declare(cfg.get('daemon', 'status-queue'), durable=True, auto_delete=False)
+        ch.queue_bind(   cfg.get('daemon', 'status-queue'), cfg.get('daemon','exchange'), "status")
+        ch.basic_consume(cfg.get('daemon', 'status-queue'), consumer_tag='receiver1', callback=checker.receive_status)
+    else:
+        ch.basic_consume(cfg.get('daemon','queue'), consumer_tag='checker1', callback=checker.check_robots)
+
     while True:
         ch.wait()
 
