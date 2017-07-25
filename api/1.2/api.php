@@ -898,7 +898,8 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
     $conn = $app['service.db'];
-    $rs = $conn->query("select url, network_name, uls.first_blocked, uls.last_blocked from 
+    $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked, 
+        fmtime(uls.last_blocked) as last_blocked from 
         url_latest_status uls inner join urls using (urlid)
         where blocktype = 'COPYRIGHT' order by uls.first_blocked desc limit 25", array());
     $output = array();
