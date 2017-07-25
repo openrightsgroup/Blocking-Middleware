@@ -63,8 +63,10 @@ def urls(conn):
     c = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     c.execute("""select urlid, url, tags, source, title, description
         from urls
-        inner join site_description using (urlid)
-        where urlid in (select urlid from url_latest_status where status = 'blocked')
+        left join site_description using (urlid)
+        where urlid in (select urlid from url_latest_status where status = 'blocked' and network_name in 
+            (select name from isps where queue_name is not null)
+            )
         order by urlid
         """)
     logging.info("Found: %s", c.rowcount)
