@@ -24,6 +24,7 @@
 	RewriteRule ^status/request api.php [NC,L,qsa]
 	RewriteRule ^status/stats api.php [NC,L,qsa]
 	RewriteRule ^status/isp-stats api.php [NC,L,qsa]
+	RewriteRule ^status/blocks api.php [NC,L,qsa]
     RewriteRule ^search/url api.php [NC,L,qsa]
 
     RewriteRule ^category api.php [NC,L,qsa]
