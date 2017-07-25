@@ -892,6 +892,26 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
+$app->get('/status/blocks', function(Request $req) use ($app) {
+    checkParameters($req, array('email','signature','date'));
+    $user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+    $conn = $app['service.db'];
+    $rs = $conn->query("select url, first_blocked, last_blocked from 
+        url_latest_status inner join urls using (urlid)
+        where blocktype = 'COPYRIGHT' order by first_blocked desc limit 25", array());
+    $output = array();
+    foreach($rs as $row) {
+        $output[] = array(
+            'url' => $row['url'],
+            'first_blocked' => $row['first_blocked'],
+            'last_blocked' => $row['last_blocked']
+        );
+    }
+    return $app->json(array('success' => true, 'results' => $output));
+});
+
 class StreamResultProcessor {
 	function __construct($conn) {
 		$this->conn = $conn;
