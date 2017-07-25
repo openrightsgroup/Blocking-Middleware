@@ -109,7 +109,6 @@ def main():
     ch.queue_declare("metadata", durable=True, auto_delete=False)
     ch.queue_bind("metadata", "org.blocked", "url.org")
     ch.queue_bind("metadata", "org.blocked", "url.public")
-    ch.queue_bind("metadata", "org.blocked", "url.fixed")
 
     # create consumer, enter mainloop
     ch.basic_consume("metadata", consumer_tag='metadata1', callback=gather.get_metadata)

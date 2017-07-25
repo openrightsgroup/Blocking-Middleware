@@ -40,7 +40,7 @@ print "$c urls sent.\n";
 
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
-	source not in ('social','dmoz') and status = 'ok' order by lastpolled limit 100", array());
+	source not in ('social','dmoz','uk-zone','org-uk-zone','me-uk-zone','dot-uk-zone') and status = 'ok' order by lastpolled limit 100", array());
 
 print "Sending URLs (previously tested)...\n";
 $c = send_urls($result);
@@ -75,3 +75,4 @@ $result = $conn->query("select urlid, url, hash from urls
 print "Sending URLs (blocked dmoz)...\n";
 $c = send_urls($result);
 print "$c urls sent.\n";
+$conn->commit();

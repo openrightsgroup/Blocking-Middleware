@@ -101,7 +101,7 @@ class UrlLoader {
 
 	function load($url) {
 		$result = $this->conn->query(
-			"select * from urls where URL=?",
+			"select *, fmtime(last_reported) last_reported from urls where URL=?",
 			array($url)
 			);
 		$row = $result->fetch();
@@ -545,7 +545,7 @@ class DMOZCategoryLoader {
         $off = (int)$page * (int)$pagesize;
         $sql = "select URL as url, $active block_count,
                 url_categories.category_id, substr(display_name, ?) category_title,
-                last_reported, title
+                fmtime(last_reported) last_reported, title
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
