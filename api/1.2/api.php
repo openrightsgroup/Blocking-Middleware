@@ -892,16 +892,23 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
-$app->get('/status/blocks', function(Request $req) use ($app) {
+$app->get('/status/blocks/{page}', function(Request $req, $page) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
     $conn = $app['service.db'];
+    $off = int($page) * 25;
+    $rs = $conn->query("select count(*) from url_latest_status uls where blocktype='COPYRIGHT'",
+        array()
+    );
+    $count = $rs->fetchColumn(0);
     $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked, 
-        fmtime(uls.last_blocked) as last_blocked from 
+        fmtime(uls.last_blocked) as last_blocked
+        from 
         url_latest_status uls inner join urls using (urlid)
-        where blocktype = 'COPYRIGHT' order by uls.first_blocked desc limit 25", array());
+        where blocktype = 'COPYRIGHT' order by uls.first_blocked desc 
+        offset $off limit 25", array());
     $output = array();
     foreach($rs as $row) {
         $output[] = array(
@@ -911,8 +918,12 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
             'network_name' => $row['network_name'],
         );
     }
-    return $app->json(array('success' => true, 'results' => $output));
-});
+    return $app->json(array(
+        'success' => true, 
+        'count' => $count
+        'results' => $output
+    ));
+})->value('page', 0);
 
 class StreamResultProcessor {
 	function __construct($conn) {
