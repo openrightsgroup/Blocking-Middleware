@@ -898,7 +898,7 @@ $app->get('/status/blocks/{page}', function(Request $req, $page) use ($app) {
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
     $conn = $app['service.db'];
-    $off = int($page) * 25;
+    $off = (int)$page * 25;
     $rs = $conn->query("select count(*) from url_latest_status uls where blocktype='COPYRIGHT'",
         array()
     );
