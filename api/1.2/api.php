@@ -892,12 +892,13 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
-$app->get('/status/blocks/{page}', function(Request $req, $page) use ($app) {
+$app->get('/status/blocks', function(Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
     $conn = $app['service.db'];
+    $page = $req->get('page', 0);
     $off = (int)$page * 25;
     $rs = $conn->query("select count(*) from url_latest_status uls where blocktype='COPYRIGHT'",
         array()
@@ -923,7 +924,7 @@ $app->get('/status/blocks/{page}', function(Request $req, $page) use ($app) {
         'count' => $count,
         'results' => $output
     ));
-})->value('page', 0);
+});
 
 class StreamResultProcessor {
 	function __construct($conn) {
