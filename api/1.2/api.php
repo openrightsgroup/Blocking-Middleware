@@ -920,7 +920,7 @@ $app->get('/status/blocks/{page}', function(Request $req, $page) use ($app) {
     }
     return $app->json(array(
         'success' => true, 
-        'count' => $count
+        'count' => $count,
         'results' => $output
     ));
 })->value('page', 0);
