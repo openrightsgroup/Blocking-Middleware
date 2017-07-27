@@ -294,8 +294,8 @@ class IpLookupService {
 		error_log("Writing cache entry for $ip, $network");
         $this->conn->beginTransaction();
         $q = $this->conn->query(
-            "update isp_cache set created = now() where ip = ? and network = ?",
-            array($ip, $network)
+            "update isp_cache set network=?, created = now() where ip = ?",
+            array($network, $ip)
             );
         if ($q->rowCount() == 0) {
             $this->conn->query(
