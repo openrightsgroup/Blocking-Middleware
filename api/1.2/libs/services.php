@@ -630,6 +630,36 @@ class ISPReportLoader {
         return $networks;
         
     }
+
+    function get_reports($type, $page=0, $pagesize=25) {
+        $off = ((int)$page) * $pagesize;
+        $res = $this->conn->query("select 
+            url, network_name, fmtime(isp_reports.created) as created, unblocked
+            from isp_reports 
+            inner join urls using(urlid)
+            where type = ?
+            order by isp_reports.created desc
+            limit $pagesize offset $off", 
+            array($type)
+            );
+        $reports = array();
+        foreach ($res as $row) {
+            $reports[] = $row;
+        }
+        return $reports;
+    }
+
+    function count_reports($type) {
+        $res = $this->conn->query("select 
+            count(*)
+            from isp_reports 
+            inner join urls using(urlid)
+            where type = ?",
+            array($type)
+            );
+        return $res->fetchColumn(0);
+    }
+            
 }
 
 

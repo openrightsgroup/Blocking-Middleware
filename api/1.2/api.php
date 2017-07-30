@@ -926,6 +926,22 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
     ));
 });
 
+$app->get('/status/ispreports', function (Request $req) use ($app) {
+    $user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+    $count = $app['db.ispreport.load']->count_reports('unblock');
+    $reports = $app['db.ispreport.load']->get_reports('unblock');
+
+    $output = array();
+    $output['success'] = true;
+    $output['reports'] = $reports;
+    $output['count'] = $count;
+
+    $app->json($output);
+});
+    
+
 class StreamResultProcessor {
 	function __construct($conn) {
 		$this->conn = $conn;
