@@ -208,10 +208,11 @@ $app->get('/search/url', function(Request $req) use ($app) {
     $page = $req->get('page', 0);
 	$user = $app['db.user.load']->load($req->get('email'));
 	#Middleware::checkMessageTimestamp($req->get('date'));
-	#Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
 
+    $exclude_adult = $req->get('exclude_adult', 0);
 
-    $data = $app['service.elastic']->query($q . "*", '/urls', null, $page);
+    $data = $app['service.elastic']->query($q . "*", '/urls', null, $page, 20, $exclude_adult);
     $output = array(
         'success' => true, 
         'sites' => $data->results, 

@@ -40,3 +40,5 @@ define('AMQP_PUBLIC_QUEUE_TIMEOUT', 4*86400*1000); # queued jobs expire after 4 
 define('REDIS', 'localhost:6379');
 
 $ELASTIC = "http://localhost:9200"; 
+
+define('ELASTIC_ADULT_FILTER', 'escort~ OR fetish OR stripper~ OR porn~ OR blowjob~ OR femdom~ OR fuck~');

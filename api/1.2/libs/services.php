@@ -723,11 +723,16 @@ class ElasticService {
         $this->addr = $addr;
     }
 
-    function query($term, $index = '', $sort=null, $page=0, $pagesize=20) {
+    function query($term, $index = '', $sort=null, $page=0, $pagesize=20, $exclude_adult=0) {
+        if ($exclude_adult) {
+            $query_string = "$term AND NOT (" . ELASTIC_ADULT_FILTER . ")";
+        } else {
+            $query_string = $term;
+        }
         $search = array( 
             'query' => array(
                 'query_string' => array(
-                    'query' => $term
+                    'query' => $query_string
                 )
             )
         );
