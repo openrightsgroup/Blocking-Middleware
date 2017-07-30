@@ -938,7 +938,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output['reports'] = $reports;
     $output['count'] = $count;
 
-    $app->json($output);
+    return $app->json($output);
 });
     
 

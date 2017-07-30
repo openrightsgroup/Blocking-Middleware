@@ -637,7 +637,7 @@ class ISPReportLoader {
             url, network_name, fmtime(isp_reports.created) as created, unblocked
             from isp_reports 
             inner join urls using(urlid)
-            where type = ?
+            where report_type = ?
             order by isp_reports.created desc
             limit $pagesize offset $off", 
             array($type)
@@ -654,7 +654,7 @@ class ISPReportLoader {
             count(*)
             from isp_reports 
             inner join urls using(urlid)
-            where type = ?",
+            where report_type = ?",
             array($type)
             );
         return $res->fetchColumn(0);
