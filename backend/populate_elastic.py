@@ -135,8 +135,9 @@ def changes(conn):
             # no active-network blocks in place for this URL
             c2.execute("delete from blocked_dmoz where urlid = %s",
                 [urlid])
-            r = requests.delete(args.elastic + '/urls/url/{0}'.format(row[0]))
-            logging.info("DELETE status: %s", r.status_code)
+            if not args.dummy:
+                r = requests.delete(args.elastic + '/urls/url/{0}'.format(row[0]))
+                logging.info("DELETE status: %s", r.status_code)
         else:
             logging.info("url is blocked on %s networks", row2['ct'])
             # blocked on active networks
@@ -150,7 +151,8 @@ def changes(conn):
                 [urlid])
             row2 = c2.fetchone()
 
-            update_elastic(row2)
+            if not args.dummy:
+                update_elastic(row2)
 
             # find out if the URL is in any categories
             c2.execute("select count(*) ct from url_categories where urlid = %s",
@@ -167,7 +169,11 @@ def changes(conn):
                     # duplicate key error
                     logging.warn("Exception adding to blocked_dmoz")
                     c2.execute("ROLLBACK TO save1")
-        conn.commit()
+        if not args.dummy:
+            conn.commit()
+        else:
+            logging.info("DUMMY mode: rollback")
+            conn.rollback()
 
 
 
@@ -178,8 +184,10 @@ if __name__ == '__main__':
     parser.add_argument('--db', default=os.getenv('DB'), 
         help="DB connection string")
     parser.add_argument('--elastic', help="Elastic server address")
-    parser.add_argument('--verbose', '-v', action='store_true', 
-        default=False, help="Verbose logging")
+    parser.add_argument('--verbose', '-v', action='store_true', default=False, 
+        help="Verbose logging")
+    parser.add_argument('--dummy', '-n', action='store_true', default=False, 
+        help="Dummy mode")
     parser.add_argument('--since', default=None, help="Start timestamp for changes")
     parser.add_argument('--interval', default=None, help="timeperiod for changes")
     parser.add_argument(dest='loaders', nargs="*", default='all',
@@ -194,8 +202,13 @@ if __name__ == '__main__':
     logging.getLogger("urllib3").setLevel(logging.ERROR)
     logging.getLogger("requests.packages").setLevel(logging.ERROR)
 
+    if args.dummy:
+        logging.info("DUMMY mode on")
+
     conn = psycopg2.connect(args.db)
 
-    for loader in args.loaders if 'all' not in args.loaders else LOADERS.keys():
+    loaders = args.loaders if 'all' not in args.loaders else LOADERS.keys()
+    logging.info("Running loaders: %s", loaders)
+    for loader in loaders:
         logging.info("Running loader: %s", loader)
         LOADERS[loader](conn)
