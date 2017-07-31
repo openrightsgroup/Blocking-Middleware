@@ -58,6 +58,38 @@ def categories(conn):
         if r.status_code not in (200,201):
             debug_response(data, r)
 
+def update_elastic(row):
+    data = {
+        'id': row['urlid'],
+        'title': row['title'],
+        'tags': row['tags'],
+        'url': row['url'], 
+        'source': row['source']
+        }
+    try:
+        desc = json.loads(row['description'])
+        if 'keywords' in desc:
+            parts = desc['keywords'].split(',')
+            if len(parts) > 1:
+                data['keywords'] = [x.strip() for x in parts]
+            else:
+                data['keywords'] = [x.strip() for x in desc['keywords'].split()]
+        if 'description' in desc:
+            data['description'] = desc['description']
+    except Exception,v:
+        logging.warn("URL error: %s from %s", repr(v), row['urlid'])
+
+    r = requests.put(args.elastic + '/urls/url/{0}'.format(row['urlid']),
+        data=json.dumps(data),
+        headers={
+            'Content-Type': 'application/json'
+        })
+
+    logging.info("Added url %s: %s -> %s", row['urlid'], row['url'],
+        r.status_code)
+    if r.status_code not in (200,201):
+        debug_response(data, r)
+
 @register
 def urls(conn):
     c = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -71,36 +103,75 @@ def urls(conn):
         """)
     logging.info("Found: %s", c.rowcount)
     for row in c:
-        data = {
-            'id': row['urlid'],
-            'title': row['title'],
-            'tags': row['tags'],
-            'url': row['url'], 
-            'source': row['source']
-            }
-        try:
-            desc = json.loads(row['description'])
-            if 'keywords' in desc:
-                parts = desc['keywords'].split(',')
-                if len(parts) > 1:
-                    data['keywords'] = [x.strip() for x in parts]
-                else:
-                    data['keywords'] = [x.strip() for x in desc['keywords'].split()]
-            if 'description' in desc:
-                data['description'] = desc['description']
-        except Exception,v:
-            logging.warn("URL error: %s from %s", repr(v), row['urlid'])
+        update_elastic( row)
 
-        r = requests.put(args.elastic + '/urls/url/{0}'.format(row['urlid']),
-            data=json.dumps(data),
-            headers={
-                'Content-Type': 'application/json'
-            })
+@register
+def changes(conn):
+    c = conn.cursor()
+    c2 = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if args.since is None and args.interval is None:
+        print "Required args: <since> or <interval>"
+        sys.exit(1)
 
-        logging.info("Added url %s: %s -> %s", row['urlid'], row['url'],
-            r.status_code)
-        if r.status_code not in (200,201):
-            debug_response(data, r)
+    if args.since:
+        c.execute("select distinct urlid from url_status_changes where created > %s",
+            [args.since])
+    elif args.interval:
+        c.execute("select distinct urlid from url_status_changes where created >= CURRENT_TIMESTAMP - INTERVAL %s",
+            [args.interval])
+
+    for row in c:
+        # count up blocks from active networks
+        urlid = row[0]
+        logging.info("Processing urlid: %s", urlid)
+        c2.execute("""select count(*) ct from url_latest_status where 
+                status = 'blocked' AND 
+                network_name in (select name from isps where queue_name is not null)
+                AND urlid = %s""",
+            [urlid])
+        row2 = c2.fetchone()
+        if row2['ct'] == 0:
+            logging.info("url not blocked")
+            # no active-network blocks in place for this URL
+            c2.execute("delete from blocked_dmoz where urlid = %s",
+                [urlid])
+            r = requests.delete(args.elastic + '/urls/url/{0}'.format(row[0]))
+            logging.info("DELETE status: %s", r.status_code)
+        else:
+            logging.info("url is blocked on %s networks", row2['ct'])
+            # blocked on active networks
+
+            # get data for elastic
+            c2.execute("""select urlid, url, tags, source, title, description
+                from urls
+                left join site_description using (urlid)
+                where urlid = %s
+                """,
+                [urlid])
+            row2 = c2.fetchone()
+
+            update_elastic(row2)
+
+            # find out if the URL is in any categories
+            c2.execute("select count(*) ct from url_categories where urlid = %s",
+                [urlid])
+            row2 = c2.fetchone()
+            if row2['ct'] > 0:
+                logging.info("Adding %s to dmoz", urlid)
+                # it's in a category
+                c2.execute("SAVEPOINT save1")
+                try:
+                    c2.execute("insert into blocked_dmoz(urlid) values (%s)",
+                        [urlid])
+                except:
+                    # duplicate key error
+                    logging.warn("Exception adding to blocked_dmoz")
+                    c2.execute("ROLLBACK TO save1")
+        conn.commit()
+
+
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -109,6 +180,8 @@ if __name__ == '__main__':
     parser.add_argument('--elastic', help="Elastic server address")
     parser.add_argument('--verbose', '-v', action='store_true', 
         default=False, help="Verbose logging")
+    parser.add_argument('--since', default=None, help="Start timestamp for changes")
+    parser.add_argument('--interval', default=None, help="timeperiod for changes")
     parser.add_argument(dest='loaders', nargs="*", default='all',
         choices=LOADERS.keys() + ['all'], help="loaders to run")
     args = parser.parse_args()
