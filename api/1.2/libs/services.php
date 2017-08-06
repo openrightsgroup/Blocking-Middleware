@@ -631,16 +631,26 @@ class ISPReportLoader {
         
     }
 
-    function get_reports($type, $page=0, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $pagesize=25) {
+
         $off = ((int)$page) * $pagesize;
+
+        $args = array($type);
+        if ($network) {
+            $args[] = $network;
+            $network_clause = " AND network_name = ?";
+        } else {
+            $network_clause = "";
+        }
+
         $res = $this->conn->query("select 
             url, network_name, fmtime(isp_reports.created) as created, unblocked
             from isp_reports 
             inner join urls using(urlid)
-            where report_type = ?
+            where report_type = ? $network_clause
             order by isp_reports.created desc
             limit $pagesize offset $off", 
-            array($type)
+            $args
             );
         $reports = array();
         foreach ($res as $row) {
@@ -649,13 +659,20 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type) {
+    function count_reports($type, $network=null) {
+        $args = array($type);
+        if ($network) {
+            $args[] = $network;
+            $network_clause = " AND network_name = ?";
+        } else {
+            $network_clause = "";
+        }
         $res = $this->conn->query("select 
             count(*)
             from isp_reports 
             inner join urls using(urlid)
-            where report_type = ?",
-            array($type)
+            where report_type = ? $network_clause",
+            $args
             );
         return $res->fetchColumn(0);
     }

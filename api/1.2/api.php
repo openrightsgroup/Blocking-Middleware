@@ -930,13 +930,17 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
 $app->get('/status/ispreports', function (Request $req) use ($app) {
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $isp = $req->get('isp',null);
 
-    $count = $app['db.ispreport.load']->count_reports('unblock');
-    $reports = $app['db.ispreport.load']->get_reports('unblock');
+    $count = $app['db.ispreport.load']->count_reports('unblock', $isp);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp);
 
     $output = array();
     $output['success'] = true;
     $output['reports'] = $reports;
+    if ($isp) {
+        $output['isp'] = $isp;
+    }
     $output['count'] = $count;
 
     return $app->json($output);
