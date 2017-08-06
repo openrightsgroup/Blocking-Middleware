@@ -931,9 +931,10 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
     $isp = $req->get('isp',null);
+    $page = $req->get('page', 0);
 
     $count = $app['db.ispreport.load']->count_reports('unblock', $isp);
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page);
 
     $output = array();
     $output['success'] = true;
