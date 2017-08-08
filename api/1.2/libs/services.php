@@ -720,10 +720,11 @@ class AMQPQueueService {
         $this->submit_routing_key = $submit_routing_key;
     }
 
-    function publish_url($urltext) {
+    function publish_url($urltext, $request_id) {
         $msgbody = json_encode(array(
             'url'=>$urltext, 
-            'hash'=>md5($urltext)
+            'hash'=>md5($urltext),
+            'request_id' => $request_id
             ));
 
         $ch = $this->amqp;

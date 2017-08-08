@@ -357,7 +357,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 		$queued = true;
 
-        $app['service.queue']->publish_url($urltext);
+        $app['service.queue']->publish_url($urltext, $request_id);
 
 	} else {
 		$queued = false;
