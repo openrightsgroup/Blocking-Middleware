@@ -40,7 +40,7 @@ print "$c urls sent.\n";
 
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
-	source not in ('social','dmoz','uk-zone','org-uk-zone','me-uk-zone','dot-uk-zone') and status = 'ok' order by lastpolled limit 100", array());
+	source not in ('social','dmoz','uk-zone','org-uk-zone','me-uk-zone','dot-uk-zone','dotorg') and status = 'ok' order by lastpolled limit 100", array());
 
 print "Sending URLs (previously tested)...\n";
 $c = send_urls($result);
