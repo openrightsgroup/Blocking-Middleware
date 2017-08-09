@@ -58,13 +58,27 @@ def categories(conn):
         if r.status_code not in (200,201):
             debug_response(data, r)
 
-def update_elastic(row):
+def get_categories(conn, urlid):
+    c = conn.cursor()
+    c.execute("""select categories.id, categories.name, categories.display_name 
+            from categories 
+            inner join categories x on x.tree <@ categories.tree 
+            inner join url_categories on x.id = url_categories.category_id
+            where url_categories.urlid = %s
+            order by categories.tree""",
+            [ urlid ])
+    out = [ row['id'] for row in c ]
+    c.close()
+    return out
+
+def update_elastic(row, categories=[]):
     data = {
         'id': row['urlid'],
         'title': row['title'],
         'tags': row['tags'],
         'url': row['url'], 
-        'source': row['source']
+        'source': row['source'],
+        'categories': categories
         }
     try:
         desc = json.loads(row['description'])
@@ -93,17 +107,21 @@ def update_elastic(row):
 @register
 def urls(conn):
     c = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    c.execute("""select urlid, url, tags, source, title, description
+    c.execute("""select urls.urlid, url, tags, source, title, description, blocked_dmoz.urlid as blocked_dmoz
         from urls
         left join site_description using (urlid)
-        where urlid in (select urlid from url_latest_status where status = 'blocked' and network_name in 
+        left join blocked_dmoz on blocked_dmoz.urlid = urls.urlid
+        where urls.urlid in (select urlid from url_latest_status where status = 'blocked' and network_name in 
             (select name from isps where queue_name is not null)
             )
         order by urlid
         """)
     logging.info("Found: %s", c.rowcount)
     for row in c:
-        update_elastic( row)
+        categories = None
+        if row['blocked_dmoz']:
+            categories = get_categories(conn, row['urlid'])
+        update_elastic(row, categories)
 
 @register
 def changes(conn):
@@ -152,7 +170,7 @@ def changes(conn):
             row2 = c2.fetchone()
 
             if not args.dummy:
-                update_elastic(row2)
+                update_elastic(row2, get_categories(conn, urlid))
 
             # find out if the URL is in any categories
             c2.execute("select count(*) ct from url_categories where urlid = %s",
