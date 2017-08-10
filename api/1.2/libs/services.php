@@ -523,7 +523,7 @@ class DMOZCategoryLoader {
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             inner join url_latest_status uls on uls.urlID=urls.urlID
-            $filter_active
+            $active
             where url_categories.category_id = ? and uls.status = 'blocked'
             group by url
             order by URL, network_name",
@@ -775,6 +775,27 @@ class ElasticService {
         }
         $out->count = $data->hits->total;
         return $out;
+
+    }
+
+    function urls_by_category($catid) {
+        $search = array(
+            'query' => array(
+                'match' => array(
+                    'categories' => $catid
+                )
+            )
+        );
+        $req = new HTTP_Request2($this->addr . $index . '/_search');
+        $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
+            ->setBody(json_encode($search))
+            ->setHeader('Content-type: application/json')
+            ->send();
+
+        $data = json_decode($rsp->getBody());
+        print_r($data);
+
+
 
     }
 }
