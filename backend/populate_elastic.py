@@ -67,7 +67,7 @@ def get_categories(conn, urlid):
             where url_categories.urlid = %s
             order by categories.tree""",
             [ urlid ])
-    out = [ row['id'] for row in c ]
+    out = [ row[0] for row in c ]
     c.close()
     return out
 
