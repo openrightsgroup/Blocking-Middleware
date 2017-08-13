@@ -150,7 +150,7 @@ if ($argv[1] == 'counters') {
         $q = $conn->query("select count(*) from urls where tags && makearray(?)",
             array($row['id'])
             );
-        $totalcount = $q->fetchone()
+        $totalcount = $q->fetchone();
         $conn->query("insert into stats.domain_stats (name, description, block_count, total)
             values (?,?,?,?)",
             array($row['name'], $row['description'], $blockcount, $totalcount)
