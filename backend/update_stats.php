@@ -152,9 +152,9 @@ if ($argv[1] == 'counters') {
             array($row['id'])
             );
         $totalcount = $q->fetchColumn();
-        $conn->query("insert into stats.domain_stats (name, description, block_count, total)
-            values (?,?,?,?)",
-            array($row['name'], $row['description'], $blockcount, $totalcount)
+        $conn->query("insert into stats.domain_stats (id, name, description, block_count, total)
+            values (?,?,?,?,?)",
+            array($row['id'], $row['name'], $row['description'], $blockcount, $totalcount)
             );
 
     }
