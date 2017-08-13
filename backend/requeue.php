@@ -75,4 +75,3 @@ $result = $conn->query("select urlid, url, hash from urls
 print "Sending URLs (blocked dmoz)...\n";
 $c = send_urls($result);
 print "$c urls sent.\n";
-$conn->commit();
