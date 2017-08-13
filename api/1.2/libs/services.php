@@ -694,14 +694,12 @@ class ResultProcessorService {
 		$url = $this->url_loader->load($result['url']);
 
 		$this->conn->query(
-            "insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created,
-                title, remote_ip, ssl_verified, ssl_fingerprint, request_id) 
-			values (?,?,?,?,?,?,?,?,?,now(),  ?, ?, ?::bool, ?, ?)",
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created) 
+			values (?,?,?,?,?,?,?,?,?,now())",
 			array(
 				$url['urlid'],$probe['id'], $result['config'],$result['ip_network'],
 				$result['status'],$result['http_status'], $result['network_name'],
-                @$result['category'],@$result['blocktype'],
-                @$result['title'], @$result['remote_ip'], @$result['ssl_verified'], @$result['ssl_fingerprint'], @$result['request_id']
+				@$result['category'],@$result['blocktype']
 			)
 		);
 
