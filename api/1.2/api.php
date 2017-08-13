@@ -865,6 +865,23 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 	return $app->json(array('success' => true, "stats" => $stats));
 });
 
+$app->get('/status/category-stats', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+    $stats = array();
+
+    $q = $conn->query("select * from stats.category_stats order by network_name, category",
+        array());
+    foreach ($q as $row) {
+        $stats[] = $row;
+    }
+
+    return $app->json(array('success' => true, 'stats' => $stats));
+
+});
 
 $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	function mkint($v) {

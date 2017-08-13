@@ -1291,3 +1291,12 @@ BEGIN
 return array_append('{}'::varchar[], x);
 END;
 $$ language plpgsql immutable;
+
+CREATE SCHEMA stats;
+
+CREATE TABLE stats.category_stats (
+    category character varying(64),
+    network_name text,
+    count bigint
+);
+

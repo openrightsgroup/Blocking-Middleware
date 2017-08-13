@@ -4,7 +4,7 @@ include_once __DIR__ . "/../api/1.2/libs/DB.php";
 $conn = db_connect();
 
 if(count($argv) == 1) {
-	echo "Required arg: <counters|isps>\n";
+	echo "Required arg: <counters|isps|block-category>\n";
 	exit(1);
 }
 
@@ -122,5 +122,14 @@ if ($argv[1] == 'counters') {
         }
 
 	} while ($row);
-	
+
+} elseif ($argv[1] == 'block-category') {
+    $conn->beginTransaction();
+    $q = $conn->query("delete from stats.category_stats");
+    $q = $conn->query("insert into stats.category_stats
+        select category, network_name, count(*) 
+        from url_latest_status 
+        where category is not null and category <> '' and status='blocked' 
+        group by category, network_name");
+    $conn->commit()
 }
