@@ -1172,7 +1172,7 @@ CREATE INDEX site_description_urlid ON site_description USING btree (urlid);
 
 CREATE INDEX source ON urls USING btree (source);
 
-CREATE INDEX tags on urls using gin(tags);
+CREATE INDEX url_tags on urls using gin(tags);
 
 --
 -- Name: uls_url_network; Type: INDEX; Schema: public; Owner: -; Tablespace: 
