@@ -137,6 +137,7 @@ if ($argv[1] == 'counters') {
     $rs = $conn->query("select * from tags where type = ?",
         array('domain'));
     foreach($rs as $row) {
+        echo $row['id'] . "\n";
         $conn->query("delete from stats.domain_stats where id = ?",
             array($row['id']));
 
@@ -146,11 +147,11 @@ if ($argv[1] == 'counters') {
             where tags && makearray(?)",
             array($row['id'])
             );
-        $blockcount = $q->fetchone();
+        $blockcount = $q->fetchColumn();
         $q = $conn->query("select count(*) from urls where tags && makearray(?)",
             array($row['id'])
             );
-        $totalcount = $q->fetchone();
+        $totalcount = $q->fetchColumn();
         $conn->query("insert into stats.domain_stats (name, description, block_count, total)
             values (?,?,?,?)",
             array($row['name'], $row['description'], $blockcount, $totalcount)
