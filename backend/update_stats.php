@@ -131,5 +131,28 @@ if ($argv[1] == 'counters') {
         from url_latest_status 
         where category is not null and category <> '' and status='blocked' 
         group by category, network_name");
-    $conn->commit()
+    $conn->commit();
+} elseif ($argv[1] == 'domain-category') {
+    $conn->beginTransaction();
+    $rs = $conn->query("select * from tags where type = ?",
+        array('domain'));
+    foreach($rs as $row) {
+        $conn->query("delete from stats.domain_stats where id = ?",
+            array($row['id']));
+
+        $q = $conn->query("select count(case when uls.status = 'blocked' then 1 else 0 end) as blockcount, count(*) as total
+            from url_latest_status uls 
+            inner join urls using(urlid) 
+            where tags && makearray(?)",
+            array($row['id'])
+            );
+        $countrow = $q->fetch();
+        $conn->query("insert into stats.domain_stats (name, description, block_count, total)
+            values (?,?,?,?)",
+            array($row['name'], $row['description'], $countrow['blockcount'], $countrow['count'])
+            );
+
+    }
+    $conn->commit();
+
 }

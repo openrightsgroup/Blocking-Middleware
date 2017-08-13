@@ -883,6 +883,24 @@ $app->get('/status/category-stats', function(Request $req) use ($app) {
 
 });
 
+$app->get('/status/domain-stats', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+	$user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+	$conn = $app['service.db'];
+    $stats = array();
+
+    $q = $conn->query("select * from stats.domain_stats order by name",
+        array());
+    foreach ($q as $row) {
+        $stats[] = $row;
+    }
+
+    return $app->json(array('success' => true, 'stats' => $stats));
+
+});
+
 $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	function mkint($v) {
 		return (int)$v;

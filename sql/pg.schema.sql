@@ -1300,3 +1300,9 @@ CREATE TABLE stats.category_stats (
     count bigint
 );
 
+create table domain_stats(
+    name varchar(64), 
+    description text, 
+    block_count int, 
+    total int
+);
