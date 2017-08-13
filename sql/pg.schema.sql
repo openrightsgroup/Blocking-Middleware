@@ -1301,6 +1301,7 @@ CREATE TABLE stats.category_stats (
 );
 
 create table domain_stats(
+    id varchar(32) not null,
     name varchar(64), 
     description text, 
     block_count int, 
