@@ -140,16 +140,20 @@ if ($argv[1] == 'counters') {
         $conn->query("delete from stats.domain_stats where id = ?",
             array($row['id']));
 
-        $q = $conn->query("select count(case when uls.status = 'blocked' then 1 else 0 end) as blockcount, count(*) as total
+        $q = $conn->query("select count(distinct urlid) as blockcount 
             from url_latest_status uls 
             inner join urls using(urlid) 
             where tags && makearray(?)",
             array($row['id'])
             );
-        $countrow = $q->fetch();
+        $blockcount = $q->fetchone();
+        $q = $conn->query("select count(*) from urls where tags && makearray(?)",
+            array($row['id'])
+            );
+        $totalcount = $q->fetchone()
         $conn->query("insert into stats.domain_stats (name, description, block_count, total)
             values (?,?,?,?)",
-            array($row['name'], $row['description'], $countrow['blockcount'], $countrow['count'])
+            array($row['name'], $row['description'], $blockcount, $totalcount)
             );
 
     }
