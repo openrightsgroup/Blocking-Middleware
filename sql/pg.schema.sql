@@ -1300,7 +1300,7 @@ CREATE TABLE stats.category_stats (
     count bigint
 );
 
-create table domain_stats(
+create table stats.domain_stats(
     id varchar(32) not null,
     name varchar(64), 
     description text, 
