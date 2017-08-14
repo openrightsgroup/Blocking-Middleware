@@ -133,18 +133,21 @@ if ($argv[1] == 'counters') {
         group by category, network_name");
     $conn->commit();
 } elseif ($argv[1] == 'domain-category') {
-    $conn->beginTransaction();
+
     $rs = $conn->query("select * from tags where type = ?",
         array('domain'));
     foreach($rs as $row) {
         echo $row['id'] . "\n";
+        $conn->beginTransaction();
+
+        # counts for this domain
         $conn->query("delete from stats.domain_stats where id = ?",
             array($row['id']));
 
         $q = $conn->query("select count(distinct urlid) as blockcount 
             from url_latest_status uls 
             inner join urls using(urlid) 
-            where tags && makearray(?)",
+            where tags && makearray(?) and uls.status = 'blocked'",
             array($row['id'])
             );
         $blockcount = $q->fetchColumn();
@@ -157,7 +160,21 @@ if ($argv[1] == 'counters') {
             array($row['id'], $row['name'], $row['description'], $blockcount, $totalcount)
             );
 
+        # block counts per ISP for this domain
+
+        $conn->query("delete from stats.domain_isp_stats where tag = ?",
+            array( $row['id'])
+            );
+        $q = $conn->query("insert into stats.domain_isp_stats(tag, network_name, block_count)
+            select network_name, count(distinct urls.urlid) as block_count
+            from url_latest_status uls 
+            inner join urls on uls.urlid = urls.urlid
+            where tags && makearray(?) and uls.status = 'blocked' 
+            group by uls.network_name",
+            array($row['id'])
+            );
+
+        $conn->commit();
     }
-    $conn->commit();
 
 }

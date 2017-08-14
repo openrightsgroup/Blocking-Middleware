@@ -1307,3 +1307,10 @@ create table stats.domain_stats(
     block_count int, 
     total int
 );
+
+create table stats.domain_isp_stats(
+    id serial, 
+    tag varchar(32), 
+    network_name varchar(64), 
+    block_count int
+);
