@@ -166,12 +166,12 @@ if ($argv[1] == 'counters') {
             array( $row['id'])
             );
         $q = $conn->query("insert into stats.domain_isp_stats(tag, network_name, block_count)
-            select network_name, count(distinct urls.urlid) as block_count
+            select ?, network_name, count(distinct urls.urlid) as block_count
             from url_latest_status uls 
             inner join urls on uls.urlid = urls.urlid
             where tags && makearray(?) and uls.status = 'blocked' 
             group by uls.network_name",
-            array($row['id'])
+            array($row['id'], $row['id'])
             );
 
         $conn->commit();
