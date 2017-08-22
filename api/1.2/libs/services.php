@@ -510,6 +510,28 @@ class DMOZCategoryLoader {
 		return $out;
 	}
 
+    function load_block($urlid, $filter_active=0) {
+        if ($filter_active) {
+            $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
+        } else {
+            $active = "";
+        }
+
+        $result = $this->conn->query(
+            "select URL as url, count(distinct network_name) block_count, title
+                from urls
+            inner join url_latest_status uls on uls.urlID=urls.urlID
+            $active
+            where urls.urid = ? and uls.status = 'blocked'
+            group by url
+            ",
+            array($urlid)
+            );
+        $data = $result->fetch();
+        return $data;
+        
+    }
+
     function load_blocks($parentid, $filter_active=0) {
         // get blocked sites that belong to a category (does not get sites of child categories)
         if ($filter_active) {
@@ -775,7 +797,7 @@ class ElasticService {
 
     }
 
-    function urls_by_category($catid) {
+    function urls_by_category($catid, $page=0, $pagesize=20) {
         $search = array(
             'query' => array(
                 'match' => array(
@@ -783,6 +805,9 @@ class ElasticService {
                 )
             )
         );
+        $search['from'] = $page*$pagesize;
+        $search['size'] = $pagesize;
+
         $req = new HTTP_Request2($this->addr . $index . '/_search');
         $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
             ->setBody(json_encode($search))
@@ -790,7 +815,15 @@ class ElasticService {
             ->send();
 
         $data = json_decode($rsp->getBody());
-        print_r($data);
+
+        $out = new stdClass();
+        $out->results = array();
+        foreach($data->hits->hits as $hit) {
+            $out->results[] = $hit->_source;
+        }
+        $out->count = $data->hits->total;
+
+        return $out;
 
 
 
