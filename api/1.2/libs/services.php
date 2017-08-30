@@ -512,18 +512,17 @@ class DMOZCategoryLoader {
 
     function load_block($urlid, $filter_active=0) {
         if ($filter_active) {
-            $active = "inner join isps on uls.network_name = isps.name and isps.queue_name is not null";
+            $active = "block_count_active";
         } else {
-            $active = "";
+            $active = "block_count_all";
         }
 
-        $result = $this->conn->query(
-            "select URL as url, count(distinct network_name) block_count, title
+        $result = $this->conn->query("select URL as url, $active block_count,
+                fmtime(last_reported) last_reported, title
                 from urls
-            inner join url_latest_status uls on uls.urlID=urls.urlID
-            $active
-            where urls.urlid = ? and uls.status = 'blocked'
-            group by url, title
+            inner join url_categories on urls.urlID = url_categories.urlID
+            left join cache_block_count on cache_block_count.urlID = urls.urlID
+            where urls.urlid = ? 
             ",
             array($urlid)
             );
