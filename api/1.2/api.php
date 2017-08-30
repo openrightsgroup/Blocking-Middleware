@@ -1364,11 +1364,24 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         return $app->json(array("status"=>"notfound"),404);
     }
 
-    $result = $app['service.elastic']->urls_by_category($parent, $req->get('page', 0));
-    $sites = array();
+    if (defined('CATEGORY_SEARCH_ELASTIC')) {
+        $result = $app['service.elastic']->urls_by_category($parent, $req->get('page', 0));
+        $sites = array();
 
-    foreach($result->results as $hit) {
-        $sites[] = $app['db.category.load']->load_block($hit->urlid, $req->get('active', 0));
+        foreach($result->results as $hit) {
+            $sites[] = $app['db.category.load']->load_block($hit->urlid, $req->get('active', 0));
+        }
+    } else {
+
+    if ($req->get('recurse') && $parent) {
+        $res = $app['db.category.load']->load_blocks_recurse($parent, $req->get('page', 0), $req->get('active', 0), 20);
+    } else {
+        $res = $app['db.category.load']->load_blocks($parent, $req->get('active', 0));
+    }    
+    foreach ($res as $data) {
+        $sites[] = $data;    
+    }
+
     }
 
     return $app->json(array(
