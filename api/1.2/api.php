@@ -1364,9 +1364,9 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         return $app->json(array("status"=>"notfound"),404);
     }
 
+    $sites = array();
     if (defined('CATEGORY_SEARCH_ELASTIC')) {
         $result = $app['service.elastic']->urls_by_category($parent, $req->get('page', 0));
-        $sites = array();
 
         foreach($result->results as $hit) {
             $sites[] = $app['db.category.load']->load_block($hit->urlid, $req->get('active', 0));
