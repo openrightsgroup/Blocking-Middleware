@@ -808,7 +808,7 @@ class ElasticService {
         $search['from'] = $page*$pagesize;
         $search['size'] = $pagesize;
 
-        $req = new HTTP_Request2($this->addr . $index . '/_search');
+        $req = new HTTP_Request2($this->addr .  '/urls/_search');
         $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
             ->setBody(json_encode($search))
             ->setHeader('Content-type: application/json')
