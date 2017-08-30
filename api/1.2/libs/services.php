@@ -523,7 +523,7 @@ class DMOZCategoryLoader {
             inner join url_latest_status uls on uls.urlID=urls.urlID
             $active
             where urls.urlid = ? and uls.status = 'blocked'
-            group by url
+            group by url, title
             ",
             array($urlid)
             );
