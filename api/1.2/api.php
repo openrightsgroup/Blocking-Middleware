@@ -1369,7 +1369,7 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         $result = $app['service.elastic']->urls_by_category($parent, $req->get('page', 0));
 
         foreach($result->results as $hit) {
-            $sites[] = $app['db.category.load']->load_block($hit->urlid, $req->get('active', 0));
+            $sites[] = $app['db.category.load']->load_block($hit->id, $req->get('active', 0));
         }
     } else {
 
