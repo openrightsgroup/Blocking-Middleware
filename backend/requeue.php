@@ -3,6 +3,7 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
+include "$dir/../api/1.2/libs/config.php";
 $conn = db_connect();
 
 define('MAXQ', 2250);
@@ -38,9 +39,14 @@ print "Sending URLs (untested)...\n";
 $c = send_urls($result);
 print "$c urls sent.\n";
 
+
+$placeholders = array_pad(array(), count($REQUEUE_EXCLUDE_SOURCES), "?");
+
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
-	source not in ('social','dmoz','uk-zone','org-uk-zone','me-uk-zone','dot-uk-zone','dotorg') and status = 'ok' order by lastpolled limit 100", array());
+	source not in ($placeholders) and status = 'ok' order by lastpolled limit 100", 
+    $REQUEUE_EXCLUDE_SOURCES
+    );
 
 print "Sending URLs (previously tested)...\n";
 $c = send_urls($result);

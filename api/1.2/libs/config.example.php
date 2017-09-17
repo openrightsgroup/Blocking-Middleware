@@ -42,3 +42,5 @@ define('REDIS', 'localhost:6379');
 $ELASTIC = "http://localhost:9200"; 
 
 define('ELASTIC_ADULT_FILTER', 'escort~ OR fetish OR stripper~ OR porn~ OR blowjob~ OR femdom~ OR fuck~');
+
+$REQUEUE_EXCLUDE_SOURCES = array();
