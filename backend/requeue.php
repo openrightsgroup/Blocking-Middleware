@@ -40,7 +40,7 @@ $c = send_urls($result);
 print "$c urls sent.\n";
 
 
-$placeholders = array_pad(array(), count($REQUEUE_EXCLUDE_SOURCES), "?");
+$placeholders = implode(",",array_pad(array(), count($REQUEUE_EXCLUDE_SOURCES), "?"));
 
 $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
