@@ -157,7 +157,7 @@ BEGIN
  end if;
 
  UPDATE url_latest_status SET
- status = NEW.status, created = NEW.created, category = NEW.category, blocktype = NEW.blocktype
+ status = NEW.status, created = NEW.created, category = NEW.category, blocktype = NEW.blocktype, result_id = NEW.id
  WHERE urlid = NEW.urlid and network_name = NEW.network_name;
  
  IF NOT FOUND
@@ -168,14 +168,16 @@ BEGIN
   category ,
   blocktype ,
   urlid ,
-  network_name )
+  network_name,
+  result_id)
  values (
  NEW.status,
  NEW.created,
  NEW.category,
  NEW.blocktype,
  NEW.urlid,
- NEW.network_name
+ NEW.network_name,
+ NEW.id
  );
  END IF; 
  RETURN NEW;
@@ -606,7 +608,12 @@ CREATE TABLE results (
     created timestamp with time zone,
     filter_level character varying(16),
     category character varying(64),
-    blocktype character varying(16)
+    blocktype character varying(16),
+    title varchar(2048),
+    remote_ip varchar(64),
+    ssl_verified bool, 
+    ssl_fingerprint varchar(256),
+    request_id int
 );
 
 
@@ -709,7 +716,8 @@ CREATE TABLE url_latest_status (
     category character varying(64),
     blocktype character varying(16),
     first_blocked timestamp with time zone,
-    last_blocked timestamp with time zone
+    last_blocked timestamp with time zone,
+    result_id int
 );
 
 

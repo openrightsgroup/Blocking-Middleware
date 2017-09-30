@@ -715,12 +715,14 @@ class ResultProcessorService {
 		$url = $this->url_loader->load($result['url']);
 
 		$this->conn->query(
-			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created) 
-			values (?,?,?,?,?,?,?,?,?,now())",
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created, 
+            title, remote_ip, ssl_verified, ssl_fingerprint, request_id) 
+			values (?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?)",
 			array(
 				$url['urlid'],$probe['id'], $result['config'],$result['ip_network'],
 				$result['status'],$result['http_status'], $result['network_name'],
-				@$result['category'],@$result['blocktype']
+				@$result['category'],@$result['blocktype'],
+                @$result['title'],@$result['remote_ip'],@$result['ssl_verified'],@$result['ssl_fingerprint'],@$result['request_id']
 			)
 		);
 
@@ -739,10 +741,11 @@ class AMQPQueueService {
         $this->submit_routing_key = $submit_routing_key;
     }
 
-    function publish_url($urltext) {
+    function publish_url($urltext, $request_id=null) {
         $msgbody = json_encode(array(
             'url'=>$urltext, 
-            'hash'=>md5($urltext)
+            'hash'=>md5($urltext),
+            'request_id'=>$request_id
             ));
 
         $ch = $this->amqp;
