@@ -2,6 +2,7 @@
 BEGIN;
 delete from blocked_dmoz;
 
+-- TODO: move excluded ISP list somewhere else
 INSERT INTO blocked_dmoz(urlid) 
 SELECT distinct Urls.urlid 
 FROM urls 
@@ -10,7 +11,9 @@ INNER JOIN isps on uls.network_name = isps.name
 WHERE uls.status = 'blocked' AND 
     urls.status = 'ok' AND 
     source = 'dmoz' and 
-    isps.queue_name is not null;
+    isps.queue_name is not null AND
+    uls.network_name <> 'BT-Strict'
+    ;
 
 COMMIT;
 
