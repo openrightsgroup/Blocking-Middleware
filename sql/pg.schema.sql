@@ -66,6 +66,11 @@ CREATE TYPE enum_isp_type AS ENUM(
     'mobile'
 );
 
+CREATE TYPE enum_isp_status AS ENUM(
+    'running',
+    'down'
+);
+
 --
 -- Name: insert_contact(character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -433,6 +438,7 @@ CREATE TABLE isps (
     admin_email text,
     admin_name text,
     isp_type enum_isp_type
+    isp_status enum_isp_status
 );
 
 
@@ -478,7 +484,8 @@ CREATE TABLE probes (
     ispublic smallint DEFAULT 1 NOT NULL,
     enabled smallint DEFAULT 1 NOT NULL,
     lastseen timestamp with time zone,
-    proberesprecv integer DEFAULT 0
+    proberesprecv integer DEFAULT 0,
+    isp_id integer
 );
 
 
