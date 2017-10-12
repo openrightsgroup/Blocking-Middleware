@@ -12,7 +12,8 @@ WHERE uls.status = 'blocked' AND
     urls.status = 'ok' AND 
     source = 'dmoz' and 
     isps.queue_name is not null AND
-    uls.network_name <> 'BT-Strict'
+    uls.network_name <> 'BT-Strict' AND
+    isps.id not in (select isp_id from probes where isp_status = 'down') 
     ;
 
 COMMIT;
