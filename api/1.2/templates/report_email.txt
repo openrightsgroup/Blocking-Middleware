@@ -14,6 +14,10 @@ Thanks,
 
 {{reporter_name|raw}}
 
+You can view details including when the block was detected and who else appears to be blocking the site at: https://www.blocked.org.uk/site/{{url|raw}}
+
+This email was sent from https://www.blocked.org.uk — you can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
+
 {% else %}
 
 The site {{url|raw}} has been flagged by user {{reporter_name|raw}} ({{reporter_email|raw}}).
