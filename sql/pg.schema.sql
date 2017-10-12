@@ -388,7 +388,7 @@ CREATE TABLE isp_reports (
     created timestamp with time zone,
     message text,
     report_type character varying(32),
-    unblocked integer,
+    unblocked integer DEFAULT 0,
     notified integer,
     send_updates integer,
     last_updated timestamp with time zone,
