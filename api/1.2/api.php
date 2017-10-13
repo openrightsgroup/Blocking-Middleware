@@ -965,7 +965,8 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
         fmtime(uls.last_blocked) as last_blocked
         from 
         url_latest_status uls inner join urls using (urlid)
-        where blocktype = 'COPYRIGHT' order by uls.first_blocked desc 
+        where blocktype = 'COPYRIGHT' 
+        order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc 
         offset $off limit 25", array());
     $output = array();
     foreach($rs as $row) {
