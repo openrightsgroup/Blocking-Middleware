@@ -46,7 +46,9 @@ CREATE TYPE enum_url_status AS ENUM (
     'ok',
     'disallowed-by-robots-txt',
     'disallowed-mime-type',
-    'disallowed-content-length'
+    'disallowed-content-length',
+    'invalid',
+    'duplicate'
 );
 
 
