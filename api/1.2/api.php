@@ -957,10 +957,11 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
     $conn = $app['service.db'];
     $page = $req->get('page', 0);
     $off = (int)$page * 25;
-    $rs = $conn->query("select count(*) from url_latest_status uls where blocktype='COPYRIGHT'",
+    $rs = $conn->query("select count(*), count(distinct urlid) from url_latest_status uls inner join urls using (urlid) where urls.status = 'ok' and blocktype='COPYRIGHT'",
         array()
     );
     $count = $rs->fetchColumn(0);
+    $count = $rs->fetchColumn(1);
     $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked, 
         fmtime(uls.last_blocked) as last_blocked
         from 
@@ -980,6 +981,7 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
     return $app->json(array(
         'success' => true, 
         'count' => $count,
+        'urlcount' => $urlcount,
         'results' => $output
     ));
 });
