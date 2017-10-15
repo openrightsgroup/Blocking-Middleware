@@ -111,9 +111,10 @@ def urls(conn):
         from urls
         left join site_description using (urlid)
         left join blocked_dmoz on blocked_dmoz.urlid = urls.urlid
+        left join isp_reports on isp_reports.urlid = urls.urlid and network_name = 'ORG'
         where urls.urlid in (select urlid from url_latest_status where status = 'blocked' and network_name in 
             (select name from isps where queue_name is not null)
-            )
+            ) and isp_reports.id is null
         order by urlid
         """)
     logging.info("Found: %s", c.rowcount)
