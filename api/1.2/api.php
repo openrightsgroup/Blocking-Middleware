@@ -29,13 +29,13 @@ $app['service.db'] = $app->share(function() {
 });
 
 
-/*$app['service.redis.cache'] = $app->share(function(){
+$app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
 });
 
 $app['service.amqp'] = $app->share(function() {
 	return amqp_connect();
-});*/
+});
 
 $app['service.queue'] = $app->share(function($app) {
     global $SUBMIT_ROUTING_KEY;
