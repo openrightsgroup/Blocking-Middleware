@@ -606,11 +606,11 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id) {
+    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish) {
         $q = $this->conn->query("insert into isp_reports
-        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, created)
-        values (?,?,?,?,?,?,?,?,now()) returning id as id",
-        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id)
+        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, created)
+        values (?,?,?,?,?,?,?,?,?,now()) returning id as id",
+        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish)
         );
         $row = $q->fetch();
         return $row['id'];

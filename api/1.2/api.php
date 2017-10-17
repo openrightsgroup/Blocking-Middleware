@@ -29,13 +29,13 @@ $app['service.db'] = $app->share(function() {
 });
 
 
-$app['service.redis.cache'] = $app->share(function(){
+/*$app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
 });
 
 $app['service.amqp'] = $app->share(function() {
 	return amqp_connect();
-});
+});*/
 
 $app['service.queue'] = $app->share(function($app) {
     global $SUBMIT_ROUTING_KEY;
@@ -1541,7 +1541,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $data['message'],
                 $data['report_type'],
                 (@$data['send_updates'] ? 1 : 0),
-                $contact['id']
+                $contact['id'],
+                (@$data['allow_publish'] ? 1: 0)
                 );
             # send email here
 
