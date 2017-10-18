@@ -212,7 +212,7 @@ $app->get('/search/url', function(Request $req) use ($app) {
 
     $exclude_adult = $req->get('exclude_adult', 0);
 
-    $data = $app['service.elastic']->query($q . "*", '/urls', null, $page, 20, $exclude_adult);
+    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $exclude_adult);
     $output = array(
         'success' => true, 
         'sites' => $data->results, 
