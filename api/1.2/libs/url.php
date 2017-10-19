@@ -32,6 +32,20 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid scheme: " . $parts['scheme']);
 	}
 
-	return $url;
+    # normalize case - domain and scheme to lower case, path preserves case
+
+    # find first separater after the scheme; allow length 8 for https://
+    $seppos = strpos($url, "/", 8);
+    if ($seppos === FALSE) {
+        # no path separator, entire string can be lower-cased
+        return strtolower($url);
+    } else {
+        # split string into domain and path
+        $domain = substr($url, 0, $seppos);
+        $path = substr($url, $seppos);
+        # recombine string
+        return strtolower($domain) . $path;
+    }
+
 
 }
