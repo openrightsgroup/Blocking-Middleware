@@ -837,6 +837,15 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	$categories = $app['db.url.load']->load_categories($url['urlid']);
 
+    $reports = array();
+    foreach ($app['db.ispreport.load']->get_url_reports($url['urlid']) as $report) {
+        $reports[] = array(
+            'report_type' => $report['report_type'],
+            'created' => $report['created'],
+            'network_name' => $report['network_name']
+            );
+    }
+
 	return $app->json(array(
 		'success' => true, 
 		"url" => $url['url'], 
@@ -844,6 +853,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		"results" => $output,
 		"url-status" => $url['status'],
 		"categories" => $categories,
+        "reports" => $reports,
         'last_report_timestamp' =>  $url['last_reported'],
 	));
 });

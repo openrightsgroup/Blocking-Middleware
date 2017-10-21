@@ -652,6 +652,20 @@ class ISPReportLoader {
         
     }
 
+    function get_url_reports($urlid) {
+        $res = $this->conn->query("select id, network_name, created, report_type
+            from isp_reports
+            where urlid = ?
+            order by network_name",
+            array($urlid)
+            );
+        $reports = array();
+        foreach($res as $row) {
+            $reports[] = $row;
+        }
+        return $reports;
+    }
+
     function get_reports($type, $network=null, $page=0, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
