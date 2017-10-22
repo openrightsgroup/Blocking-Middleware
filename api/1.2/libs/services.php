@@ -606,11 +606,11 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish) {
+    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status) {
         $q = $this->conn->query("insert into isp_reports
-        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, created)
-        values (?,?,?,?,?,?,?,?,?,now()) returning id as id",
-        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish)
+        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, created)
+        values (?,?,?,?,?,?,?,?,?,?,now()) returning id as id",
+        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status)
         );
         $row = $q->fetch();
         return $row['id'];
@@ -640,7 +640,7 @@ class ISPReportLoader {
         $res = $this->conn->query("select network_name
             from url_latest_status left join isp_reports using(urlid, network_name)
             where 
-                url_latest_status.urlid = ? and url_latest_status.created > now() - interval '28 day'
+                url_latest_status.urlid = ? 
                 and url_latest_status.status = 'blocked'
                 and (isp_reports.id is null or isp_reports.unblocked = 1)",
             array($urlID));

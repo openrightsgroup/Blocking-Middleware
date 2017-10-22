@@ -51,6 +51,13 @@ CREATE TYPE enum_url_status AS ENUM (
     'duplicate'
 );
 
+CREATE TYPE enum_report_status as ENUM (
+    'new',
+    'pending',
+    'sent',
+    'abuse',
+    'cancelled'
+);
 
 --
 -- Name: enum_user_status; Type: TYPE; Schema: public; Owner: -
@@ -395,7 +402,8 @@ CREATE TABLE isp_reports (
     send_updates integer,
     last_updated timestamp with time zone,
     contact_id int,
-    allow_publish int default 0
+    allow_publish int default 0,
+    status enum_report_status default 'new'
 );
 
 

@@ -1478,6 +1478,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     if (!isset($data['networks']) || count($data['networks']) == 0) {
         $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
+        error_log("Unreported: " . implode(",", $data['networks']));
     }
 
     if (!$contact['verified'] && !(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
@@ -1518,15 +1519,18 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     }
 
     $ids = array();
+    $queued = array();
     $rejected = array();
     foreach($data['networks'] as $network_name) {
         error_log("Looking up: ". $network_name);
+        $age_limit = false;
         $network = $app['db.isp.load']->load($network_name);
 
         // check latest status
         // special case for the pseudo-isp ORG
         if ($network_name != "ORG") {
-            $q = $app['service.db']->query("select id from url_latest_status
+            $q = $app['service.db']->query("select id, (now()-created) > interval '14 days' as age_limit
+                from url_latest_status
                 where urlID = ? and network_name = ? and status = 'blocked'",
                 array($url['urlid'], $network_name)
                 );
@@ -1534,6 +1538,11 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             if (!$row) {
                 $rejected[$network_name] = "Not blocked on this network";
                 continue;
+            }
+            if ($row[1] == 't') {
+                $age_limit = 't';
+                error_log("Age limited");
+                $queued[] = $network_name;
             }
         }
         if (!$network['admin_email']) {
@@ -1552,11 +1561,12 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $data['report_type'],
                 (@$data['send_updates'] ? 1 : 0),
                 $contact['id'],
-                (@$data['allow_publish'] ? 1: 0)
+                (@$data['allow_publish'] ? 1: 0),
+                $age_limit ? 'pending' : 'sent'
                 );
             # send email here
 
-            if ($contact['verified'] || $network_name == 'ORG') {
+            if (($contact['verified'] || $network_name == 'ORG') && $age_limit == false) {
                 sendISPReport(
                     $data['reporter']['name'],
                     $data['reporter']['email'],
@@ -1579,7 +1589,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         'success' => true,
         'verification_required' => ($contact['verified']) ? false : true,
         'report_ids' => $ids,
-        'rejected' => $rejected
+        'rejected' => $rejected,
+        'queued' => $queued
     ), 201);
 
 
