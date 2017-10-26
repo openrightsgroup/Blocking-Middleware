@@ -844,4 +844,12 @@ class ElasticService {
 
 
     }
+
+    function delete($urlid) {
+        $url = $this->addr .  '/urls/url/'.$urlid;
+        $req = new HTTP_Request2($url);
+        $rsp = $req->setMethod(HTTP_Request2::METHOD_DELETE)
+            ->send();
+    }
+
 }
