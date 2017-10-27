@@ -13,7 +13,7 @@ if (count($argv) != 5) {
 }
 
 $res = $conn->query("select id from users where email = ?", array($argv[4]));
-$row = $res->fetch_array();
+$row = $res->fetch();
 if (!$row) {
     print "User not found: {$argv[4]}\n";
     exit(2);
