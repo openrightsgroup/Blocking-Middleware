@@ -636,6 +636,20 @@ class ISPReportLoader {
         return false;
     }
 
+    function set_status($reportid, $status, $last_updated=null) {
+        if (!is_null($last_updated)) {
+            $this->conn->query("update isp_reports set status = ?, last_updated = ? where id = ?",
+                array($status, $last_updated, $reportid)
+                );
+        } else {
+            $this->conn->query("update isp_reports set status = ? where id = ?",
+                array($status,  $reportid)
+                );
+        }
+        error_log("Updated status: report={$reportid}; status={$status}");
+
+    }
+
     function get_unreported($urlID) {
         $res = $this->conn->query("select network_name
             from url_latest_status left join isp_reports using(urlid, network_name)
