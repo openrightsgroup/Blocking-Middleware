@@ -613,6 +613,9 @@ class ISPReportLoader {
         array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status)
         );
         $row = $q->fetch();
+        if ($status == 'sent') {
+            $this->update_submitted($row['id']);
+        }
         return $row['id'];
     }
 
@@ -646,9 +649,19 @@ class ISPReportLoader {
                 array($status,  $reportid)
                 );
         }
+        if ($status == 'sent') {
+            $this->update_submitted($reportid);
+        }
         error_log("Updated status: report={$reportid}; status={$status}");
 
     }
+
+    function update_submitted($reportid) {
+        $this->conn->query("update isp_reports set submitted = now() where id = ?",
+            array($reportid)
+            );
+    }
+        
 
     function get_unreported($urlID) {
         $res = $this->conn->query("select network_name

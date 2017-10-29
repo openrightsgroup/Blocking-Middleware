@@ -1585,6 +1585,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         }
 
     }
+    if (count($queued) > 0) {
+        $app['db.url.load']->updateLastPolled($url['urlid']);
+        $app['service.queue']->publish_url($url['url']);
+    }
 
     return $app->json(array(
         'success' => true,

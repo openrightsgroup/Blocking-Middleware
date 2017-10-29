@@ -401,6 +401,7 @@ CREATE TABLE isp_reports (
     notified integer,
     send_updates integer,
     last_updated timestamp with time zone,
+    submitted timestamp with time zone,
     contact_id int,
     allow_publish int default 0,
     status enum_report_status default 'new'
