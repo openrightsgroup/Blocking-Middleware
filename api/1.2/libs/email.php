@@ -1,6 +1,5 @@
 <?
 
-require_once __DIR__."/../../../backend/silex/vendor/autoload.php";
 
 function sendISPReport($name, $email, $network, $url, $message, $report_type, $renderer) {
     $msg = new PHPMailer();
