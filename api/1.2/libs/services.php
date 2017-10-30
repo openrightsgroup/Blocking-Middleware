@@ -706,7 +706,7 @@ class ISPReportLoader {
         }
 
         $res = $this->conn->query("select 
-            url, network_name, fmtime(isp_reports.created) as created, unblocked
+            url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted
             from isp_reports 
             inner join urls using(urlid)
             where report_type = ? $network_clause
