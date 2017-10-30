@@ -709,7 +709,7 @@ class ISPReportLoader {
             url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted
             from isp_reports 
             inner join urls using(urlid)
-            where report_type = ? $network_clause
+            where report_type = ? $network_clause and isp_reports.status not in ('cancelled','abuse')
             order by isp_reports.created desc
             limit $pagesize offset $off", 
             $args
@@ -733,7 +733,7 @@ class ISPReportLoader {
             count(*)
             from isp_reports 
             inner join urls using(urlid)
-            where report_type = ? $network_clause",
+            where report_type = ? $network_clause  and isp_reports.status not in ('cancelled','abuse')",
             $args
             );
         return $res->fetchColumn(0);
