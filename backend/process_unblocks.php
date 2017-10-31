@@ -11,8 +11,9 @@ include_once __DIR__ . "/silex/vendor/autoload.php";
 
 
 $conn = db_connect();
+$elastic = new ElasticService($ELASTIC);
 
-$q = $conn->query("select isp_reports.id, usc.created from 
+$q = $conn->query("select isp_reports.id, usc.created, isp_reports.urlid from 
     isp_reports
     inner join url_status_changes usc on isp_reports.urlid = usc.urlid and isp_reports.network_name = usc.network_name
     where usc.new_status = 'ok' and isp_reports.unblocked = 0 and usc.created >= isp_reports.created 
@@ -25,6 +26,7 @@ foreach($q as $row) {
     $conn->query("update isp_reports set unblocked = 1, last_updated = ? where id = ?",
         array($row['created'], $row['id'])
         );
+    $elastic->delete($row['urlid']);
 }
 
 
