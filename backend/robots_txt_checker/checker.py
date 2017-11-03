@@ -153,6 +153,7 @@ def main():
     amqpopts = dict(cfg.items('amqp'))
     amqpconn = amqp.Connection( **amqpopts)
     ch = amqpconn.channel()
+    ch.basic_qos(0, 10, False)
 
     checker = BlockedRobotsTxtChecker(cfg, conn, ch)
 
