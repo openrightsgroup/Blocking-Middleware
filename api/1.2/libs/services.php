@@ -709,7 +709,7 @@ class ISPReportLoader {
             url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted, networks.description as description
             from isp_reports 
             inner join urls using(urlid)
-            inner join networks using (network_name)
+            inner join isps using (network_name)
             where report_type = ? $network_clause and isp_reports.status not in ('cancelled','abuse')
             order by isp_reports.created desc
             limit $pagesize offset $off", 
