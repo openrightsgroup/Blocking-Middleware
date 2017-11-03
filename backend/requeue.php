@@ -55,7 +55,7 @@ print "$c urls sent.\n";
 $result = $conn->query("select distinct urlid, url, hash, lastpolled from urls
     inner join isp_reports using (urlID)
     where (lastpolled < (now() - interval '1 day')) and
-    status = 'ok' order by lastpolled limit 100", array());
+    urls.status = 'ok' order by lastpolled limit 100", array());
 
 print "Sending URLs (reported)...\n";
 $c = send_urls($result);
