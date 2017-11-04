@@ -68,7 +68,7 @@ foreach($q as $result) {
     } elseif ($result['status'] == 'ok') {
         $reportloader->set_status($result['report_id'], 'cancelled', $result['created']);
     } else {
-        error_log("Report {$result['urlid']} left at pending; result was {$result['status']}\n");
+        error_log("Report {$row['urlid']} left at pending; result was {$result['status']}\n");
     }
 }
 
