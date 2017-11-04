@@ -24,10 +24,13 @@ $templateloader = new Twig_Environment($loader, array(
     'debug' => true
 ));
 
-$q = $conn->query("select isp_reports.id as report_id, results.status, results.created
+$q = $conn->query("select isp_reports.id as report_id, results.status, results.created, results.network_name
     from isp_reports
+    inner join contacts on contact_id = contacts.id
     inner join results on isp_reports.urlid = results.urlid and isp_reports.network_name = results.network_name
-    where isp_reports.status = 'pending' and results.created >= (now() - interval '1 day')",
+    where isp_reports.status = 'pending' 
+        and results.created >= (now() - interval '1 day')
+        and contacts.verified = 1",
     array()
     );
 

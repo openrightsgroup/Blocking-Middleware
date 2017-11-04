@@ -1217,7 +1217,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
             // now get pending reports
 
             $res = $conn->query("select * from isp_reports
-                where contact_id = ?",
+                where contact_id = ? and status = 'sent'", # should be 'new'
                 array($contact['id'])
                 );
             foreach ($res as $row) {
