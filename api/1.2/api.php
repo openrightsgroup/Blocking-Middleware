@@ -800,7 +800,7 @@ $app->get('/status/probes', function(Request $req) use ($app) {
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
 	$conn = $app['service.db'];
-    $result = $conn->query("select name, description, isp_status, lastseen
+    $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen
         from probes inner join isps on isp_id = isps.id
         where show_results = 1
         order by lastseen",
