@@ -799,6 +799,7 @@ $app->get('/status/probes', function(Request $req) use ($app) {
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
+	$conn = $app['service.db'];
     $result = $conn->query("select name, description, isp_status, lastseen
         from probes inner join isps on isp_id = isps.id
         where show_results = 1
