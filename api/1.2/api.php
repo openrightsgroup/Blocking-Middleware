@@ -794,10 +794,10 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 /*  -------^---^---^---- End Administrator functions ... */
 
 $app->get('/status/probes', function(Request $req) use ($app) {
-    checkParameters($req, array('email','signature'));
+    checkParameters($req, array('email','signature','date'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
 
     $result = $conn->query("select name, description, isp_status, lastseen
         from probes inner join isps on isp_id = isps.id
