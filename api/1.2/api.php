@@ -1418,8 +1418,11 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
-    if ($app['db.blacklist.load']->check($url['url'])) {
-        return $app->json(array('success' => false, 'message' => 'domain rejected'));
+    if (!(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
+        // we are submittingt to ISPs, not feedback to ORG
+        if ($app['db.blacklist.load']->check($url['url'])) {
+            return $app->json(array('success' => false, 'message' => 'domain rejected'));
+        }
     }
 
     $contact = $app['db.contact.load']->insert(
