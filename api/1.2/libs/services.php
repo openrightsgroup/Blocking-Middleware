@@ -881,3 +881,44 @@ class ElasticService {
     }
 
 }
+
+class BlacklistLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function insert($domain) {
+        $res = $this->conn->query("insert into domain_blacklist(domain, created) values (?, now())",
+            array($domain)
+            );
+        return true;
+    }
+
+    function delete($domain) {
+        $res = $this->conn->query("delete from domain_blacklist where domain = ?",
+            array($domain)
+            );
+        return true;
+    }
+
+    function select() {
+        $res = $this->conn->query("select domain from domain_blacklist order by domain");
+        $out = array();
+        foreach($res as $row) {
+            $out[] = $row['domain'];
+        }
+        return $out;
+    }
+
+    function check($url) {
+        // check url against the domain blacklist.  Return true if match found
+        $res = $this->conn->query("select domain from domain_blacklist where ? ~* domain",
+            array($url)
+            );
+        $row = $res->fetch();
+        if (!is_null($row)) {
+            return true;
+        }
+        return false;
+    }
+}

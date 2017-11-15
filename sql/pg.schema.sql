@@ -1341,3 +1341,9 @@ create table stats.domain_isp_stats(
     network_name varchar(64), 
     block_count int
 );
+
+create table domain_blacklist(
+    id serial primary key not null,
+    domain varchar not null unique,
+    created timestamptz not null
+);

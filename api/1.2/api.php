@@ -82,6 +82,9 @@ $app['db.category.load'] = function($app) {
 $app['db.ispreport.load'] = function($app) {
 	return new ISPReportLoader($app['service.db']);
 };
+$app['db.blacklist.load'] = function($app) {
+	return new BlacklistLoader($app['service.db']);
+};
 
 $app['service.result.process'] = function($app) {
 	return new ResultProcessorService(
@@ -200,6 +203,11 @@ $app->after(function(Request $request, Response $response) {
 	global $APIVersion; // from DB.php
 	$response->headers->set('API-Version', $APIVersion);
 });
+
+// controller includes
+
+include_once "ctrl/admin.inc.php";
+
 
 /* URL Endpoints */
 
@@ -710,89 +718,6 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 })
 ->value('client_ip',''); # make client_ip arg optional
 
-
-#--------- Begin  Administrator Functions
-
-$app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
-	checkParameters($req, array('email','date','signature'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
-	checkAdministrator($user);
-
-	$conn = $app['service.db'];
-
-	# if status has been supplied, only list users with that status
-	if ($status) {
-		$rs = $conn->query("select email, fullName, createdAt, status from users where status = ?",
-			array($status));
-	} else {
-		$rs = $conn->query("select email, fullName, createdAt, status from users");
-	}
-
-	$out = array();
-    foreach($rs as $row) {
-		$out[] = $row;
-	}
-
-	return $app->json(array("success"=>true,"users"=>$out));
-})
-->value('status','');
-
-$app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
-	# Set the status of a user
-	checkParameters($req, array('email','signature','date'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-
-	Middleware::verifyUserMessage($user . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
-
-	$conn = $app['service.db'];
-	$result = $conn->query("UPDATE users set status = ? where email = ?",
-		array($req->get('status'), $user));
-
-	if ($result->rowCount() == 0) {
-		throw new UserLookupError();
-	}
-
-	return $app->json(array('success' => true, "status" => $req->get('status'), "email" => $user));
-});
-
-$app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
-	# Set the status of a probe
-	checkParameters($req, array('email','signature','date'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($uuid . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
-
-	if (!($req->get('status') == "enabled" || $req->get('status') == 'disabled')) {
-		return $app->json(array(
-			"success"=> false,
-			"error"=> "Unknown status: " . $req->get('status')
-		), 500);
-	}
-
-	$conn = $app['service.db'];
-	$result = $conn->query("UPDATE probes set enabled = ? where uuid = ?",
-		array($req->get('status') == "enabled" ? 1 : 0, $uuid));
-
-	if ($result->rowCount() == 0) {
-		throw new ProbeLookupError();
-	}
-
-	return $app->json(array('success'=> true, "status"=> $req->get('status'), "email"=> $user));
-});
-
-/*  -------^---^---^---- End Administrator functions ... */
-
 $app->get('/status/probes', function(Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
 
@@ -877,6 +802,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		"categories" => $categories,
         "reports" => $reports,
         'last_report_timestamp' =>  $url['last_reported'],
+        'blacklisted' => $app['db.blacklist.load']->check($url['url']),
 	));
 });
 
@@ -1491,6 +1417,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         );
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
+
+    if ($app['db.blacklist.load']->check($url['url'])) {
+        return $app->json(array('success' => false, 'message' => 'domain rejected'));
+    }
 
     $contact = $app['db.contact.load']->insert(
         $data['reporter']['email'],
