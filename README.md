@@ -41,8 +41,9 @@ We reused the following software components to make this:
 - @ircmaxell's [password compatibility library](https://github.com/ircmaxell/password_compat) (MIT license).
 - The [Symfony2](https://github.com/symfony/symfony) PHP web development framework (MIT license).
 - The [Silex](https://github.com/silexphp/Silex) PHP micro-framework to develop websites based on Symfony2 components (MIT license).
-- The [MySQL community edition](https://www.mysql.com/products/community/) database (GPLv2 license).
+- The [PostgreSQL](https://www.postgresql.org) database (PostgreSQL license).
 - The [Vagrant](https://github.com/mitchellh/vagrant) tool for building and distributing development environments (MIT license).
 - [php-amqp](http://pecl.php.net/package/amqp) from pecl (PHP license).
+- [RabbitMQ](https://www.rabbitmq.com) (Mozilla Public License 1.1)
 
 Thanks!
