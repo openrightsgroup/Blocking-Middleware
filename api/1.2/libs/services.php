@@ -916,7 +916,8 @@ class BlacklistLoader {
             array($url)
             );
         $row = $res->fetch();
-        if (!is_null($row)) {
+        if ($row !== false) {
+            // found a matching row
             return true;
         }
         return false;
