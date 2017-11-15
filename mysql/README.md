@@ -1,3 +1,0 @@
-# MySQL #
-
-DB Schemas
