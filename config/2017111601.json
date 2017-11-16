@@ -202,7 +202,7 @@
             "blocktype": [
                 "COPYRIGHT"
             ]
-        },
+        }
 
     ],
     "org-block-rules": "0.2.3",
