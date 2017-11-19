@@ -25,7 +25,7 @@ optlist, optargs = getopt.getopt(sys.argv[1:],'v', [
 	'new',
 
         # probe registration
-        'probeseed=', 
+        'probeseed=',
         'probehmac=',
         'probeuuid=',
 		'https',
@@ -38,7 +38,7 @@ logging.basicConfig(
 	)
 
 class TestClient:
-	MODES = ['user','user_status','submit','prepare_probe','register_probe','update_gcm','ip','list_users','stats','get']
+	MODES = ['user','user_status','submit','prepare_probe','register_probe','ip','list_users','stats','get']
 	PREFIX='/1.2/'
 
 	def __init__(self, options):
@@ -62,7 +62,7 @@ class TestClient:
 		return getattr(self, mode)()
 
 
-			
+
 
 	def user(self):
 		rq = requests.post('https://' + self.host +":"+self.port+ self.prefix+'register/user',
@@ -91,7 +91,7 @@ class TestClient:
 				}
 			)
 		return rq.status_code, rq.content
-                
+
         def register_probe(self):
                 uuid = hashlib.md5(self.opts['--probeseed'] + '-' + self.opts['--probehmac']).hexdigest()
 		logging.info("Sending UUID: %s", uuid)
@@ -104,20 +104,7 @@ class TestClient:
 				}
 			)
 		return rq.status_code, rq.content
-                
-	def update_gcm(self):
-		rq = requests.post('https://' + self.host+":"+self.port + self.prefix+'update/gcm',
-			data={
-                                'probe_uuid': opts['--probeuuid'],
-                                'gcm_type': 8,
-                                'frequency': 30,
-                                'gcm_id': 'abcdefg',
-                                'signature': self.sign('abcdefg'),
-                            }
-                        )
 
-                return rq.status_code, rq.content
-                
 	def get(self):
 		rq = requests.get(self.get_url('request/httpt'),
 			params = {
@@ -182,8 +169,8 @@ class TestClient:
                 msg = ':'.join([str(x) for x in args])
 		hm = hmac.new(self.secret, msg, hashlib.sha512)
 		return hm.hexdigest()
-		
 
-		
+
+
 client = TestClient(opts)
 print client.run(optargs[0])

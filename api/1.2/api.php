@@ -20,7 +20,7 @@ $CORS_HEADERS = array(
     'Access-Control-Allow-Methods' => 'GET, OPTIONS, PUT, POST',
     'Access-Control-Allow-Headers' => 'content-type',
 );
-    
+
 
 $app = new Silex\Application();
 $app['debug'] = true;
@@ -41,7 +41,7 @@ $app['service.amqp'] = $app->share(function() {
 $app['service.queue'] = $app->share(function($app) {
     global $SUBMIT_ROUTING_KEY;
 
-    return new AMQPQueueService($app['service.amqp'], 
+    return new AMQPQueueService($app['service.amqp'],
         $SUBMIT_ROUTING_KEY);
 });
 
@@ -223,8 +223,8 @@ $app->get('/search/url', function(Request $req) use ($app) {
 
     $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $exclude_adult);
     $output = array(
-        'success' => true, 
-        'sites' => $data->results, 
+        'success' => true,
+        'sites' => $data->results,
         'count' => $data->count
         );
     foreach($output['sites'] as $site) {
@@ -246,7 +246,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$row = $app['db.user.load']->load($req->get('email'));
 	checkUser($row);
 
-	Middleware::verifyUserMessage($req->get('url'), $row['secret'], 
+	Middleware::verifyUserMessage($req->get('url'), $row['secret'],
 		$req->get('signature')
 	);
 
@@ -265,7 +265,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         # and fullname unless they would be cleared
 
         $contact = $app['db.contact.load']->insert(
-            $req->get('contactemail'), 
+            $req->get('contactemail'),
             $req->get('fullname'),
             $req->get('joinlist', false)
             );
@@ -285,11 +285,11 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	# always record the request, even if we didn't queue it
     $args = array(
-            $url['urlid'], 
-            $row['id'], 
-            ($contact ? $contact['id'] : null), 
-            $req->get('additional_data'), 
-            $req->get('information'), 
+            $url['urlid'],
+            $row['id'],
+            ($contact ? $contact['id'] : null),
+            $req->get('additional_data'),
+            $req->get('information'),
             $req->get('allowcontact', 0)
             );
 
@@ -305,7 +305,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
         parse_str($req->get('additional_data'), $additional);
         foreach ($additional as $k => $v) {
             $conn->query(
-                "insert into requests_additional_data(request_id, name, value, created) 
+                "insert into requests_additional_data(request_id, name, value, created)
                     values (?,?,?,now())",
                 array($request_id, $k, $v)
                 );
@@ -381,7 +381,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		'queued' => $queued
 	), 201);
 });
-	
+
 $app->get('/status/user',function(Request $req) use ($app) {
 	# Get the status of a user
 	$conn = $app['service.db'];
@@ -392,12 +392,12 @@ $app->get('/status/user',function(Request $req) use ($app) {
 
 	$row = $app['db.user.load']->load($req->get('email'));
 
-	Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'), 
+	Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'),
 		$row['secret'], $req->get('signature'));
 
 
 	return $app->json(array('success'=>'true', 'status'=> $row['status']));
-	
+
 });
 
 
@@ -412,7 +412,7 @@ $app->post('/register/user', function(Request $req) use ($app) {
 	$password = password_hash($req->get('password'), PASSWORD_DEFAULT);
 	$probeHMAC = md5($Salt . rand() . $email);
 
-	$secret = Middleware::generateSharedSecret(); 
+	$secret = Middleware::generateSharedSecret();
 	try {
 		$result = $conn->query(
 			"insert into users (email, password, probeHMAC, secret) VALUES (?,?,?,?)",
@@ -479,7 +479,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	try {
 		$conn->query("insert into probes (uuid,userID,secret,countrycode,type) values (?,?,?,?,?)",
 			array(
-				$req->get('probe_uuid'), $row['id'], $secret, 
+				$req->get('probe_uuid'), $row['id'], $secret,
 				$req->get('country_code'), $req->get('probe_type')
 				)
 			);
@@ -503,7 +503,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
 	Middleware::verifyUserMessage($req->get('probe_uuid'),  $probe['secret'], $req->get('signature'));
-	
+
 	# Get the ISP details
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
@@ -593,7 +593,7 @@ $app->get('/request/httpt', function(Request $req) use ($app) {
 });
 
 $app->post('/response/httpt', function(Request $req) use ($app) {
-	checkParameters($req, 
+	checkParameters($req,
 		array('probe_uuid','url','config','ip_network','status',
 		'http_status','date','signature','network_name')
 		);
@@ -649,7 +649,7 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 		throw new InputError();
 	}
 
-		
+
 	// fetch and return config here
 
 	$configfile = __DIR__ . "/../../config/" . $version . "." . $format;
@@ -659,28 +659,9 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 	if (!$content) {
 		throw new ConfigLoadError();
 	}
-		
-	
+
+
 	return $content;
-});
-
-$app->post('/update/gcm', function(Request $req) use ($app) {
-	checkParameters($req, array('gcm_id','probe_uuid','signature'));
-
-	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
-
-	Middleware::verifyUserMessage($req->get('gcm_id'), $probe['secret'],  $req->get('signature'));
-
-	$conn = $app['service.db'];
-	$conn->query("update probes set gcmRegID=?, lastSeen=now(), gcmType=?, frequency=? where uuid=?",
-		array(
-			$req->get('gcm_id'),
-			$req->get('gcm_type'),
-			$req->get('frequency'),
-			$req->get('probe_uuid'),
-			));
-
-	return $app->json(array('success'=>true,'status'=>'ok'));
 });
 
 $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app) {
@@ -696,10 +677,10 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 
 	if ($client_ip) {
 		$ip = $client_ip;
-	} else { 
+	} else {
 		$ip = $req->getClientIp();
 	}
-	
+
 	$descr = $app['service.ip.query']->lookup($ip);
 
 	/* use standardised name from the database if possible */
@@ -754,9 +735,9 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
 	# Fetch results from status summary table
 	$result = $conn->query("select isps.description, l.status, fmtime(l.created) created,  l.category, l.blocktype,
-        fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked, 
+        fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked,
         isps.name, isps.queue_name
-		from url_latest_status l 
+		from url_latest_status l
 		inner join isps on isps.name = l.network_name
 		where l.urlID = ? and isps.show_results = 1",
 		array($url['urlid'])
@@ -794,8 +775,8 @@ $app->get('/status/url', function (Request $req) use ($app) {
     }
 
 	return $app->json(array(
-		'success' => true, 
-		"url" => $url['url'], 
+		'success' => true,
+		"url" => $url['url'],
         "title" => $url['title'],
 		"results" => $output,
 		"url-status" => $url['status'],
@@ -867,8 +848,8 @@ $app->get('/status/domain-isp-stats', function(Request $req) use ($app) {
 	$conn = $app['service.db'];
     $stats = array();
 
-    $q = $conn->query("select stats.domain_isp_stats.*, tags.name, tags.description 
-        from stats.domain_isp_stats 
+    $q = $conn->query("select stats.domain_isp_stats.*, tags.name, tags.description
+        from stats.domain_isp_stats
         inner join tags on tags.id = domain_isp_stats.tag
         order by name",
         array());
@@ -921,12 +902,12 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
     $row = $rs->fetch();
     $count = $row['ct'];
     $urlcount = $row['urlcount'];
-    $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked, 
+    $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
         fmtime(uls.last_blocked) as last_blocked
-        from 
+        from
         url_latest_status uls inner join urls using (urlid)
         where blocktype = 'COPYRIGHT'  and urls.status = 'ok'
-        order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc 
+        order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
         offset $off limit 25", array());
     $output = array();
     foreach($rs as $row) {
@@ -938,7 +919,7 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
         );
     }
     return $app->json(array(
-        'success' => true, 
+        'success' => true,
         'count' => $count,
         'urlcount' => $urlcount,
         'results' => $output
@@ -964,7 +945,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
 
     return $app->json($output);
 });
-    
+
 
 class StreamResultProcessor {
 	function __construct($conn) {
@@ -977,10 +958,10 @@ class StreamResultProcessor {
 		$data =(array)json_decode($msg->getBody());
 
 	# Fetch results from status summary table, left joining to get last blocked time
-	$result = $this->conn->query("select isps.description, l.status, 
-        fmtime(l.created) created, fmtime(l.last_blocked) last_blocked, 
-        fmtime(l.first_blocked) first_blocked, l.category 
-		from url_latest_status l 
+	$result = $this->conn->query("select isps.description, l.status,
+        fmtime(l.created) created, fmtime(l.last_blocked) last_blocked,
+        fmtime(l.first_blocked) first_blocked, l.category
+		from url_latest_status l
 		inner join isps on isps.name = l.network_name
 		inner join urls on urls.urlID = l.urlID
 		where urls.url = ? and l.network_name = ?",
@@ -1002,7 +983,7 @@ class StreamResultProcessor {
 }
 
 $app->get('/stream/results', function (Request $req) use ($app) {
-	/* experimental endpoint that streams results from the AMQP public 
+	/* experimental endpoint that streams results from the AMQP public
 	results queue using chunked encoding.  A blocking client socket
 	will be able to read single-line json statements giving the results for
 	each ISP in real time.  For best results, the call to /stream/results
@@ -1025,7 +1006,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 	if ($timeout) {
 		if (!(5 <= $timeout && $timeout <= 30)) {
 			return $app->json(array(
-				"success" => false, 
+				"success" => false,
 				"error" => "Invalid timeout value"
 			), 400);
 		}
@@ -1047,26 +1028,26 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		$q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
 		$q->declare();
 		$q->bind("org.results", "results.*." . $hash);
-		
+
 
 		$tag = $hash . "-" . time();
 		print json_encode(array(
-			"type" => "status", 
+			"type" => "status",
 			"tag" => $tag,
 			"hash" => $hash,
-			"url" => $url, 
+			"url" => $url,
 			));
 		print "\n";
 		ob_flush();
 
 		$conn = $app['service.db'];
 		# Fetch results from status summary table
-		$result = $conn->query("select isps.description, l.status, 
-        fmtime(l.created) created, 
-        fmtime(l.last_blocked) last_blocked, 
-        fmtime(l.first_blocked) first_blocked, 
-        l.category 
-		from url_latest_status l 
+		$result = $conn->query("select isps.description, l.status,
+        fmtime(l.created) created,
+        fmtime(l.last_blocked) last_blocked,
+        fmtime(l.first_blocked) first_blocked,
+        l.category
+		from url_latest_status l
 		inner join urls on urls.urlID = l.urlID
 		inner join isps on isps.name = l.network_name
 		where urls.url = ? and isps.show_results = 1 ",
@@ -1096,7 +1077,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		$q->consume(array($processor,"result_callback"), AMQP_NOPARAM, $tag);
 	} catch (AMQPQueueException $e) {
 		return $app->json(array(
-			"success" => false, 
+			"success" => false,
 			"type" => "error",
 			"msg" => $e->getMessage()
 		), 500);
@@ -1123,7 +1104,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 
 		$conn->beginTransaction();
 		try {
-			$result = $conn->query("select contactID from url_subscriptions 
+			$result = $conn->query("select contactID from url_subscriptions
 				where token = ?",
 				array($req->get('token'))
 			);
@@ -1134,7 +1115,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 			$conn->query("update contacts set verified = 1 where id = ?",
 				array($row[0])
 			);
-			$result = $conn->query("update url_subscriptions set verified = 1, token = null 
+			$result = $conn->query("update url_subscriptions set verified = 1, token = null
 				where verified = 0 and token = ?",
 				array($token)
 			);
@@ -1147,14 +1128,14 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 			error_log("Rolling back");
 			$conn->rollback();
 			throw $err;
-		} 
+		}
     } elseif (substr($token, 0, 1) == 'B') {
         // verifying user after ISP report submit
         try {
             $conn->beginTransaction();
             $contact = $app['db.contact.load']->loadByToken($token);
             $result = $conn->query("update contacts set verified = 1, token = null
-                where verified = 0 and token = ?", 
+                where verified = 0 and token = ?",
                 array($token)
                 );
             if ($result->rowCount() != 1) {
@@ -1174,7 +1155,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 sendISPReport(
                     $row['name'],
                     $row['email'],
-                    $network, 
+                    $network,
                     $url['url'],
                     $row['message'],
                     $row['report_type'],
@@ -1184,14 +1165,14 @@ $app->post('/verify/email', function (Request $req) use ($app) {
             }
 
             $conn->commit();
-            
+
         } catch (Exception $err) {
-            
+
 			error_log("Rolling back");
 			$conn->rollback();
 			throw $err;
-		} 
-        
+		}
+
 
 	} else {
 		throw new InvalidTokenError();
@@ -1256,7 +1237,7 @@ $app->get('/category/random', function (Request $req) use ($app) {
 });
 
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
-    
+
 	checkParameters($req, array('email','signature'));
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
@@ -1339,18 +1320,18 @@ $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app
         $res = $app['db.category.load']->load_blocks_recurse($parent, $req->get('page', 0), $req->get('active', 0), 20);
     } else {
         $res = $app['db.category.load']->load_blocks($parent, $req->get('active', 0));
-    }    
+    }
     foreach ($res as $data) {
-        $sites[] = $data;    
+        $sites[] = $data;
     }
 
     }
 
     return $app->json(array(
-        "success" => true, 
+        "success" => true,
         "id" => $parent,
-        "category" => $cat['display_name'], 
-        "name" => $cat['name'], 
+        "category" => $cat['display_name'],
+        "name" => $cat['name'],
         "total_blocked_url_count" => $cat['total_blocked_url_count'],
         "total_block_count" => $cat['total_block_count'],
         "sites"=> $sites));
@@ -1403,7 +1384,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
       ]
     }
     */
-    
+
     $conn = $app['service.db'];
     $data = (array)json_decode($req->getContent(), true);
 
@@ -1441,7 +1422,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         $token = "B" . md5($contact['id'] . "-" .
             Middleware::generateSharedSecret(10));
 
-        $conn->query("update contacts set 
+        $conn->query("update contacts set
             token = ?  where id = ?",
             array( $token, $contact['id'])
             );
@@ -1450,7 +1431,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         $msg = new PHPMailer();
         $msg->setFrom(SITE_EMAIL, SITE_NAME);
         $msg->addAddress(
-            $data['reporter']['email'], 
+            $data['reporter']['email'],
             $data['reporter']['name']
             );
         $msg->Subject = "Confirm your email address";
@@ -1558,6 +1539,3 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
 
 $app->run();
-
-
-
