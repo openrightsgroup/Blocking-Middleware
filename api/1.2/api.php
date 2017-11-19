@@ -1402,6 +1402,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     if (!(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
         // we are submittingt to ISPs, not feedback to ORG
         if ($app['db.blacklist.load']->check($url['url'])) {
+            error_log("{$url['url']} is blacklisted; not submitting");
             return $app->json(array('success' => false, 'message' => 'domain rejected'));
         }
     }
