@@ -632,7 +632,8 @@ CREATE TABLE results (
     remote_ip varchar(64),
     ssl_verified bool, 
     ssl_fingerprint varchar(256),
-    request_id int
+    request_id int,
+    final_url varchar(2048)
 );
 
 
