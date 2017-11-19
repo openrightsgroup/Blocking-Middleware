@@ -415,7 +415,7 @@ $app->post('/register/user', function(Request $req) use ($app) {
 	$secret = Middleware::generateSharedSecret();
 	try {
 		$result = $conn->query(
-			"insert into users (email, password, probeHMAC, secret) VALUES (?,?,?,?)",
+			"insert into users (email, password, probehmac, secret) VALUES (?,?,?,?)",
 			array($email,$password,$probeHMAC,$secret)
 			);
 	}
@@ -449,7 +449,7 @@ $app->post('/prepare/probe', function(Request $req) use ($app) {
 
 	$probeHMAC = Middleware::generateSharedSecret(32);
 
-	$conn->query("update users set probeHMAC = ? where email = ?",
+	$conn->query("update users set probehmac = ? where email = ?",
 		array($probeHMAC, $req->get('email'))
 		);
 
@@ -466,7 +466,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	$row = $app['db.user.load']->load($req->get('email'));
 	checkUser($row);
 
-	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probeHMAC']);
+	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probehmac']);
 	if ($check_uuid != $req->get('probe_uuid')) {
 		return $app->json(array(
 			'success' => false,
