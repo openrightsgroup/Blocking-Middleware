@@ -7,7 +7,7 @@ class UserLoader {
 
 	function load($email) {
 		$result = $this->conn->query(
-			"select id,secret,probeHMAC,status,administrator from users where email = ?",
+			"select id,secret,probehmac,status,administrator from users where email = ?",
 			array($email)
 			);
 
@@ -68,7 +68,7 @@ class UrlLoader {
 	}
 
     function insert($url, $source="user") {
-        /* Insert user record.  Does not return ID. 
+        /* Insert user record.  Does not return ID.
         AN insert rule emulates INSERT IGNORE */
         $result = $this->conn->query(
             "insert into urls (URL, hash, source, tags, lastPolled, inserted) values (?,?,?, makearray(?), now(), now() )",
@@ -84,7 +84,7 @@ class UrlLoader {
                 array($source, $source, $url));
             return false;
         }
-        
+
     }
 
 	function loadByID($urlid) {
@@ -138,7 +138,7 @@ class UrlLoader {
 		$result = $this->conn->query(
 			"select display_name from categories
 			inner join url_categories on category_id = categories.id
-			where urlID = ?", 
+			where urlID = ?",
             array($urlID),
             PDO::FETCH_NUM
             );
@@ -161,12 +161,12 @@ class UrlLoader {
     function get_unreported_blocks($count = 10) {
         // return <n> unreported blocked sites
 
-        $res = $this->conn->query("select 
+        $res = $this->conn->query("select
                 urls.url
-            from urls 
+            from urls
             inner join blocked_dmoz on blocked_dmoz.urlID = urls.urlID
             left join isp_reports on (isp_reports.urlID = urls.urlID)
-            where isp_reports.urlID is null 
+            where isp_reports.urlID is null
             order by random() limit " . (int)$count,
             # sort  by rand is horrible, do something better
             array()
@@ -254,7 +254,7 @@ class IspLoader {
 			array($title, $title),
             PDO::FETCH_NUM
 			);
-		
+
         $row = $result->fetch();
 		$ispid = $row[0];
 		$this->conn->query("insert into isp_aliases(ispid, alias, created)
@@ -276,7 +276,7 @@ class IpLookupService {
 	function check_cache($ip) {
 		error_log("Checking cache for $ip");
 		$result = $this->conn->query(
-			"select network from isp_cache where ip = ? and 
+			"select network from isp_cache where ip = ? and
 			created >= current_date  - interval '7 day'",
 			array($ip)
 			);
@@ -406,7 +406,7 @@ class DMOZCategoryLoader {
     function get_parent($node) {
 
         $sql = 'select id
-            from categories 
+            from categories
             where tree @> ?
             order by tree desc limit 1 offset 1';
         $q = $this->conn->query($sql, array($node['tree']));
@@ -431,12 +431,12 @@ class DMOZCategoryLoader {
         $args = array($parent['tree'] . '.*{1}');
 
         $sql = "select id, display_name,
-            name, 
+            name,
             total_blocked_url_count,
             total_block_count,
             blocked_url_count,
             block_count
-            from categories 
+            from categories
             where $where
             order by $sort";
         return $this->conn->query($sql, $args);
@@ -456,9 +456,9 @@ class DMOZCategoryLoader {
             total_block_count,
             blocked_url_count,
             block_count
-            from categories 
+            from categories
             where nlevel(tree) = 1 " .
-            ($show_empty ? "" : " and total_block_count > 0 ") . 
+            ($show_empty ? "" : " and total_block_count > 0 ") .
             "order by $sort";
         return $this->conn->query($sql, array());
 
@@ -471,8 +471,8 @@ class DMOZCategoryLoader {
 		$result = $this->conn->query(
 			"select URL from urls
 			inner join url_categories on urls.urlID = url_categories.urlID
-			where category_id = ?", 
-            array($parent), 
+			where category_id = ?",
+            array($parent),
             PDO::FETCH_NUM
             );
 		$out = array();
@@ -483,7 +483,7 @@ class DMOZCategoryLoader {
 	}
 
     function load_sites_recurse($parent) {
-        // get sites that belong to a category 
+        // get sites that belong to a category
         # TODO: unicode function
         $row = $this->load($parent);
         $key = $this->get_lookup_key($row);
@@ -499,7 +499,7 @@ class DMOZCategoryLoader {
 			"select URL from urls
 			inner join url_categories on urls.urlID = url_categories.urlID
             inner join categories on categories.id = url_categories.category_id
-			where $where limit 20", 
+			where $where limit 20",
             $args,
             PDO::FETCH_NUM
             );
@@ -522,13 +522,13 @@ class DMOZCategoryLoader {
                 from urls
             inner join url_categories on urls.urlID = url_categories.urlID
             left join cache_block_count on cache_block_count.urlID = urls.urlID
-            where urls.urlid = ? 
+            where urls.urlid = ?
             ",
             array($urlid)
             );
         $data = $result->fetch();
         return $data;
-        
+
     }
 
     function load_blocks($parentid, $filter_active=0) {
@@ -575,7 +575,7 @@ class DMOZCategoryLoader {
             order by URL limit 20 offset $off";
         error_log("SQL: $sql");
         $result = $this->conn->query(
-            $sql, 
+            $sql,
             array(strlen($row['display_name'])+2, $row['tree'])
             );
         return $result;
@@ -592,9 +592,9 @@ class DMOZCategoryLoader {
 
     function random($count=1) {
         $q = $this->conn->query("select id, display_name, name, total_blocked_url_count
-            from categories where total_blocked_url_count > 0 
+            from categories where total_blocked_url_count > 0
             order by random() limit " . (int)$count, array());
-        
+
 
         return $q;
     }
@@ -635,7 +635,7 @@ class ISPReportLoader {
         $row = $res->fetch(PDO::FETCH_NUM);
         if ($row[0] == 0) {
             return true;
-        } 
+        }
         return false;
     }
 
@@ -661,13 +661,13 @@ class ISPReportLoader {
             array($reportid)
             );
     }
-        
+
 
     function get_unreported($urlID) {
         $res = $this->conn->query("select network_name
             from url_latest_status left join isp_reports using(urlid, network_name)
-            where 
-                url_latest_status.urlid = ? 
+            where
+                url_latest_status.urlid = ?
                 and url_latest_status.status = 'blocked'
                 and (isp_reports.id is null or isp_reports.unblocked = 1)",
             array($urlID));
@@ -676,7 +676,7 @@ class ISPReportLoader {
             $networks[] = $row['network_name'];
         }
         return $networks;
-        
+
     }
 
     function get_url_reports($urlid) {
@@ -705,14 +705,14 @@ class ISPReportLoader {
             $network_clause = "";
         }
 
-        $res = $this->conn->query("select 
+        $res = $this->conn->query("select
             url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted, isps.description as description
-            from isp_reports 
+            from isp_reports
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
             where report_type = ? $network_clause and isp_reports.status not in ('cancelled','abuse')
             order by isp_reports.created desc
-            limit $pagesize offset $off", 
+            limit $pagesize offset $off",
             $args
             );
         $reports = array();
@@ -730,16 +730,16 @@ class ISPReportLoader {
         } else {
             $network_clause = "";
         }
-        $res = $this->conn->query("select 
+        $res = $this->conn->query("select
             count(*)
-            from isp_reports 
+            from isp_reports
             inner join urls using(urlid)
             where report_type = ? $network_clause  and isp_reports.status not in ('cancelled','abuse')",
             $args
             );
         return $res->fetchColumn(0);
     }
-            
+
 }
 
 
@@ -757,8 +757,8 @@ class ResultProcessorService {
 		$url = $this->url_loader->load($result['url']);
 
 		$this->conn->query(
-			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created, 
-            title, remote_ip, ssl_verified, ssl_fingerprint, request_id) 
+			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created,
+            title, remote_ip, ssl_verified, ssl_fingerprint, request_id)
 			values (?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?)",
 			array(
 				$url['urlid'],$probe['id'], $result['config'],$result['ip_network'],
@@ -785,7 +785,7 @@ class AMQPQueueService {
 
     function publish_url($urltext, $request_id=null) {
         $msgbody = json_encode(array(
-            'url'=>$urltext, 
+            'url'=>$urltext,
             'hash'=>md5($urltext),
             'request_id'=>$request_id
             ));
@@ -794,7 +794,7 @@ class AMQPQueueService {
         $ex = new AMQPExchange($ch);
         $ex->setName('org.blocked');
         $ex->publish(
-            $msgbody, $this->submit_routing_key, AMQP_NOPARAM, 
+            $msgbody, $this->submit_routing_key, AMQP_NOPARAM,
             array('priority'=>2)
         );
     }
@@ -812,7 +812,7 @@ class ElasticService {
         } else {
             $query_string = trim($term);
         }
-        $search = array( 
+        $search = array(
             'query' => array(
                 'query_string' => array(
                     'query' => $query_string
