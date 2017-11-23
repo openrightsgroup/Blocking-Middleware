@@ -888,7 +888,7 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
-$app->get('/status/blocks', function(Request $req, $region) use ($app) {
+$app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
