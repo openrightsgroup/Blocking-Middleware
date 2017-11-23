@@ -888,7 +888,7 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
-$app->get('/status/blocks', function(Request $req) use ($app) {
+$app->get('/status/blocks', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
@@ -896,19 +896,26 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
     $conn = $app['service.db'];
     $page = $req->get('page', 0);
     $off = (int)$page * 25;
-    $rs = $conn->query("select count(*) ct, count(distinct urlid) urlcount from url_latest_status uls inner join urls using (urlid) where urls.status = 'ok' and blocktype='COPYRIGHT'",
-        array()
+    $rs = $conn->query("select count(*) ct, count(distinct urlid) urlcount 
+        from url_latest_status uls 
+        inner join urls using (urlid) 
+        inner join isps on uls.network_name = isps.name
+        where urls.status = 'ok' and blocktype='COPYRIGHT' and regions && makearray(?)",
+        array($region)
     );
     $row = $rs->fetch();
     $count = $row['ct'];
     $urlcount = $row['urlcount'];
+
     $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
         fmtime(uls.last_blocked) as last_blocked
-        from
-        url_latest_status uls inner join urls using (urlid)
-        where blocktype = 'COPYRIGHT'  and urls.status = 'ok'
+        from url_latest_status uls 
+        inner join urls using (urlid)
+        inner join isps on uls.network_name = isps.name
+        where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?)
         order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
-        offset $off limit 25", array());
+        offset $off limit 25", array($region));
+
     $output = array();
     foreach($rs as $row) {
         $output[] = array(
@@ -924,7 +931,7 @@ $app->get('/status/blocks', function(Request $req) use ($app) {
         'urlcount' => $urlcount,
         'results' => $output
     ));
-});
+})->value('region', 'gb');
 
 $app->get('/status/ispreports', function (Request $req) use ($app) {
     $user = $app['db.user.load']->load($req->get('email'));

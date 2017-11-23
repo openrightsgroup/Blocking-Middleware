@@ -449,8 +449,9 @@ CREATE TABLE isps (
     show_results integer,
     admin_email text,
     admin_name text,
-    isp_type enum_isp_type
-    isp_status enum_isp_status
+    isp_type enum_isp_type,
+    isp_status enum_isp_status,
+    regions varchar[]
 );
 
 
