@@ -908,7 +908,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
     $urlcount = $row['urlcount'];
     $sortfield = $req->get('sort', 'url');
 
-    if (!in_array(array('url','latest'), $sortfield)) {
+    if (!in_array($sortfield, array('url','latest'))) {
         return $app->json(array('success'=>false, 'message'=>'invalid sort order'), 400);
     }
 
