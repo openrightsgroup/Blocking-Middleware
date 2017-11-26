@@ -911,6 +911,9 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
     if (!in_array($sortfield, array('url','last_blocked'))) {
         return $app->json(array('success'=>false, 'message'=>'invalid sort order'), 400);
     }
+    if ($sortfield == 'last_blocked') {
+        $sortfield = "last_blocked desc";
+    }
 
     if ($req->get('format', 'networkrow') == 'networkrow') {
         $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
