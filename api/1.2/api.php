@@ -906,25 +906,54 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
     $row = $rs->fetch();
     $count = $row['ct'];
     $urlcount = $row['urlcount'];
+    $sortfield = $req->get('sort', 'url');
 
-    $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
-        fmtime(uls.last_blocked) as last_blocked
-        from url_latest_status uls 
-        inner join urls using (urlid)
-        inner join isps on uls.network_name = isps.name
-        where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?)
-        order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
-        offset $off limit 25", array($region));
-
-    $output = array();
-    foreach($rs as $row) {
-        $output[] = array(
-            'url' => $row['url'],
-            'first_blocked' => $row['first_blocked'],
-            'last_blocked' => $row['last_blocked'],
-            'network_name' => $row['network_name'],
-        );
+    if (!in_array(array('url','latest'), $sortfield)) {
+        return $app->json(array('success'=>false, 'message'=>'invalid sort order'), 400);
     }
+
+    if ($req->get('format', 'networkrow') == 'networkrow') {
+        $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
+            fmtime(uls.last_blocked) as last_blocked
+            from url_latest_status uls 
+            inner join urls using (urlid)
+            inner join isps on uls.network_name = isps.name
+            where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?)
+            order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
+            offset $off limit 25", array($region));
+
+        $output = array();
+        foreach($rs as $row) {
+            $output[] = array(
+                'url' => $row['url'],
+                'first_blocked' => $row['first_blocked'],
+                'last_blocked' => $row['last_blocked'],
+                'network_name' => $row['network_name'],
+            );
+        }
+
+    } else {
+        $rs = $conn->query("select url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
+            fmtime(max(uls.last_blocked)) as last_blocked
+            from url_latest_status uls 
+            inner join urls using (urlid)
+            inner join isps on uls.network_name = isps.name and regions && makearray(?)
+            where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
+            group by url
+            order by $sortfield
+            offset $off limit 25", array($region));
+
+        $output = array();
+        foreach($rs as $row) {
+            $output[] = array(
+                'url' => $row['url'],
+                'first_blocked' => $row['first_blocked'],
+                'last_blocked' => $row['last_blocked'],
+                'networks' => $row['networks'],
+            );
+        }
+    }
+
     return $app->json(array(
         'success' => true,
         'count' => $count,
