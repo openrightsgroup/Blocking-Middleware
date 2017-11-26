@@ -784,18 +784,22 @@ class AMQPQueueService {
         $this->submit_routing_key = $submit_routing_key;
     }
 
-    function publish_url($urltext, $request_id=null) {
+    function publish_url($urltext, $target_queue=null, $request_id=null) {
         $msgbody = json_encode(array(
             'url'=>$urltext,
             'hash'=>md5($urltext),
             'request_id'=>$request_id
             ));
 
+        if (is_null($target_queue)) {
+            $target_queue = $this->submit_routing_key;
+        }
+
         $ch = $this->amqp;
         $ex = new AMQPExchange($ch);
         $ex->setName('org.blocked');
         $ex->publish(
-            $msgbody, $this->submit_routing_key, AMQP_NOPARAM,
+            $msgbody, $target_queue, AMQP_NOPARAM,
             array('priority'=>2)
         );
     }

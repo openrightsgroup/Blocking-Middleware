@@ -246,6 +246,13 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$row = $app['db.user.load']->load($req->get('email'));
 	checkUser($row);
 
+    if ($row['administrator'] == 1 && $req->get('queue')) {
+        # administrators can specify a queue to post to
+        $target_queue = 'url.' . $req->get('queue');
+    } else {
+        $target_queue = null;
+    }
+
 	Middleware::verifyUserMessage($req->get('url'), $row['secret'],
 		$req->get('signature')
 	);
@@ -366,7 +373,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 		$queued = true;
 
-        $app['service.queue']->publish_url($urltext);
+        $app['service.queue']->publish_url($urltext, $target_queue);
 
 	} else {
 		$queued = false;
