@@ -777,7 +777,9 @@ $app->get('/status/url', function (Request $req) use ($app) {
         $reports[] = array(
             'report_type' => $report['report_type'],
             'created' => $report['created'],
-            'network_name' => $report['network_name']
+            'network_name' => $report['network_name'],
+            'name' => $report['allow_publish'] ? $report['name'] : "",
+            'message' => $report['allow_publish'] ? $report['message'] : ""
             );
     }
 
