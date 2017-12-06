@@ -404,7 +404,8 @@ CREATE TABLE isp_reports (
     submitted timestamp with time zone,
     contact_id int,
     allow_publish int default 0,
-    status enum_report_status default 'new'
+    status enum_report_status default 'new',
+    site_category varchar(64)
 );
 
 

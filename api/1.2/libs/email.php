@@ -1,6 +1,6 @@
 <?php
 
-function sendISPReport($name, $email, $network, $url, $message, $report_type, $renderer) {
+function sendISPReport($name, $email, $network, $url, $message, $report_type, $category, $renderer) {
     $msg = new PHPMailer();
     $msg->AddReplyTo($email, $name);
     $msg->setFrom(SITE_EMAIL, $name . ' via Blocked.org.uk');
@@ -18,7 +18,8 @@ function sendISPReport($name, $email, $network, $url, $message, $report_type, $r
             'reporter_name' => $name,
             'url' => $url,
             'message' => $message,
-            'report_type' => explode(",", $report_type)
+            'report_type' => explode(",", $report_type),
+            'category' => $category
             )
         );
 

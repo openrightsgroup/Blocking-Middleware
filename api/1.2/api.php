@@ -1426,6 +1426,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         'email': 'j.bloggs@example.com'
       },
       'message': "I would like this unblocked because ...",
+      'category': 'gambling',
       'auth': [
         'email': 'useraccount@blocked.org.uk',
         'signature': 'abcdef0123456',
@@ -1547,7 +1548,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 (@$data['send_updates'] ? 1 : 0),
                 $contact['id'],
                 (@$data['allow_publish'] ? 1: 0),
-                $age_limit ? 'pending' : 'sent'
+                $age_limit ? 'pending' : 'sent',
+                @$data['category']
                 );
             # send email here
 
