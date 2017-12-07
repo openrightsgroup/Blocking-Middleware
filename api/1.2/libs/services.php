@@ -629,14 +629,27 @@ class ISPReportLoader {
     }
 
     function can_report($urlID, $network_name) {
+        // find out if site has already been reported on this network
         $res = $this->conn->query("select count(*) from isp_reports
             where urlID = ? and network_name = ? and unblocked = 0",
             array($urlID, $network_name));
         $row = $res->fetch(PDO::FETCH_NUM);
-        if ($row[0] == 0) {
-            return true;
+        if ($row[0] != 0) {
+            error_log("$urlID already reported on $network_name");
+            return false;
         }
-        return false;
+        // find out if the site has already been reported on a network with the same admin_email as this one
+        $res = $this->conn->query("select count(*) from isp_reports
+            inner join isps on (isp_reports.network_name = isps.name)
+            inner join isps isps2 on (isps2.admin_email = isps.admin_email)
+            where urlid = ? and isps2.name = ?",
+            array($urlID, $network_name));
+        $row = $res->fetch(PDO::FETCH_NUM);
+        if ($row[0] != 0) {
+            error_log("$urlID reported on same admin_email as $network_name");
+            return false;
+        }
+        return true;
     }
 
     function set_status($reportid, $status, $last_updated=null) {
