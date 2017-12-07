@@ -1207,6 +1207,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                     $url['url'],
                     $row['message'],
                     $row['report_type'],
+                    $row['site_category'],
                     $app['service.template']
                 );
 
@@ -1561,6 +1562,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     $url['url'],
                     $data['message'],
                     $data['report_type'],
+                    $data['category'],
                     $app['service.template']
                     );
             }

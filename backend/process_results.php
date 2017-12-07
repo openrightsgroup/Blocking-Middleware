@@ -57,6 +57,7 @@ foreach($q as $result) {
             $url['url'],
             $row['message'],
             $row['report_type'],
+            $row['site_category'],
             $templateloader
         );
         if (!$res) {
