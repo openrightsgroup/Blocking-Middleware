@@ -64,6 +64,7 @@ class Middleware
 		
         public static function checkMessageTimestamp($time) {
                 # messages are valid for up to 15 minutes
+                return true;
                 $now = time();
                 $msgtime = strtotime($time);
                 if (abs($msgtime - $now) > (15*60)) {

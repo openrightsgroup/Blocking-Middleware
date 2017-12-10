@@ -628,6 +628,15 @@ class ISPReportLoader {
         return $row;
     }
 
+    function flag($urlID, $status) {
+        $res = $this->conn->query("update isp_reports set status = ?, last_updated=now() where urlid = ?",
+            array($status, $urlID));
+        if ($res->rowCount()) {
+            return true;
+        }
+        return false;
+    }
+
     function can_report($urlID, $network_name) {
         // find out if site has already been reported on this network
         $res = $this->conn->query("select count(*) from isp_reports
@@ -706,7 +715,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -718,15 +727,24 @@ class ISPReportLoader {
             $network_clause = "";
         }
 
+        if ($is_admin) {
+            $admin_fields = 'isp_reports.status,isp_reports.email,';
+            $filter = '';
+        } else {
+            $admin_fields = '';
+            $filter = "and isp_reports.status not in ('cancelled','abuse')";
+        }
+
         $res = $this->conn->query("select
             url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
+                $admin_fields
                 isps.description as description,
                 case when allow_publish = 1 then isp_reports.name else '' end as name,
                 case when allow_publish = 1 then isp_reports.message else '' end as message
             from isp_reports
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
-            where report_type = ? $network_clause and isp_reports.status not in ('cancelled','abuse')
+            where report_type = ? $network_clause  $filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -738,7 +756,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $network=null) {
+    function count_reports($type, $network=null, $is_admin) {
         $args = array($type);
         if ($network) {
             $args[] = $network;
@@ -746,11 +764,16 @@ class ISPReportLoader {
         } else {
             $network_clause = "";
         }
+        if ($is_admin) {
+            $filter = '';
+        } else {
+            $filter = "and isp_reports.status not in ('cancelled','abuse')";
+        }
         $res = $this->conn->query("select
             count(*)
             from isp_reports
             inner join urls using(urlid)
-            where report_type = ? $network_clause  and isp_reports.status not in ('cancelled','abuse')",
+            where report_type = ? $network_clause  $filter",
             $args
             );
         return $res->fetchColumn(0);

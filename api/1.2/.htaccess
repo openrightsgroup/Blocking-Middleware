@@ -38,6 +38,7 @@
     RewriteRule ^ispreport/candidates api.php [NC,L,qsa]
     RewriteRule ^ispreport/submit api.php [NC,L,qsa]
     RewriteRule ^ispreport/blacklist api.php [NC,L,qsa]
+    RewriteRule ^ispreport/flag api.php [NC,L,qsa]
 
 	# admin functions
 	RewriteRule ^list/users api.php [NC,L,qsa]
