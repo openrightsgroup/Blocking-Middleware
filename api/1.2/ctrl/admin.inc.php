@@ -172,6 +172,24 @@ $app->get('/courtorders', function(Request $req) use ($app) {
 
 });
 
+$app->get('/courtorders/{name}', function(Request $req, $name) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $order = $loader->load($name);
+
+    $urls = $loader->get_urls($order['id']);
+    
+    return $app->json(array('success' => true, 'courtorder' => $order, 'urls' => $urls));
+
+});
+
 $app->post('/courtorders', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
@@ -182,9 +200,49 @@ $app->post('/courtorders', function(Request $req) use ($app) {
 	checkAdministrator($adminuser);
 
     $loader = $app['db.courtorder.load'];
-    $loader->insert($req->get('name'), $req->get('date'), $req->get('url'));
+    $loader->insert($req->get('name'), $req->get('order_date'), $req->get('url'));
 
     return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
+});
+
+$app->post('/courtorders/sites', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $urlloader = $app['db.url.load'];
+
+    $order = $loader->load($req->get('name'));
+    $urldata = $urlloader->load($req->get('url'));
+
+    $loader->add_url($order['id'], $urldata['urlid']);
+
+    return $app->json(array('success' => true, 'courtorder' => $req->get('name'), 'url' => $req->get('url')));
+});
+
+$app->delete('/courtorders/sites', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $urlloader = $app['db.url.load'];
+
+    $order = $loader->load($req->get('name'));
+    $urldata = $urlloader->load($req->get('url'));
+
+    $loader->delete_url($order['id'], $urldata['urlid']);
+
+    return $app->json(array('success' => true, 'courtorder' => $req->get('name'), 'url' => $req->get('url')));
 });
 
 /*  -------^---^---^---- End Administrator functions ... */

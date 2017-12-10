@@ -1359,4 +1359,15 @@ create table courtorders (
     created timestamptz
 );
 
+create table courtorder_urls (
+    id serial primary key not null,
+    order_id int not null,
+    urlid int not null,
+    created timestamptz
+);
+
+create unique index courtorder_order_url on courtorder_urls(order_id, urlid);
+alter table courtorder_urls add foreign key (urlid) references urls(urlid) on delete cascade;
+alter table courtorder_urls add foreign key (order_id) references courtorders(id) on delete cascade;
+
 

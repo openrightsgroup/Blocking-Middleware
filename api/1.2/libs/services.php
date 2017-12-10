@@ -982,9 +982,30 @@ class CourtOrderLoader {
         return $output;
     }
 
+    function load($name) {
+        $res = $this->conn->query("select * from courtorders where name = ?",
+            array($name)
+            );
+        $row = $res->fetchone();
+        return $row;
+    }
+
     function insert($name, $date, $url) {
+        error_log("Name: $name, date: $date, url: $url");
         $this->conn->query("insert into courtorders(name, date, url, created) values (?,?,?,now())",
             array($name, $date, $url)
+            );
+    }
+
+    function add_url($orderid, $urlid) {
+        $this->conn->query("insert into courtorder_urls(order_id, urlid, created) values (?,?,now())",
+            array($orderid, $urlid)
+            );
+    }
+
+    function delete_url($orderid, $urlid) {
+        $this->conn->query("delete from courtorder_urls where order_id = ? and urlid = ?",
+            array($orderid, $urlid)
             );
     }
 
