@@ -205,6 +205,21 @@ $app->post('/courtorders', function(Request $req) use ($app) {
     return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
 });
 
+$app->delete('/courtorders', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $loader->delete($req->get('name'));
+
+    return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
+});
+
 $app->post('/courtorders/sites', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 

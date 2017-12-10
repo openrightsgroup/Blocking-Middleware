@@ -997,6 +997,12 @@ class CourtOrderLoader {
             );
     }
 
+    function delete($name) {
+        $this->conn->query("delete from courtorders where name = ?",
+            array($name)
+            );
+    }
+
     function add_url($orderid, $urlid) {
         $this->conn->query("insert into courtorder_urls(order_id, urlid, created) values (?,?,now())",
             array($orderid, $urlid)
@@ -1007,6 +1013,19 @@ class CourtOrderLoader {
         $this->conn->query("delete from courtorder_urls where order_id = ? and urlid = ?",
             array($orderid, $urlid)
             );
+    }
+
+    function get_urls($orderid) {
+        $res = $this->conn->query("select urls.url, urls.title, urls.status
+            from urls inner join courtorder_urls using (urlid)
+            where courtorder_urls.order_id = ?",
+            array($orderid)
+            );
+        $output = array();
+        foreach($res as $row) {
+            $output[] = $row;
+        }
+        return $output;
     }
 
 }
