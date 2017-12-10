@@ -1350,3 +1350,13 @@ create table domain_blacklist(
     domain varchar not null unique,
     created timestamptz not null
 );
+
+create table courtorders (
+    id serial primary key not null,
+    name varchar(64) not null unique,
+    date date,
+    url varchar,
+    created timestamptz
+);
+
+

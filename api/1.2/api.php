@@ -85,6 +85,9 @@ $app['db.ispreport.load'] = function($app) {
 $app['db.blacklist.load'] = function($app) {
 	return new BlacklistLoader($app['service.db']);
 };
+$app['db.courtorder.load'] = function($app) {
+	return new CourtOrderLoader($app['service.db']);
+};
 
 $app['service.result.process'] = function($app) {
 	return new ResultProcessorService(

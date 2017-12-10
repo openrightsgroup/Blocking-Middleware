@@ -967,3 +967,26 @@ class BlacklistLoader {
         return false;
     }
 }
+
+class CourtOrderLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function select() {
+        $res = $this->conn->query("select * from courtorders order by name");
+        $output = array();
+        foreach($res as $row) {
+            $output[] = $row;
+        }
+        return $output;
+    }
+
+    function insert($name, $date, $url) {
+        $this->conn->query("insert into courtorders(name, date, url, created) values (?,?,?,now())",
+            array($name, $date, $url)
+            );
+    }
+
+}
+

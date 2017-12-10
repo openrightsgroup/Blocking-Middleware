@@ -156,5 +156,36 @@ $app->delete('/ispreport/blacklist', function(Request $req) use ($app) {
 
 });
 
+$app->get('/courtorders', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $orders = $loader->select();
+    
+    $app->json(array('success' => true, 'courtorders' => $orders));
+
+});
+
+$app->post('/courtorders', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $loader->insert($req->get('name'), $req->get('date'), $req->get('url'));
+
+    $app->json(array('success' => true, 'courtorder' => $req->get('name')));
+});
+
 /*  -------^---^---^---- End Administrator functions ... */
 
