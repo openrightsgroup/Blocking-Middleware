@@ -986,7 +986,7 @@ class CourtOrderLoader {
         $res = $this->conn->query("select * from courtorders where name = ?",
             array($name)
             );
-        $row = $res->fetchone();
+        $row = $res->fetch();
         return $row;
     }
 
