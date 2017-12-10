@@ -168,7 +168,7 @@ $app->get('/courtorders', function(Request $req) use ($app) {
     $loader = $app['db.courtorder.load'];
     $orders = $loader->select();
     
-    $app->json(array('success' => true, 'courtorders' => $orders));
+    return $app->json(array('success' => true, 'courtorders' => $orders));
 
 });
 
@@ -184,7 +184,7 @@ $app->post('/courtorders', function(Request $req) use ($app) {
     $loader = $app['db.courtorder.load'];
     $loader->insert($req->get('name'), $req->get('date'), $req->get('url'));
 
-    $app->json(array('success' => true, 'courtorder' => $req->get('name')));
+    return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
 });
 
 /*  -------^---^---^---- End Administrator functions ... */
