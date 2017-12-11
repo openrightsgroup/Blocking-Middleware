@@ -1010,9 +1010,21 @@ class CourtOrderLoader {
             );
     }
 
+    function add_network_url($orderid, $isp_id, $url) {
+        $this->conn->query("insert into courtorder_network_urls(order_id, isp_id, url, created) values (?,?,?,now())",
+            array($orderid, $isp_id, $url)
+            );
+    }
+
     function delete_url($orderid, $urlid) {
         $this->conn->query("delete from courtorder_urls where order_id = ? and urlid = ?",
             array($orderid, $urlid)
+            );
+    }
+
+    function delete_network_url($orderid, $isp_id) {
+        $this->conn->query("delete from courtorder_network_urls where order_id = ? and isp_id = ?",
+            array($orderid, $isp_id)
             );
     }
 

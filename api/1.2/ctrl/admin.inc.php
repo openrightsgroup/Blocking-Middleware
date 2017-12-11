@@ -223,6 +223,41 @@ $app->delete('/courtorders', function(Request $req) use ($app) {
     return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
 });
 
+
+$app->post('/courtorders/isp_urls', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $order = $app['db.courtorder.load']->load($req->get('name'));
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
+
+    $app['db.courtorder.load']->add_network_url($order['id'], $isp['id'], $req->get('url'));
+
+    return $app->json(array('success' => true, 'courtorder' => $order['name']));
+});
+
+$app->delete('/courtorders/isp_urls', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $order = $app['db.courtorder.load']->load($req->get('name'));
+	$isp = $app['db.isp.load']->load($req->get('network_name'));
+
+    $app['db.courtorder.load']->delete_network_url($order['id'], $isp['id']));
+
+    return $app->json(array('success' => true, 'courtorder' => $order['name']));
+});
+
 $app->post('/courtorders/sites', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
