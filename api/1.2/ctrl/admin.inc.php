@@ -253,7 +253,7 @@ $app->delete('/courtorders/isp_urls', function(Request $req) use ($app) {
     $order = $app['db.courtorder.load']->load($req->get('name'));
 	$isp = $app['db.isp.load']->load($req->get('network_name'));
 
-    $app['db.courtorder.load']->delete_network_url($order['id'], $isp['id']));
+    $app['db.courtorder.load']->delete_network_url($order['id'], $isp['id']);
 
     return $app->json(array('success' => true, 'courtorder' => $order['name']));
 });
