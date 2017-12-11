@@ -1355,6 +1355,7 @@ create table courtorders (
     id serial primary key not null,
     name varchar(64) not null unique,
     date date,
+    url varchar,
     judgment varchar,
     judgment_date date,
     judgment_url varchar,
