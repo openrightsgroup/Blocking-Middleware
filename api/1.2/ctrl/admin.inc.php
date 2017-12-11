@@ -200,7 +200,10 @@ $app->post('/courtorders', function(Request $req) use ($app) {
 	checkAdministrator($adminuser);
 
     $loader = $app['db.courtorder.load'];
-    $loader->insert($req->get('name'), $req->get('order_date'), $req->get('url'));
+    $loader->insert(
+        $req->get('name'), $req->get('order_date'), $req->get('url'), 
+        $req->get('judgment'), $req->get('judgment_date'), $req->get('judgment_url')
+    );
 
     return $app->json(array('success' => true, 'courtorder' => $req->get('name')));
 });

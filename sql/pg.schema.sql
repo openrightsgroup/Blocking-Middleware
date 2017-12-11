@@ -1355,6 +1355,16 @@ create table courtorders (
     id serial primary key not null,
     name varchar(64) not null unique,
     date date,
+    judgment varchar,
+    judgment_date date,
+    judgment_url varchar,
+    created timestamptz
+);
+
+create table courtorder_network_urls (
+    id serial primary key not null,
+    order_id int not null,
+    network_id int not null,
     url varchar,
     created timestamptz
 );
@@ -1369,5 +1379,6 @@ create table courtorder_urls (
 create unique index courtorder_order_url on courtorder_urls(order_id, urlid);
 alter table courtorder_urls add foreign key (urlid) references urls(urlid) on delete cascade;
 alter table courtorder_urls add foreign key (order_id) references courtorders(id) on delete cascade;
+alter table courtorder_network_urls add foreign key (order_id) references courtorders(id) on delete cascade;
 
 

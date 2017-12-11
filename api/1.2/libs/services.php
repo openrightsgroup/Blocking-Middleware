@@ -990,10 +990,11 @@ class CourtOrderLoader {
         return $row;
     }
 
-    function insert($name, $date, $url) {
+    function insert($name, $date, $url, $judgment, $judgment_date, $judgment_url) {
         error_log("Name: $name, date: $date, url: $url");
-        $this->conn->query("insert into courtorders(name, date, url, created) values (?,?,?,now())",
-            array($name, $date, $url)
+        $this->conn->query("insert into courtorders(name, date, judgment, judgment_date, judgment_url, created) 
+            values (?,?,?,?,?,now())",
+            array($name, $date, $url, $judgment, $judgment_date, $judgment_url)
             );
     }
 
