@@ -1041,5 +1041,18 @@ class CourtOrderLoader {
         return $output;
     }
 
+    function get_network_urls($orderid) {
+        $res = $this->conn->query("select isps.name as network_name, courtorder_isp_urls.url as url
+            from courtorder_isp_urls inner join isps on isps.id = isp_id
+            order by isps.name",
+            array()
+            );
+        $output = array();
+        foreach($res as $row) {
+            $output[] = $row;
+        }
+        return $output;
+    }
+
 }
 

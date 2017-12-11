@@ -185,8 +185,8 @@ $app->get('/courtorders/{name}', function(Request $req, $name) use ($app) {
     $order = $loader->load($name);
 
     $urls = $loader->get_urls($order['id']);
-    
-    return $app->json(array('success' => true, 'courtorder' => $order, 'urls' => $urls));
+    $isp_info = $loader->get_network_urls($order['id']);
+    return $app->json(array('success' => true, 'courtorder' => $order, 'urls' => $urls, 'isp_urls' => $isp_info));
 
 });
 
