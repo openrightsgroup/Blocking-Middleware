@@ -506,7 +506,8 @@ CREATE TABLE probes (
     lastseen timestamp with time zone,
     proberesprecv integer DEFAULT 0,
     isp_id integer,
-    probe_status enum_probe_status default 'active'::enum_probe_status
+    probe_status enum_probe_status default 'active'::enum_probe_status,
+    location text
 );
 
 
