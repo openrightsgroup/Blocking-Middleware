@@ -719,7 +719,7 @@ $app->get('/status/probes', function(Request $req) use ($app) {
     $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen, probe_status, location
         from probes inner join isps on isp_id = isps.id
         where show_results = 1
-        order by lastseen",
+        order by lastseen desc",
         array());
     $output = array();
     foreach ($result as $row) {
