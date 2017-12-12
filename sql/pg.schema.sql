@@ -484,6 +484,12 @@ CREATE SEQUENCE org_categories_id_seq
 
 ALTER SEQUENCE org_categories_id_seq OWNED BY org_categories.id;
 
+CREATE TYPE enum_probe_status as enum(
+    'inactive',
+    'testing',
+    'active',
+    'retired'
+);
 
 --
 -- Name: probes; Type: TABLE; Schema: public; Owner: -; Tablespace: 
@@ -499,7 +505,8 @@ CREATE TABLE probes (
     enabled smallint DEFAULT 1 NOT NULL,
     lastseen timestamp with time zone,
     proberesprecv integer DEFAULT 0,
-    isp_id integer
+    isp_id integer,
+    probe_status enum_probe_status default 'active'::enum_probe_status
 );
 
 
