@@ -38,7 +38,7 @@ if ($argv[1] == 'counters') {
 	$result = $conn->query("select count(distinct urlid) from url_latest_status 
         inner join isps on isps.name = url_latest_status.network_name
         inner join urls using (urlid) 
-        where url_latest_status.status = 'blocked' and filter_level in ('','default') and source='alexa'",
+        where url_latest_status.status = 'blocked' and filter_level in ('','default','Kidsafe','Light') and source='alexa'",
         array()
         );
 	$row = $result->fetch(PDO::FETCH_NUM);
