@@ -507,7 +507,8 @@ CREATE TABLE probes (
     proberesprecv integer DEFAULT 0,
     isp_id integer,
     probe_status enum_probe_status default 'active'::enum_probe_status,
-    location text
+    location text,
+    filter_enabled bool
 );
 
 
