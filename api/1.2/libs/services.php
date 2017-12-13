@@ -637,10 +637,10 @@ class ISPReportLoader {
         return false;
     }
 
-    function unflag($urlID, $status) {
+    function unflag($urlID) {
         $res = $this->conn->query("update isp_reports set status = case when submitted is null then 'pending' else 'sent' end case, 
             last_updated=now() where urlid = ?",
-            array($status, $urlID));
+            array($urlID));
         if ($res->rowCount()) {
             return true;
         }
