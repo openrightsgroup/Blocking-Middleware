@@ -638,7 +638,7 @@ class ISPReportLoader {
     }
 
     function unflag($urlID) {
-        $res = $this->conn->query("update isp_reports set status = case when submitted is null then 'pending' else 'sent' end case, 
+        $res = $this->conn->query("update isp_reports set status = case when submitted is null then 'pending'::enum_report_status else 'sent'::enum_report_status end, 
             last_updated=now() where urlid = ?",
             array($urlID));
         if ($res->rowCount()) {
