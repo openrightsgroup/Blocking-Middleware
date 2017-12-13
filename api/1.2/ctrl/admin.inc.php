@@ -105,6 +105,24 @@ $app->post('/ispreport/flag', function(Request $req) use ($app) {
 
 });
 
+$app->post('/ispreport/unflag', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date') . ":" . $req->get('url'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $urldata = $app['db.url.load']->load($req->get('url'));
+    
+    $loader = $app['db.ispreport.load'];
+    $result = $loader->unflag($urldata['urlid']);
+
+    return $app->json(array('success' => true, 'url' => $req->get('url'), 'updated' => $result));
+
+});
+
 # add a blacklist entry
 $app->post('/ispreport/blacklist', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date','domain'));

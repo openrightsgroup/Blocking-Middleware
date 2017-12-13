@@ -637,6 +637,16 @@ class ISPReportLoader {
         return false;
     }
 
+    function flag($urlID, $status) {
+        $res = $this->conn->query("update isp_reports set status = case when submitted is null then 'pending' else 'sent' end case, 
+            last_updated=now() where urlid = ?",
+            array($status, $urlID));
+        if ($res->rowCount()) {
+            return true;
+        }
+        return false;
+    }
+
     function can_report($urlID, $network_name) {
         // find out if site has already been reported on this network
         $res = $this->conn->query("select count(*) from isp_reports

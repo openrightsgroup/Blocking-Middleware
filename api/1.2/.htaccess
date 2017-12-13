@@ -39,6 +39,7 @@
     RewriteRule ^ispreport/submit api.php [NC,L,qsa]
     RewriteRule ^ispreport/blacklist api.php [NC,L,qsa]
     RewriteRule ^ispreport/flag api.php [NC,L,qsa]
+    RewriteRule ^ispreport/unflag api.php [NC,L,qsa]
 
     RewriteRule ^courtorders api.php [NC,L,qsa]
 
