@@ -176,7 +176,8 @@ if ($argv[1] == 'counters') {
             select ?, network_name, count(distinct urls.urlid) as block_count
             from url_latest_status uls 
             inner join urls on uls.urlid = urls.urlid
-            where tags && makearray(?) and uls.status = 'blocked' 
+            inner join isps on isps.name = uls.network_name
+            where tags && makearray(?) and uls.status = 'blocked' and isps.region = '{gb}'
             group by uls.network_name",
             array($row['id'], $row['id'])
             );
