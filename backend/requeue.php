@@ -85,9 +85,9 @@ print "$c urls sent.\n";
 
 /* send copyright blocks for retesting */
 
-$result = $conn->query("select distinct urls.urlid, url, hash from urls
+$result = $conn->query("select distinct urls.urlid, url, hash, lastpolled from urls
     inner join url_latest_status using (urlid)
-    where url_latest_status.status = 'blocked' and blocktype = 'COPYRIGHT' and lastpolled < (now() - interval '7 day')
+    where url_latest_status.status = 'blocked' and urls.status = 'ok' and blocktype = 'COPYRIGHT' and lastpolled < (now() - interval '7 day')
     order by lastpolled limit 50", array());
 
 print "Sending URLs (copyright blocked)...\n";
