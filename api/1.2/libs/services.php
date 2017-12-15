@@ -1008,6 +1008,18 @@ class CourtOrderLoader {
             );
     }
 
+    function update($original_name, $name, $date, $url, $judgment, $judgment_date, $judgment_url) {
+        error_log("Update Name: $name, date: $date, url: $url");
+        $res = $this->conn->query("update courtorders set name=?, date=?, url=?, judgment=?, judgment_date=?, judgment_url=?
+            where name = ? ",
+            array($name, $date, $url, $judgment, $judgment_date, $judgment_url, $original_name)
+            );
+        if ($res->rowCount() != 0) {
+            return true;
+        }
+        return false;
+    }
+
     function delete($name) {
         $this->conn->query("delete from courtorders where name = ?",
             array($name)
