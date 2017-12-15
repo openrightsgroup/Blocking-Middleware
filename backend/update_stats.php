@@ -177,7 +177,7 @@ if ($argv[1] == 'counters') {
             from url_latest_status uls 
             inner join urls on uls.urlid = urls.urlid
             inner join isps on isps.name = uls.network_name
-            where tags && makearray(?) and uls.status = 'blocked' and isps.region = '{gb}'
+            where tags && makearray(?) and uls.status = 'blocked' and isps.regions && '{gb}'
             group by uls.network_name",
             array($row['id'], $row['id'])
             );
