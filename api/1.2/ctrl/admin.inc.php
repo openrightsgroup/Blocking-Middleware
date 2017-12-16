@@ -317,7 +317,7 @@ $app->delete('/courtorders/sites', function(Request $req) use ($app) {
     return $app->json(array('success' => true, 'courtorder' => $req->get('name'), 'url' => $req->get('url')));
 });
 
-$app->post('/courtorders/{name}', function(Request $req, $name) use ($app) {
+$app->post('/courtorders/{original_name}', function(Request $req, $original_name) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
 	Middleware::checkMessageTimestamp($req->get('date'));
@@ -327,7 +327,7 @@ $app->post('/courtorders/{name}', function(Request $req, $name) use ($app) {
 	checkAdministrator($adminuser);
 
     $loader = $app['db.courtorder.load'];
-    $loader->update($name, 
+    $loader->update($original_name, 
         $req->get('name'), $req->get('order_date'), $req->get('url'), 
         $req->get('judgment'), $req->get('judgment_date'), $req->get('judgment_url')
     );
