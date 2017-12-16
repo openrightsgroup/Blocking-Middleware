@@ -208,25 +208,6 @@ $app->get('/courtorders/{name}', function(Request $req, $name) use ($app) {
 
 });
 
-$app->post('/courtorders/{name}', function(Request $req, $name) use ($app) {
-	checkParameters($req, array('email','signature','date'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
-
-    $loader = $app['db.courtorder.load'];
-    $loader->update($name, 
-        $req->get('name'), $req->get('order_date'), $req->get('url'), 
-        $req->get('judgment'), $req->get('judgment_date'), $req->get('judgment_url')
-    );
-    $order = $loader->load($req->get('name'));
-
-    return $app->json(array('success' => true, 'courtorder' => $order));
-
-});
 
 $app->post('/courtorders', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
@@ -334,6 +315,26 @@ $app->delete('/courtorders/sites', function(Request $req) use ($app) {
     $loader->delete_url($order['id'], $urldata['urlid']);
 
     return $app->json(array('success' => true, 'courtorder' => $req->get('name'), 'url' => $req->get('url')));
+});
+
+$app->post('/courtorders/{name}', function(Request $req, $name) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $loader = $app['db.courtorder.load'];
+    $loader->update($name, 
+        $req->get('name'), $req->get('order_date'), $req->get('url'), 
+        $req->get('judgment'), $req->get('judgment_date'), $req->get('judgment_url')
+    );
+    $order = $loader->load($req->get('name'));
+
+    return $app->json(array('success' => true, 'courtorder' => $order));
+
 });
 
 /*  -------^---^---^---- End Administrator functions ... */
