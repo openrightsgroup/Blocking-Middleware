@@ -249,7 +249,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$row = $app['db.user.load']->load($req->get('email'));
 	checkUser($row);
 
-    if ($row['administrator'] == 1 && $req->get('queue')) {
+    $is_admin = $row['administrator'];
+
+    if ($is_admin && $req->get('queue')) {
         # administrators can specify a queue to post to
         $target_queue = 'url.' . $req->get('queue');
     } else {
@@ -372,7 +374,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	# beware shortcut logic - checkLastPolled is not evaluated for new urls
 	# checkLastPolled also updates the timestamp
-	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlid'])) {
+	if ($newurl || $app['db.url.load']->checkLastPolled($url['urlid']) || ($is_admin && $req->get('force',0))) {
 
 		$queued = true;
 
