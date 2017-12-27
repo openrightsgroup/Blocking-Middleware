@@ -711,7 +711,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 })
 ->value('client_ip',''); # make client_ip arg optional
 
-$app->get('/status/probes', function(Request $req) use ($app) {
+$app->get('/status/probes/{region}', function(Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
@@ -721,9 +721,9 @@ $app->get('/status/probes', function(Request $req) use ($app) {
     $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen, probe_status, location, proberesprecv as tests_run,
         filter_level, filter_enabled
         from probes inner join isps on isp_id = isps.id
-        where show_results = 1
+        where show_results = 1 and regions && makearray(?)
         order by lastseen desc",
-        array());
+        array($region));
     $output = array();
     foreach ($result as $row) {
         $output[] = $row;
@@ -731,7 +731,7 @@ $app->get('/status/probes', function(Request $req) use ($app) {
 
     return $app->json(array('success'=>true, 'status'=> $output));
 
-});
+})->value('region','gb');
 
 $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
