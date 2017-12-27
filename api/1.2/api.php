@@ -928,8 +928,8 @@ $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
             'unblocked' => $row['unblocked'],
             'avg_unblock_time' => $time
         );
-        $ttl_time += $time;
-        $ttl_sent += $sent;
+        $ttl_time += $time * $row['unblocked'];
+        $ttl_sent += $row['sent'];
         $ttl_unblock += $row['unblocked'];
     }
     $output['all'] = array(
