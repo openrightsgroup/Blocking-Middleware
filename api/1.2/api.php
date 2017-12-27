@@ -902,6 +902,45 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 	return $app->json(array('success' => true, 'isp-stats' => $output));
 });
 
+$app->get('/status/ispreport-stats', function (Request $req) use ($app) {
+    checkParameters($req, array('email','signature','date'));
+    $user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+    $conn = $app['service.db'];
+
+    $q = $conn->query("select network_name, count(*) as sent, sum(unblocked) as unblocked, 
+        avg(case when unblocked = 1 then last_updated - submitted else null end) as avg_unblock
+        from isp_reports 
+        where report_type = 'unblock' and status = 'sent' 
+        group by network_name 
+        order by network_name",
+        array());
+
+    $output = array();
+    $ttl_time = 0;
+    $ttl_sent = 0;
+    $ttl_unblock = 0;
+    foreach($q as $row) {
+        $time = explode(" ", $row['avg_unblock'])[0];
+        $output[ $row['network_name'] ] = array(
+            'sent' => $row['sent'], 
+            'unblocked' => $row['unblocked'],
+            'avg_unblock_time' => $time
+        );
+        $ttl_time += $time;
+        $ttl_sent += $sent;
+        $ttl_unblock += $row['unblocked'];
+    }
+    $output['all'] = array(
+        'sent' => $ttl_sent,
+        'unblocked' => $ttl_unblock,
+        'avg_unblock_time' => $ttl_time / $ttl_unblock
+    );
+
+	return $app->json(array('success' => true, 'unblock-stats' => $output));
+});
+
 $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
