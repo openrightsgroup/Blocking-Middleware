@@ -711,7 +711,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 })
 ->value('client_ip',''); # make client_ip arg optional
 
-$app->get('/status/probes/{region}', function(Request $req) use ($app) {
+$app->get('/status/probes/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
