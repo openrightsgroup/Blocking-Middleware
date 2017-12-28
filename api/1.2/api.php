@@ -909,8 +909,15 @@ $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
 
     $conn = $app['service.db'];
 
-    $q = $conn->query("select network_name, count(*) as sent, sum(unblocked) as unblocked, 
-        avg(case when unblocked = 1 then last_updated - submitted else null end) as avg_unblock
+    $q = $conn->query("select network_name, 
+        count(*) as sent, 
+        sum(unblocked) as total_unblocked,
+        sum(case when not exists(
+            select * from isp_reports r where r.urlid = isp_reports.urlid and r.id <> isp_reports.id and r.status = 'sent'
+            ) then unblocked else 0 end
+            ) as unblocked, 
+        avg(case when unblocked = 1 and not exists(select * from isp_reports r where r.urlid = isp_reports.urlid and r.id <> isp_reports.id and r.status = 'sent')
+            then last_updated - submitted else null end) as avg_unblock
         from isp_reports 
         where report_type = 'unblock' and status = 'sent' 
         group by network_name 
