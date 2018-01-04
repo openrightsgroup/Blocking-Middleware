@@ -995,6 +995,33 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             );
         }
 
+    } elseif ($req->get('format','networkrow') == 'injunction') {
+        $rs = $conn->query("select cj.name judgment_name, cjug.name url_group_name, urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
+                    fmtime(max(uls.last_blocked)) as last_blocked
+                    from url_latest_status uls 
+                    inner join urls using (urlid)
+                    inner join isps on uls.network_name = isps.name and regions && makearray(?) 
+                    left join frontend.court_judgment_urls cju on urls.url = cju.url 
+                    left join frontend.court_judgments cj on cju.judgment_id = cj.id 
+                    left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
+                    where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
+                    group by cj.name, cjug.name, urls.url
+                    order by cj.name, cjug.name, urls.url 
+                    offset $off limit 25",
+                    array($region));
+
+        $output = array();
+        foreach($rs as $row) {
+            $output[] = array(
+                'judgment_name' => $row['judgment_name'],
+                'url_group_name' => $row['url_group_name'],
+                'url' => $row['url'],
+                'first_blocked' => $row['first_blocked'],
+                'last_blocked' => $row['last_blocked'],
+                'network_name' => $row['network_name'],
+            );
+        }
+
     } else {
         $rs = $conn->query("select url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
             fmtime(max(uls.last_blocked)) as last_blocked
