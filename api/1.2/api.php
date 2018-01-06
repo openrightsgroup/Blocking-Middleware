@@ -1023,7 +1023,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } else {
-        $rs = $conn->query("select url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
+        /*$rs = $conn->query("select url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
             fmtime(max(uls.last_blocked)) as last_blocked
             from url_latest_status uls 
             inner join urls using (urlid)
@@ -1031,7 +1031,9 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
             group by url
             order by $sortfield
-            offset $off limit 25", array($region));
+           offset $off limit 25", array($region));*/
+       $rs = $conn->query("select url, networks, first_blocked, last_blocked from stats.cache_copyright_blocks where regions && makearray(?) order by url offset $off limit 25",
+               array($region));
 
         $output = array();
         foreach($rs as $row) {
