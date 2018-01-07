@@ -1007,7 +1007,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
                     where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
                     group by cj.id, cj.date, cj.sites_description, cj.name, cjug.id, cjug.name, urls.url
-                    order by cj.date desc, cj.name, cjug.name, urls.url 
+                    order by cj.date desc nulls last, cj.name nulls last, cjug.name nulls last, urls.url 
                     offset $off limit 25",
                     array($region));
 
