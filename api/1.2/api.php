@@ -771,7 +771,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'network_id' =>  $row['name'],
             'last_report_timestamp' =>  $url['last_reported'],
             'isp_active' =>  ($row['queue_name'] != null),
-            'final_url' => $row['final_url']
+            'final_url' => preg_replace('&ipaddr=[0-9a-f\.:]*','',$row['final_url'])
         );
 	}
 
