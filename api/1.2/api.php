@@ -1018,6 +1018,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                 'judgment_name' => $row['judgment_name'],
                 'judgment_date' => $row['judgment_date'],
                 'judgment_url' => $row['judgment_url'],
+                'case_number' => $row['case_number'],
                 'wiki_url' => $row['wiki_url'],
                 'judgment_sites_description' => $row['judgment_sites_description'],
                 'url_group_name' => $row['url_group_name'],
