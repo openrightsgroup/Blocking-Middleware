@@ -1017,6 +1017,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             $output[] = array(
                 'judgment_name' => $row['judgment_name'],
                 'judgment_date' => $row['judgment_date'],
+                'judgment_url' => $row['judgment_url'],
                 'judgment_sites_description' => $row['judgment_sites_description'],
                 'url_group_name' => $row['url_group_name'],
                 'url' => $row['url'],
