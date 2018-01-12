@@ -996,7 +996,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url, cj.sites_description judgment_sites_description, 
+        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.sites_description judgment_sites_description, 
                     cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
                     fmtime(max(uls.last_blocked)) as last_blocked
