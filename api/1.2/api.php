@@ -996,7 +996,8 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.sites_description judgment_sites_description, cjug.name url_group_name, 
+        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url judgment_url, cj.sites_description judgment_sites_description, 
+                    cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
                     fmtime(max(uls.last_blocked)) as last_blocked
                     from url_latest_status uls 
@@ -1006,7 +1007,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgments cj on cju.judgment_id = cj.id 
                     left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
                     where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
-                    group by cj.id, cj.date, cj.sites_description, cj.name, cjug.id, cjug.name, urls.url
+                    group by cj.id, cj.date, cj.sites_description, cj.name, cj.url, cjug.id, cjug.name, urls.url
                     order by cj.date desc nulls last, cj.name nulls last, cjug.name nulls last, urls.url 
                     offset $off limit 25",
                     array($region));
