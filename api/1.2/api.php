@@ -1006,7 +1006,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgment_urls cju on urls.url = cju.url 
                     left join frontend.court_judgments cj on cju.judgment_id = cj.id 
                     left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
-                    where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
+                    where blocktype = 'COPYRIGHT'  and urls.status = 'ok'  and urls.url ~* '^https?://[^/]+$'
                     group by cj.id, cj.date, cj.sites_description, cj.name, cj.url, cj.judgment_url, cj.case_number, cjug.id, cjug.name, urls.url
                     order by cj.date desc nulls last, cj.name nulls last, cjug.name nulls last, urls.url 
                     offset $off limit 25",
