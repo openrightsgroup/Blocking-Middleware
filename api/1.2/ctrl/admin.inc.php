@@ -343,7 +343,7 @@ $app->post('status/url', function(Request $req) use ($app) {
 	Middleware::checkMessageTimestamp($req->get('date'));
 
 	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
 	checkAdministrator($adminuser);
 
     $urlloader = $app['db.url.load'];
