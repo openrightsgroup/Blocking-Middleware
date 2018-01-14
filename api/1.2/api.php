@@ -965,7 +965,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         from url_latest_status uls 
         inner join urls using (urlid) 
         inner join isps on uls.network_name = isps.name
-        where urls.status = 'ok' and blocktype='COPYRIGHT' and regions && makearray(?)",
+        where urls.status = 'ok' and blocktype='COPYRIGHT' and regions && makearray(?) and urls.url ~* '^https?://[^/]+$'",
         array($region)
     );
     $row = $rs->fetch();
@@ -986,7 +986,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             from url_latest_status uls 
             inner join urls using (urlid)
             inner join isps on uls.network_name = isps.name
-            where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?)
+            where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?) and urls.url ~* '^https?://[^/]+$'
             order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
             offset $off limit 25", array($region));
 
@@ -1039,7 +1039,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             fmtime(max(uls.last_blocked)) as last_blocked
             from url_latest_status uls 
             inner join urls using (urlid)
-            inner join isps on uls.network_name = isps.name and regions && makearray(?)
+            inner join isps on uls.network_name = isps.name and regions && makearray(?) and urls.url ~* '^https?://[^/]+$'
             where blocktype = 'COPYRIGHT'  and urls.status = 'ok' 
             group by url
             order by $sortfield
