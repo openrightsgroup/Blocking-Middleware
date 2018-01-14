@@ -181,6 +181,19 @@ class UrlLoader {
 
     }
 
+    function set_status($url, $status) {
+        $res = $this->conn->query("update urls set status=? where url = ?",
+            array($status, $url)
+        );
+        if ($res === false) {
+            return false;
+        }
+        if ($res->rowCount() == 0) {
+            return false;
+        }
+        return true;
+    }
+
 
 }
 

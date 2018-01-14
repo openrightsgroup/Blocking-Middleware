@@ -337,5 +337,28 @@ $app->post('/courtorders/{original_name}', function(Request $req, $original_name
 
 });
 
+$app->post('status/url', function(Request $req) use ($app) {
+	checkParameters($req, array('email','signature','date'));
+
+	Middleware::checkMessageTimestamp($req->get('date'));
+
+	$adminuser = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
+	checkAdministrator($adminuser);
+
+    $urlloader = $app['db.url.load'];
+    if ($req->get('normalize',1) == 0) {
+        // allow an administrator to work on non-normalized URLs
+        $urltext = $req->get('url');
+    } else {
+    	$urltext = normalize_url($req->get('url'));
+    }
+    $urldata = $urlloader->load($urltext);
+    $ret = $urlloader->set_status($urldata['url'], $req->get('status'));
+
+    return $app->json(array('success' => $ret));
+    
+});
+
 /*  -------^---^---^---- End Administrator functions ... */
 

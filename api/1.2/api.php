@@ -739,7 +739,12 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	$user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
 
-	$urltext = normalize_url($req->get('url'));
+    if ($user['administrator'] && $req->get('normalize',1) == 0) {
+        // allow an administrator to work on non-normalized URLs
+        $urltext = $req->get('url');
+    } else {
+    	$urltext = normalize_url($req->get('url'));
+    }
 
 	error_log("URL: " . $req->get('url') . "; " . $urltext);
 	$url = $app['db.url.load']->load($urltext);
