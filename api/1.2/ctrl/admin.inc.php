@@ -354,6 +354,7 @@ $app->post('status/url', function(Request $req) use ($app) {
     	$urltext = normalize_url($req->get('url'));
     }
     $urldata = $urlloader->load($urltext);
+    error_log("Updating: $urldata[url] to " . $req->get('status'));
     $ret = $urlloader->set_status($urldata['url'], $req->get('status'));
 
     return $app->json(array('success' => $ret));
