@@ -733,8 +733,8 @@ $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) 
         array($region));
     $output = array();
     foreach ($result as $row) {
+        $row['regions'] = split_pg_array($row['regions']);
         $output[] = $row;
-        $output['regions'] = split_pg_array($row['regions']);
     }
 
     return $app->json(array('success'=>true, 'status'=> $output));
