@@ -508,7 +508,8 @@ CREATE TABLE probes (
     isp_id integer,
     probe_status enum_probe_status default 'active'::enum_probe_status,
     location text,
-    filter_enabled bool
+    filter_enabled bool,
+    owner_link varchar null
 );
 
 
