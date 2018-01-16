@@ -135,6 +135,12 @@ function checkAdministrator($user) {
 	}
 }
 
+function split_pg_array($value) {
+    // splits a {value1,value2,value3} array into: array('value1','value2','value3')
+    return explode(",", substr($value, 1, -1)),
+
+}
+
 $app->error(function(APIException $e, $code) {
 	$error_class = get_class($e);
 	switch($error_class) {
@@ -719,7 +725,8 @@ $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) 
 
 	$conn = $app['service.db'];
     $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen, probe_status, location, proberesprecv as tests_run,
-        filter_level, filter_enabled
+        filter_level, filter_enabled,
+        regions
         from probes inner join isps on isp_id = isps.id
         where regions && makearray(?)
         order by lastseen desc",
@@ -727,6 +734,7 @@ $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) 
     $output = array();
     foreach ($result as $row) {
         $output[] = $row;
+        $output['regions'] = split_pg_array($row['regions']);
     }
 
     return $app->json(array('success'=>true, 'status'=> $output));
