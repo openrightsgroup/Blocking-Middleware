@@ -137,7 +137,7 @@ function checkAdministrator($user) {
 
 function split_pg_array($value) {
     // splits a {value1,value2,value3} array into: array('value1','value2','value3')
-    return explode(",", substr($value, 1, -1)),
+    return explode(",", substr($value, 1, -1));
 
 }
 
