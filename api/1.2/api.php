@@ -781,7 +781,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'first_blocked_timestamp' =>  $row['first_blocked'],
             'category' =>  $row['category'],
             'blocktype' =>  $row['blocktype'],
-            'regions' =>  $row['regions'],
+            'regions' =>  split_pg_array($row['regions']),
             'network_id' =>  $row['name'],
             'last_report_timestamp' =>  $url['last_reported'],
             'isp_active' =>  ($row['queue_name'] != null),
