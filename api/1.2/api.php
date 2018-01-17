@@ -762,7 +762,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	# Fetch results from status summary table
 	$result = $conn->query("select isps.description, l.status, fmtime(l.created) created,  l.category, l.blocktype,
         fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked,
-        isps.name, isps.queue_name, results.final_url
+        isps.name, isps.queue_name, results.final_url, isps.regions
 		from url_latest_status l
 		inner join isps on isps.name = l.network_name
         left join results on results.id = l.result_id
@@ -781,6 +781,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'first_blocked_timestamp' =>  $row['first_blocked'],
             'category' =>  $row['category'],
             'blocktype' =>  $row['blocktype'],
+            'regions' =>  $row['regions'],
             'network_id' =>  $row['name'],
             'last_report_timestamp' =>  $url['last_reported'],
             'isp_active' =>  ($row['queue_name'] != null),
