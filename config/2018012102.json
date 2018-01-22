@@ -286,7 +286,7 @@
 	}
     ],
     "org-block-rules": "0.2.3",
-    "version": "2018012101",
+    "version": "2018012102",
     "self-test": {
         "must-allow": [
             "http://www.bbc.co.uk",
