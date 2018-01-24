@@ -818,7 +818,7 @@ class ResultProcessorService {
 		$isp = $this->isp_loader->load($result['network_name']);
 		$url = $this->url_loader->load($result['url']);
 
-        if (@$result['final_url'] == $result['url']) {
+        if (rtrim(@$result['final_url'], '/') == $result['url']) {
             $result['final_url'] = null;
         }
 
