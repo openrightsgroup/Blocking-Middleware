@@ -818,6 +818,10 @@ class ResultProcessorService {
 		$isp = $this->isp_loader->load($result['network_name']);
 		$url = $this->url_loader->load($result['url']);
 
+        if (@$result['final_url'] == $result['url']) {
+            $result['final_url'] = null;
+        }
+
 		$this->conn->query(
 			"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, category, blocktype, created,
             title, remote_ip, ssl_verified, ssl_fingerprint, request_id, final_url)
