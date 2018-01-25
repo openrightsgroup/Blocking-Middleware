@@ -1043,8 +1043,8 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             );
         }
         $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation,  cj.sites_description judgment_sites_description 
-                    from frontend.court_judgments cj 
-                    left join frontend.court_judgment_urls cju on (cju.judgment_id = cj.id)
+                    from court_judgments cj 
+                    left join court_judgment_urls cju on (cju.judgment_id = cj.id)
                     where cju.id is null order by cj.date desc", array());
         foreach ($rs as $row) {
             $output[] = array(
@@ -1057,13 +1057,8 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                 'url' => null
             );
         }
-        usort($output, function($x, $y) {
-            if ($y['judgment_date'] > $x['judgment_date']) {
-                return 1;
-            } elseif ($y['judgment_date'] == $x['judgment_date']) {
-                    return 0;
-            }
-            return -1;
+        array_sort($output, function($x, $y) {
+            return cmp($y['judgment_date'], $x['judgment_date']);
         });
 
     } else {
