@@ -1042,6 +1042,24 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                 'networks' => explode(",", substr($row['networks'], 1, -1)),
             );
         }
+        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation,  cj.sites_description judgment_sites_description 
+                    from court_judgments cj 
+                    left join court_judgment_urls cju on (cju.judgment_id = cj.id)
+                    where cju.id is null order by cj.date desc", array());
+        foreach ($rs as $row) {
+            $output[] = array(
+                'judgment_name' => $row['judgment_name'],
+                'judgment_date' => $row['judgment_date'],
+                'judgment_url' => $row['judgment_url'],
+                'citation' => $row['citation'],
+                'wiki_url' => $row['wiki_url'],
+                'judgment_sites_description' => $row['judgment_sites_description'],
+                'url' => null
+            );
+        }
+        array_sort($output, function($x, $y) {
+            return cmp($y['judgment_date'], $x['judgment_date']);
+        });
 
     } else {
         /*$rs = $conn->query("select url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
