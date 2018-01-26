@@ -1010,7 +1010,8 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
+        $rs = $conn->query("select * from (
+              select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
                     cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
                     fmtime(max(uls.last_blocked)) as last_blocked
@@ -1022,7 +1023,14 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
                     where blocktype = 'COPYRIGHT'  and urls.status = 'ok'  and urls.url ~* '^https?://[^/]+$'
                     group by cj.id, cj.date, cj.sites_description, cj.name, cj.url, cj.judgment_url, cj.case_number, cjug.id, cjug.name, urls.url
-                    order by cj.date desc nulls last, cj.name nulls last, cjug.name nulls last, urls.url 
+              UNION
+              select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
+                    null, null, null, null, null
+                    FROM frontend.court_judgments cj
+                    left join frontend.court_judgment_urls cju on (cj.id = cju.judgment_id)
+                    where cju.id is null
+              
+              ) a order by judgment_date desc nulls last, judgment_name nulls last, url_group_name nulls last, url 
                     offset $off limit 25",
                     array($region));
 
