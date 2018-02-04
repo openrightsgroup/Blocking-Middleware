@@ -14,15 +14,13 @@ import requests
 
 import amqplib.client_0_8 as amqp
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s\t%(levelname)s\t%(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S]",
     )
 
 """
-This daemon listens on a dedicated queue for URLs fetch, and extracts metadata from the HTML.
-
-The metadata is saved to the site_description table.
+This daemon listens on a dedicated queue for URLs fetch, and saves the whois expiry date
 
 """
 class WhoisLookup(object):
@@ -49,7 +47,9 @@ class WhoisLookup(object):
 
     def get_domain_expiry(self, domain):
         proc = subprocess.Popen(['/usr/bin/whois', domain], stdout=subprocess.PIPE)
+        ret = None
         for line in proc.stdout:
+            logging.debug("Line: %s", line.strip())
             if not ': ' in line:
                 continue
             field, value = line.strip().split(': ')
