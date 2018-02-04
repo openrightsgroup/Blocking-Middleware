@@ -53,12 +53,10 @@ class WhoisLookup(object):
             if not ': ' in line:
                 continue
             field, value = line.strip().split(': ')
-            if field == 'Registry Expiry Date':
-                ret = value
+            if field in ('Registry Expiry Date','Expiry date'):
+                ret = value.strip()
         rc = proc.wait()
-        if rc == 0:
-            return ret
-        raise RuntimeError(rc)
+        return ret
 
     def save_expiry(self, url, expiry):
         c = self.conn.cursor()
