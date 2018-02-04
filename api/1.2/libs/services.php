@@ -619,11 +619,11 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category='') {
+    function insert($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category='', $allow_contact=0) {
         $q = $this->conn->query("insert into isp_reports
-        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, site_category, created)
-        values (?,?,?,?,?,?,?,?,?,?,?,now()) returning id as id",
-        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category)
+        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, site_category, allow_contact, created)
+        values (?,?,?,?,?,?,?,?,?,?,?,?,now()) returning id as id",
+        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category, $allow_contact)
         );
         $row = $q->fetch();
         if ($status == 'sent') {

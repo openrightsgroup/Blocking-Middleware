@@ -1660,7 +1660,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 $contact['id'],
                 (@$data['allow_publish'] ? 1: 0),
                 $age_limit ? 'pending' : 'sent',
-                @$data['category']
+                @$data['category'],
+                (@$data['allow_contact'] ? 1: 0),
                 );
             # send email here
 

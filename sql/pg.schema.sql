@@ -405,7 +405,8 @@ CREATE TABLE isp_reports (
     contact_id int,
     allow_publish int default 0,
     status enum_report_status default 'new',
-    site_category varchar(64)
+    site_category varchar(64),
+    allow_contact int default 0
 );
 
 
