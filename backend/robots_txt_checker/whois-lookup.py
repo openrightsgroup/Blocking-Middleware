@@ -50,6 +50,8 @@ class WhoisLookup(object):
     def get_domain_expiry(self, domain):
         proc = subprocess.Popen(['/usr/bin/whois', domain], stdout=subprocess.PIPE)
         for line in proc.stdout:
+            if not ': ' in line:
+                continue
             field, value = line.strip().split(': ')
             if field == 'Registry Expiry Date':
                 ret = value
