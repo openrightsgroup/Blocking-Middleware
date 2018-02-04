@@ -852,7 +852,9 @@ CREATE TABLE urls (
     last_blocked timestamp with time zone,
     polledsuccess integer DEFAULT 0,
     title varchar(255),
-    tags varchar[] default '{}'::varchar[]
+    tags varchar[] default '{}'::varchar[],
+    whois_expiry datetime null,
+    whois_expiry_last_checked timestamptz null
 );
 
 
