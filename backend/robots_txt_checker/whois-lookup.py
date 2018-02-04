@@ -14,7 +14,7 @@ import requests
 
 import amqplib.client_0_8 as amqp
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s\t%(levelname)s\t%(message)s",
     datefmt="[%Y-%m-%d %H:%M:%S]",
     )
@@ -60,6 +60,7 @@ class WhoisLookup(object):
 
     def save_expiry(self, url, expiry):
         c = self.conn.cursor()
+        logging.info("Saving expiry: %s for url: %s", expiry, url)
         c.execute("update urls set whois_expiry = %s, whois_expiry_last_checked = now() where url = %s", [expiry, url] )
         c.close()
         self.conn.commit()
