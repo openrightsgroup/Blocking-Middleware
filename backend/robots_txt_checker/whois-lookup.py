@@ -64,7 +64,7 @@ class WhoisLookup(object):
         c.close()
         self.conn.commit()
 
-    def get_metadata(self,msg):
+    def get_expiry(self,msg):
         data = json.loads(msg.body)
         self.ch.basic_ack(msg.delivery_tag)
         # now fetch the page to extract data
