@@ -762,10 +762,10 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	# Fetch results from status summary table
 	$result = $conn->query("select isps.description, l.status, fmtime(l.created) created,  l.category, l.blocktype,
         fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked,
-        isps.name, isps.queue_name, results.final_url, isps.regions
+        isps.name, isps.queue_name, results_base.final_url, isps.regions
 		from url_latest_status l
 		inner join isps on isps.name = l.network_name
-        left join results_base on results.id = l.result_id
+        left join results_base on results_base.id = l.result_id
 		where l.urlID = ? and isps.show_results = 1 and isps.regions && makearray(?)",
 		array($url['urlid'], $req->get('region','gb'))
         );
