@@ -628,7 +628,7 @@ CREATE SEQUENCE results_id_seq
 -- Name: results; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE TABLE results (
+CREATE TABLE results_base (
     id integer DEFAULT nextval('results_id_seq'::regclass) NOT NULL,
     urlid integer,
     probeid integer,
@@ -648,6 +648,9 @@ CREATE TABLE results (
     request_id int,
     final_url varchar(2048)
 );
+
+CREATE TABLE results ()
+INHERIT (results_base);
 
 
 --

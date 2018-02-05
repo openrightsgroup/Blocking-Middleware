@@ -765,7 +765,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         isps.name, isps.queue_name, results.final_url, isps.regions
 		from url_latest_status l
 		inner join isps on isps.name = l.network_name
-        left join results on results.id = l.result_id
+        left join results_base on results.id = l.result_id
 		where l.urlID = ? and isps.show_results = 1 and isps.regions && makearray(?)",
 		array($url['urlid'], $req->get('region','gb'))
         );
