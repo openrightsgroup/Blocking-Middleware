@@ -90,6 +90,7 @@ while ($isp = $result->fetch()) {
     #createqueue('admin.view.' . $isp['queue_name'], 'admin.view.#');
 }
 
+createqueue("selftest", "selftest");
 createqueue("results",  "results.#");
 createqueue("check",  "check.#");
 createqueue("heartbeat",  "probe.heartbeat.#");
