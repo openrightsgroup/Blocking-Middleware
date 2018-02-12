@@ -802,7 +802,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             );
     }
 
-	return $app->json(array(
+    $output = array(
 		'success' => true,
 		"url" => $url['url'],
         "title" => $url['title'],
@@ -812,7 +812,12 @@ $app->get('/status/url', function (Request $req) use ($app) {
         "reports" => $reports,
         'last_report_timestamp' =>  $url['last_reported'],
         'blacklisted' => $app['db.blacklist.load']->check($url['url']),
-	));
+	);
+    if ($user['administrator']) {
+        $output['tags'] = explode(",", substr($url['tags'], 1, -1));
+        $output['whois_expiry'] = $url['whois_expiry'];
+    }
+	return $app->json($output);
 });
 
 $app->get('/status/stats', function( Request $req) use ($app) {
