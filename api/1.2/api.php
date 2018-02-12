@@ -962,6 +962,30 @@ $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
 	return $app->json(array('success' => true, 'unblock-stats' => $output));
 });
 
+$app->get('/status/country-stats', function(Request $req) use ($app) {
+    checkParameters($req, array('email','signature','date'));
+    $user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+
+    $conn = $app['service.db'];
+
+    $rs = $conn->query("select unnest(regions) region, count(distinct urlid) blocked_url_count 
+        from isps 
+        inner join url_latest_status on network_name = isps.name 
+        where regions && '{eu}' and blocktype = 'COPYRIGHT' and url_latest_status.status = 'blocked' 
+        group by unnest(isps.regions);", array());
+    
+    $output = array();
+    foreach($rs as $row) {
+        $output[] = $row;
+    }
+    return $app->json(array(
+        'success' => true,
+        'stats' => $results
+    ));
+
+});
+
 $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
     $user = $app['db.user.load']->load($req->get('email'));
