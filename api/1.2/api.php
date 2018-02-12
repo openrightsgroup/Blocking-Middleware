@@ -981,7 +981,7 @@ $app->get('/status/country-stats', function(Request $req) use ($app) {
     }
     return $app->json(array(
         'success' => true,
-        'stats' => $results
+        'stats' => $output
     ));
 
 });
