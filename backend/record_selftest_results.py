@@ -52,7 +52,7 @@ def build_result_processor(ch, conn):
             probe_uuid = msg_data["probe_uuid"]
             logging.info("probe: %s Handling self-test", probe_uuid)
             with conn.cursor() as cursor:
-                update_db_if_necessary(
+                update_db(
                     cursor=cursor,
                     msg_data=msg_data,
                     probe_uuid=probe_uuid
@@ -63,38 +63,27 @@ def build_result_processor(ch, conn):
     return process_result
 
 
-def update_db_if_necessary(cursor, msg_data, probe_uuid):
-    cursor.execute("select filter_enabled, isp_id from probes where uuid = %s",
-                   [probe_uuid])
-    try:
-        (filter_enabled_in_db, isp_id_in_db) = cursor.fetchone()
-    except TypeError as e:
-        raise Exception("Unregistered probe", e)
-    logging.debug("probe: %s  filter: %s isp: %s",
-                  probe_uuid, filter_enabled_in_db, isp_id_in_db)
+def update_db(cursor, msg_data, probe_uuid):
+    isp_name = msg_data['network_name']
+    filter_enabled = msg_data["result"] == "filter_enabled"
 
-    filter_enabled_on_probe = msg_data["result"] == "filter_enabled"
-    if filter_enabled_on_probe != filter_enabled_in_db:
-        logging.info("probe: %s Updating filter status to: %s",
-                     probe_uuid, filter_enabled_on_probe)
-        cursor.execute("update probes set filter_enabled = %s where uuid = %s",
-                       [filter_enabled_on_probe, probe_uuid])
-        if cursor.rowcount != 1:
-            raise Exception("Failed to update probe filter status")
-
-    isp_name_on_probe = msg_data['network_name']
-    cursor.execute("select id from isps where name = %s",
-                   [isp_name_on_probe])
-    (isp_id_on_probe,) = cursor.fetchone()
-
-    if isp_id_in_db != isp_id_on_probe:
-        logging.info("probe: %s Updating isp_id from %s to %s",
-                     probe_uuid, isp_id_in_db, isp_name_on_probe)
-        cursor.execute("update probes set isp_id = %s where uuid = %s",
-                       [isp_id_on_probe, probe_uuid])
-        if cursor.rowcount != 1:
-            raise Exception("Failed to update probe isp_id")
-
+    logging.info("probe: %s Filter status: %s isp_name: %s", 
+                 probe_uuid, 
+                 filter_enabled,
+                 isp_name)
+    cursor.execute(
+        """
+            update probes 
+            set filter_enabled = %s, isp_id = isps.id 
+            from isps
+            where isps.name = %s
+            and probes.uuid = %s
+        """,
+        [filter_enabled, isp_name, probe_uuid]
+    )
+    if cursor.rowcount != 1:
+        raise Exception("Failed to update probe: {}  ".format(probe_uuid) + 
+                        "Unknown probe UUID or ISP name?")
 
 if __name__ == '__main__':
     main()
