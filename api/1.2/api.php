@@ -582,6 +582,55 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 })
 ->value('client_ip',''); # make client_ip arg optional
 
+$app->post('/status/probe/{probe}', function (Request $req, $probe) use ($app) {
+    $data =(array)json_decode($msg->getBody());
+    
+    /*
+     * Takes a data structure like:
+     * {
+     *   uuid: probe_uuid
+     *   date: "20170301T142501"
+     *   signature: sdfsdfsdfsdf
+     * 
+     *   owner_email: foo@bar.com
+     *   owner_name: sdfsdfsdf
+     *   owner_country_code: GB
+     * 
+     *   owner_org: WidgetCo
+     *   owner_url: http://widget.co
+     * }
+     */
+    
+    $conn = $app['service.db'];
+    $probe = $app['db.probe.load']->load($data['uuid']);
+   	Middleware::verifyUserMessage($req->get('date'), $probe['secret'], $req->get('signature'));
+
+    $app['db.probe.load']->updateLocation($data['uuid'], $data['owner_org']);
+    $app['db.probe.load']->updateOwnerLink($data['uuid'], $data['owner_url']);
+    
+    try {
+        $emailuser = $app['db.user.load']->load($data['owner_email']);
+    } catch (UserLookupError $exc) {
+        // no user found with that email
+        $emailuser = array();
+    }
+    $user = $app['db.user.load']->loadByID($probe['userid']);
+    
+    if (@$emailuser['id'] && $emailuser['id'] != $user['id']) {
+        // new user exists in the database but is not the currently assigned userid
+        // update probe userid to new userid
+        
+        $app['db.probe.load']->updateUserID($probe['uuid'], $emailuser['id']);
+        
+    } else {
+        
+        // update current contact details
+        $app['db.user.load']->updateContact($user['id'], $data['owner_name'], $data['owner_email'], $data['countrycode']);
+        
+    }
+    
+});
+
 $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
 

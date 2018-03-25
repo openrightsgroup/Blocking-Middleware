@@ -17,6 +17,18 @@ class UserLoader {
 		}
 		return $row;
 	}
+    
+    function updateContact($userid, $name, $email, $countrycode) {
+		$result = $this->conn->query(
+			"update users set fullname=?, email=?, countrycode=? where id = ?",
+			array($name, $email, $countrycode, $userid)
+			);
+
+		$row = $result->fetch();
+		if (!$row) {
+			throw new UserLookupError();
+		}        
+    }
 }
 
 class ProbeLoader {
@@ -59,6 +71,30 @@ class ProbeLoader {
 			throw new ProbeLookupError();
 		}
 	}
+
+    function updateLocation($uuid, $location) {
+        $result = $this->conn->query("update probes set location=? where uuid = ?",
+                                     array($location, $uuid));
+        if ($result->rowCount() != 1) {
+            throw new ProbeLookupError();
+        }
+    }
+
+    function updateOwnerLink($uuid, $url) {
+        $result = $this->conn->query("update probes set owner_link=? where uuid = ?",
+                                     array($url, $uuid));
+        if ($result->rowCount() != 1) {
+            throw new ProbeLookupError();
+        }
+    }
+
+    function updateUserID($uuid, $userid) {
+        $result = $this->conn->query("update probes set userid=? where uuid = ?",
+                                     array($userid, $uuid));
+        if ($result->rowCount() != 1) {
+            throw new ProbeLookupError();
+        }
+    }
 
 }
 
@@ -197,6 +233,7 @@ class UrlLoader {
 
 }
 
+
 class ContactLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
@@ -206,6 +243,18 @@ class ContactLoader {
 		$result = $this->conn->query(
 			"select * from contacts where email=?",
 			array($email)
+			);
+		$row = $result->fetch();
+		if (!$row) {
+			throw new ContactLookupError();
+		}
+		return $row;
+	}
+
+	function loadByID($id) {
+		$result = $this->conn->query(
+			"select * from contacts where id=?",
+			array($id)
 			);
 		$row = $result->fetch();
 		if (!$row) {
@@ -241,6 +290,7 @@ class ContactLoader {
     }
 
 }
+
 
 class IspLoader {
 	function __construct($conn) {
@@ -280,6 +330,7 @@ class IspLoader {
 		return array('name' => $title);
 	}
 }
+
 
 class IpLookupService {
 	function __construct($conn) {
@@ -369,6 +420,7 @@ class IpLookupService {
 		return $descr;
 	}
 }
+
 
 class DMOZCategoryLoader {
     function __construct($conn) {

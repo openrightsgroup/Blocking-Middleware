@@ -20,6 +20,7 @@
 
 	RewriteRule ^status/ip api.php [NC,L,qsa]
 	RewriteRule ^status/probes api.php [NC,L,qsa]
+	RewriteRule ^status/probe api.php [NC,L,qsa]
 	RewriteRule ^status/url api.php [NC,L,qsa]
 	RewriteRule ^status/request api.php [NC,L,qsa]
 	RewriteRule ^status/stats api.php [NC,L,qsa]
