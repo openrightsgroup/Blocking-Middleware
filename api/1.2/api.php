@@ -583,8 +583,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 ->value('client_ip',''); # make client_ip arg optional
 
 $app->post('/status/probe/{probe}', function (Request $req, $probe) use ($app) {
-    $data =(array)json_decode($msg->getBody());
-    
+    $data = json_decode($req->getContent(), true);    
     /*
      * Takes a data structure like:
      * {
