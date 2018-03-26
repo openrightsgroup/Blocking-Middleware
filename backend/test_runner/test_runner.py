@@ -41,7 +41,7 @@ class Test(DBObject):
     @classmethod
     def get_runnable(klass, conn):
         q = Query(conn, """select test_cases.* from tests.test_cases
-            where status >= 'RUNNING'::enum_test_status and status <= 'WAITING'::enum_test_status
+            where status >= 'RUNNING' and status <= 'WAITING'
             and (last_check is null or last_check + check_interval <= now())
             order by id""", [])
         for row in q:
