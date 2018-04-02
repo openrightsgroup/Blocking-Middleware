@@ -17,6 +17,7 @@
                 "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html",
                 "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html",
                 "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-nobranding\\.html",
+                "re:url:^http://myaccount\\.ee\\.co\\.uk/anonymous-content-lock",
                 "re:url:^https://myaccount\\.ee\\.co\\.uk/anonymous-content-lock"
             ]
         },
