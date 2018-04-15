@@ -51,7 +51,7 @@ function normalize_url($url) {
 }
 
 function categorize_url($url) {
-    /*Categorize domains into DOMAIN, SUBDOMAIN, PAGE or '' */
+    /*Categorize domains into DOMAIN, SUBDOMAIN, PAGE or null */
     
     $parts = parse_url(normalize_url($url));
     
@@ -79,5 +79,5 @@ function categorize_url($url) {
             return 'SUBDOMAIN';
         }
     }
-    return ''; // unknown
+    return null; // unknown
 }

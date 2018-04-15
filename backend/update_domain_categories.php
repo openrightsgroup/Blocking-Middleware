@@ -17,7 +17,7 @@ foreach ($q as $row) {
         continue;
     }
     
-    if ($type != '') {
+    if (!is_null($type)) {
         print "Set {$row['url']} ({$row['urlid']}) => {$type}\n";
         continue;
         $q2 = $conn->query("update urls set url_type = ? where urlid = ?",
