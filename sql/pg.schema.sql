@@ -59,6 +59,12 @@ CREATE TYPE enum_report_status as ENUM (
     'cancelled'
 );
 
+CREATE TYPE enum_url_type as ENUM (
+    'DOMAIN',
+    'SUBDOMAIN',
+    'PAGE'
+);
+
 --
 -- Name: enum_user_status; Type: TYPE; Schema: public; Owner: -
 --
@@ -857,7 +863,8 @@ CREATE TABLE urls (
     title varchar(255),
     tags varchar[] default '{}'::varchar[],
     whois_expiry timestamptz null,
-    whois_expiry_last_checked timestamptz null
+    whois_expiry_last_checked timestamptz null,
+    url_type enum_url_type null
 );
 
 
