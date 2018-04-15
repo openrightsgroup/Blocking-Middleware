@@ -63,7 +63,6 @@ class WhoisLookup(object):
         logging.info("Saving expiry: %s for url: %s", expiry, url)
         c.execute("update urls set whois_expiry = %s, whois_expiry_last_checked = now() where url = %s", [expiry, url] )
         c.close()
-        self.conn.commit()
 
     def get_expiry(self,msg):
         data = json.loads(msg.body)
@@ -79,6 +78,7 @@ class WhoisLookup(object):
                 self.save_expiry(data['url'], expiry)
         except Exception,v:
             logging.warn("Error in page data retrieval: %s", repr(v))
+        self.conn.commit()
 
         self.count += 1
         logging.info("URL: %s; rss: %s; count: %s", data['url'], resource.getrusage(0).ru_maxrss, self.count)
