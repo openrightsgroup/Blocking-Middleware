@@ -66,8 +66,8 @@ class PGConnection extends PDO {
 
 
 function db_connect() {
-    global $PG_HOST, $PG_USER, $PG_PASS, $PG_DB;
+    global $PG_HOST, $PG_USER, $PG_PASS, $PG_DB, $PG_PORT;
 
-    $connstr = "pgsql:host=$PG_HOST user=$PG_USER password=$PG_PASS dbname=$PG_DB";
+    $connstr = "pgsql:host=$PG_HOST user=$PG_USER password=$PG_PASS dbname=$PG_DB port=$PG_PORT";
     return new PGConnection($connstr);
 }

@@ -9,6 +9,7 @@ be committed.
 /* Postgres database config */
 
 $PG_HOST = 'localhost';
+$PG_PORT = 5432;
 $PG_USER = 'root';
 $PG_PASS = '';
 $PG_DB = 'bowdlerize';
