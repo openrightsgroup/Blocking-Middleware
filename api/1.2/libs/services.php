@@ -1,5 +1,7 @@
 <?php
 
+include_once "url.php";
+
 class UserLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
