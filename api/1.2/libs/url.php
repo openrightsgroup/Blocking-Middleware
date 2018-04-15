@@ -49,3 +49,35 @@ function normalize_url($url) {
 
 
 }
+
+function categorize_url($url) {
+    /*Categorize domains into DOMAIN, SUBDOMAIN, PAGE or '' */
+    
+    $parts = parse_url(normalize_url($url));
+    
+    if (@$parts['path'] != '' && @$parts['path'] != '/') {
+        return 'PAGE';
+    }
+    
+    $domainparts = explode('.', $parts['host']);
+    
+    if (count($domainparts) == 2) {
+        // example.com
+        return 'DOMAIN';
+    } elseif (count($domainparts) > 3) {
+        // jobs.mediacompany.co.uk
+        return 'SUBDOMAIN';
+    } else if (count($domainparts) == 3) {
+        # three part domains may be a domain from a cctld (example.co.uk) or a subdomain from a tld (www.example.com).
+        # guess based on the length of the last two parts
+        
+        if (strlen($domainparts[1] < 4) && strlen($domainparts[2]) < 3) {
+            // example.com.hk
+            return 'DOMAIN';
+        } else {
+            // ugh - uk.com will cause problems
+            return 'SUBDOMAIN';
+        }
+    }
+    return ''; // unknown
+}
