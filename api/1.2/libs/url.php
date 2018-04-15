@@ -60,7 +60,6 @@ function categorize_url($url) {
     }
     
     $domainparts = explode('.', $parts['host']);
-    
     if (count($domainparts) == 2) {
         // example.com
         return 'DOMAIN';
@@ -71,7 +70,7 @@ function categorize_url($url) {
         # three part domains may be a domain from a cctld (example.co.uk) or a subdomain from a tld (www.example.com).
         # guess based on the length of the last two parts
         
-        if (strlen($domainparts[1] < 4) && strlen($domainparts[2]) < 3) {
+        if (strlen($domainparts[1]) < 4 && strlen($domainparts[2]) < 3) {
             // example.com.hk
             return 'DOMAIN';
         } else {
