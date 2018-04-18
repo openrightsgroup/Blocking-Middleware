@@ -952,7 +952,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select * from (
+        $rs = $conn->query("select a.*, b.error_count from (
               select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
                     cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
@@ -972,9 +972,16 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgment_urls cju on (cj.id = cju.judgment_id)
                     where cju.id is null
               
-              ) a order by judgment_date desc nulls last, judgment_name nulls last, url_group_name nulls last, url 
-                    offset $off limit 25",
-                    array($region));
+              ) a 
+              left join (
+                select judgment_id, count(*) error_count
+                  from frontend.court_judgment_urls 
+                  inner join frontend.court_judgment_url_flags cjuf on cjuf.urlid = court_judgment_urls.id
+                  group by judgment_id
+              ) b on a.judgment_id = b.judgment_id
+              order by judgment_date desc nulls last, judgment_name nulls last, url_group_name nulls last, url 
+              offset $off limit 25",
+              array($region));
 
         $output = array();
         foreach($rs as $row) {
