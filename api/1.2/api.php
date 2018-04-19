@@ -994,6 +994,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                 'first_blocked' => $row['first_blocked'],
                 'last_blocked' => $row['last_blocked'],
                 'networks' => explode(",", substr($row['networks'], 1, -1)),
+                'reason' => $row['reason']
             );
         }
 
