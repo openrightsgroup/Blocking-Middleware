@@ -952,11 +952,12 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select a.*, b.error_count from (
+        $rs = $conn->query("select a.*, cjuf.reason from (
               select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
                     cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
-                    fmtime(max(uls.last_blocked)) as last_blocked
+                    fmtime(max(uls.last_blocked)) as last_blocked,
+                    cj.id as judgment_id, cju.id as urlid
                     from url_latest_status uls 
                     inner join urls using (urlid)
                     inner join isps on uls.network_name = isps.name and regions && makearray(?) 
@@ -964,21 +965,17 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     left join frontend.court_judgments cj on cju.judgment_id = cj.id 
                     left join frontend.court_judgment_url_groups cjug on cjug.id = cju.group_id
                     where blocktype = 'COPYRIGHT'  and urls.status = 'ok'  and urls.url ~* '^https?://[^/]+$'
-                    group by cj.id, cj.date, cj.sites_description, cj.name, cj.url, cj.judgment_url, cj.case_number, cjug.id, cjug.name, urls.url
+                    group by cj.id, cj.date, cj.sites_description, cj.name, cj.url, cj.judgment_url, cj.case_number, cjug.id, cjug.name, urls.url, cju.id
               UNION
               select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
-                    null, null, null, null, null
+                    null, null, null, null, null,
+                    cj.id as judgment_id, null
                     FROM frontend.court_judgments cj
                     left join frontend.court_judgment_urls cju on (cj.id = cju.judgment_id)
                     where cju.id is null
               
               ) a 
-              left join (
-                select judgment_id, count(*) error_count
-                  from frontend.court_judgment_urls 
-                  inner join frontend.court_judgment_url_flags cjuf on cjuf.urlid = court_judgment_urls.id
-                  group by judgment_id
-              ) b on a.judgment_id = b.judgment_id
+              left join frontend.court_judgment_url_flags cjuf on a.urlid = cjuf.urlid
               order by judgment_date desc nulls last, judgment_name nulls last, url_group_name nulls last, url 
               offset $off limit 25",
               array($region));
