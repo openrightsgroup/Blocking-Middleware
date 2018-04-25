@@ -952,7 +952,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
         }
 
     } elseif ($req->get('format','networkrow') == 'injunction') {
-        $rs = $conn->query("select a.*, cjuf.reason from (
+        $rs = $conn->query("select a.*, cjuf.reason, cjuf.abusetype from (
               select cj.name judgment_name, cj.date judgment_date, cj.url wiki_url, cj.judgment_url judgment_url, cj.citation citation, cj.sites_description judgment_sites_description, 
                     cjug.name url_group_name, 
                     urls.url, array_agg(network_name) as networks, fmtime(min(uls.first_blocked)) as first_blocked,
@@ -994,7 +994,8 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                 'first_blocked' => $row['first_blocked'],
                 'last_blocked' => $row['last_blocked'],
                 'networks' => explode(",", substr($row['networks'], 1, -1)),
-                'reason' => $row['reason']
+                'error_status' => $row['reason'],
+                'additional_error_information' => $row['abusetype']
             );
         }
 
