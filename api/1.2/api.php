@@ -1089,7 +1089,7 @@ class StreamResultProcessor {
 	}
 }
 
-$app->get('/stream/results', function (Request $req) use ($app) {
+$app->get('/stream/results/{region}', function (Request $req, $region) use ($app) {
 	/* experimental endpoint that streams results from the AMQP public
 	results queue using chunked encoding.  A blocking client socket
 	will be able to read single-line json statements giving the results for
@@ -1157,8 +1157,8 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 		from url_latest_status l
 		inner join urls on urls.urlID = l.urlID
 		inner join isps on isps.name = l.network_name
-		where urls.url = ? and isps.show_results = 1 ",
-		array($url),
+		where urls.url = ? and isps.show_results = 1 and regions && makearray(?)",
+		array($url, $region),
         PDO::FETCH_NUM
         );
 
@@ -1195,7 +1195,7 @@ $app->get('/stream/results', function (Request $req) use ($app) {
 
 	return $app->json(array('success' => true, "type" => "close", "tag" => $tag));
 
-});
+})->value('region','gb';
 
 $app->post('/verify/email', function (Request $req) use ($app) {
 	#checkParameters($req, array('email','signature','token','date'));
