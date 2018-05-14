@@ -807,7 +807,7 @@ $app->get('/status/domain-isp-stats', function(Request $req) use ($app) {
 
 });
 
-$app->get('/status/isp-stats', function(Request $req) use ($app) {
+$app->get('/status/isp-stats/{region}', function(Request $req, $region) use ($app) {
 	function mkint($v) {
 		return (int)$v;
 	}
@@ -820,8 +820,9 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 
 	$rs = $conn->query("select isps.description, ok, blocked, timeout, error, dnsfail, total
 	from isp_stats_cache
-	inner join isps on isps.name = isp_stats_cache.network_name
-	order by isps.description", array());
+    inner join isps on isps.name = isp_stats_cache.network_name
+    where region && makearray(?)
+	order by isps.description", array($region));
 
 	$output = array();
     foreach ($rs as $row) {
@@ -832,7 +833,7 @@ $app->get('/status/isp-stats', function(Request $req) use ($app) {
 
 
 	return $app->json(array('success' => true, 'isp-stats' => $output));
-});
+})->value('region', 'gb');
 
 $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
