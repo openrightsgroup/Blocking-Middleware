@@ -821,7 +821,7 @@ $app->get('/status/isp-stats/{region}', function(Request $req, $region) use ($ap
 	$rs = $conn->query("select isps.description, ok, blocked, timeout, error, dnsfail, total
 	from isp_stats_cache
     inner join isps on isps.name = isp_stats_cache.network_name
-    where region && makearray(?)
+    where regions && makearray(?)
 	order by isps.description", array($region));
 
 	$output = array();
