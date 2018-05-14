@@ -1195,7 +1195,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 
 	return $app->json(array('success' => true, "type" => "close", "tag" => $tag));
 
-})->value('region','gb';
+})->value('region','gb');
 
 $app->post('/verify/email', function (Request $req) use ($app) {
 	#checkParameters($req, array('email','signature','token','date'));
