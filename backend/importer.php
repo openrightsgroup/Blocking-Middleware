@@ -49,7 +49,7 @@ function process_import($msg, $queue) {
     #  $data['signature']
     #);
 
-    $urltext = normalize_url($data['domain']);
+    $urltext = normalize_url($data['url']);
 
     $newurl = $app['db.url.load']->insert($urltext, $data['source']);
 
