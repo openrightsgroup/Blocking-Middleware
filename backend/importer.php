@@ -29,7 +29,7 @@ function process_import($msg, $queue) {
     $queue->ack($msg->getDeliveryTag());
     $data = (array)json_decode($msg->getBody());
 
-    error_log("Got domain: {$data['domain']}}");
+    error_log("Got url: {$data['url']}}");
 
     # workaround for unicode encoding bug
     if (is_null($data['url'])) {
