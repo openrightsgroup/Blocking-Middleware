@@ -51,7 +51,7 @@ function process_import($msg, $queue) {
 
     $urltext = normalize_url($data['url']);
 
-    $newurl = $app['db.url.load']->insert($urltext, $data['source']);
+    $newurl = $urlloader->insert($urltext, $data['source']);
 
     if ($newurl) {
         $queueservice->publish_url($urltext);
