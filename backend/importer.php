@@ -19,8 +19,8 @@ $q->declare();
 
 $conn = db_connect();
 
-$queueservice = AMQPQueueService($ch, "check.test");
-$urlloader = UrlLoader($conn);
+$queueservice = new AMQPQueueService($ch, "check.test");
+$urlloader = new UrlLoader($conn);
 
 function process_import($msg, $queue) {
   global $queueservice, $urlloader;
