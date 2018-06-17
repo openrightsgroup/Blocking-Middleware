@@ -48,7 +48,9 @@ CREATE TYPE enum_url_status AS ENUM (
     'disallowed-mime-type',
     'disallowed-content-length',
     'invalid',
-    'duplicate'
+    'duplicate',
+    'restricted-malware',
+    'restricted-by-admin'
 );
 
 CREATE TYPE enum_report_status as ENUM (
