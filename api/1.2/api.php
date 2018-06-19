@@ -380,8 +380,9 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	# beware shortcut logic - checkLastPolled is not evaluated for new urls
 	# checkLastPolled also updates the timestamp
-    if ($is_admin && !is_null($target_queue) && $target_queue == '') {
+    if ($is_admin && !is_null($target_queue) && $target_queue == 'url.none') {
         # admin requests that the URL is submitted but not queued
+        error_log("admin noqueue $urltext");
         $queued = false;
     } elseif ($newurl || $app['db.url.load']->checkLastPolled($url['urlid']) || ($is_admin && $req->get('force',0))) {
 
