@@ -18,13 +18,13 @@ $ex->setType('topic');
 $ex->setFlags(AMQP_PASSIVE);
 $ex->declare();
 
-function send_urls($result) {
+function send_urls($result, $key='url.public') {
     global $ex, $conn;
 
     $c = 0;
     while ($row = $result->fetch(PDO::FETCH_NUM)) {
         $msg = array('url' => $row[1], 'hash' => $row[2]);
-        $ex->publish(json_encode($msg), "url.public", AMQP_NOPARAM);
+        $ex->publish(json_encode($msg), $key, AMQP_NOPARAM);
         $conn->query("update urls set lastpolled = now() where urlid = ?", array($row[0]));
         $c += 1;
     }
@@ -59,7 +59,7 @@ $result = $conn->query("select distinct urlid, url, hash, lastpolled from urls
     order by lastpolled limit 100", array());
 
 print "Sending URLs (reported)...\n";
-$c = send_urls($result);
+$c = send_urls($result, 'url.public.gb');
 print "$c urls sent.\n";
 
 /* blocked_dmoz built using:
