@@ -3,8 +3,8 @@
 function sendISPReport($mailname, $name, $email, $network, $url, $message, $report_type, $category, $renderer) {
     $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
-        $msg->setFrom($mailname . '@' . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
-        $msg->Sender = $mailname.'@'.MAIL_DOMAIN;
+        $msg->setFrom("reply-$mailname@" . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
+        $msg->Sender = "reply-$mailname@".MAIL_DOMAIN;
     } else {
         $msg->AddReplyTo($email, $name);
         $msg->setFrom(SITE_EMAIL, $name . ' via Blocked.org.uk');
