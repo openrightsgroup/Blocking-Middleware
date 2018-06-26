@@ -1259,6 +1259,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 $url = $app['db.url.load']->loadByID($row['urlid']);
 
                 sendISPReport(
+                    $row['mailname'],
                     $row['name'],
                     $row['email'],
                     $network,
@@ -1597,7 +1598,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
         if ($app['db.ispreport.load']->can_report($url['urlid'], $network_name)) {
 
-            $mailname = Middleware::generateSharedSecret(12);
+            $mailname = "reply-" . Middleware::generateSharedSecret(12);
             $ids[$network_name] = $app['db.ispreport.load']->insert(
                 $mailname,
                 $data['reporter']['name'],

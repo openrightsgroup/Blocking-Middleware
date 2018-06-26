@@ -413,7 +413,7 @@ CREATE TABLE isp_reports (
     status enum_report_status default 'new',
     site_category varchar(64),
     allow_contact int default 0,
-    mailname varchar(12) null unique
+    mailname varchar(32) null unique
 );
 
 
