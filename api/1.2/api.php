@@ -977,10 +977,10 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
                     cj.id as judgment_id, null
                     FROM frontend.court_judgments cj
                     left join frontend.court_judgment_urls cju on (cj.id = cju.judgment_id)
-                    where cju.id is null
+                    where cju.id is null or cju.judgment_id is null
               
               ) a 
-              left join frontend.court_judgment_url_flags cjuf on a.urlid = cjuf.urlid
+              left join frontend.court_judgment_url_flags cjuf on a.urlid = cjuf.judgment_url_id
               order by judgment_date desc nulls last, judgment_name nulls last, url_group_name nulls last, url 
               offset $off limit 25",
               array($region));
