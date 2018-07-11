@@ -18,7 +18,7 @@ import amqplib.client_0_8 as amqp
 from NORM import Query, DBObject
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     datefmt='[%Y-%m-%d:%H:%M:%S]',
     format='%(asctime)s\t%(levelname)s\t%(message)s'
     )
@@ -132,12 +132,15 @@ def check_queues(conn):
             queuelength[parts[0]] = int(parts[1])
     conn.commit()
     proc.wait()
-    avg = float(sum(queuelength.values())) / len(queuelength)
-    logging.info("Avg length: %s", avg)
     return queuelength
 
 def qname(s):
-    return "url.{0}.public".format(s)
+    try:
+        fmt = CONFIG.get('queues','queue_format')
+    except:
+        fmt = "url.{0}.public"
+
+    return fmt.format(s)
 
 def main():
     CONFIG.read(['test_runner.cfg'])
@@ -157,14 +160,15 @@ def main():
         logging.debug("DB timestamp: %s", row['now'])
         q.close()
 
-        queue_lengths = check_queues(conn)
     
         for testcase in Test.get_runnable(conn):
             logging.info("Test case %s(%s)", testcase['name'], testcase['id'])
             logging.debug("Routing: %s / %s", EXCHANGE,testcase.get_routing_key())
             add_isps, remove_isps = get_changes(map(qname, testcase['isps']), bindings[(EXCHANGE,testcase.get_routing_key())])
-            logging.debug("Add: %s", add_isps)
-            logging.debug("Remove: %s", remove_isps)
+            if add_isps:
+                logging.info("Add: %s", add_isps)
+            if remove_isps:
+                logging.info("Remove: %s", remove_isps)
     
             testcase.update_total()
     
@@ -175,8 +179,9 @@ def main():
             for queue in remove_isps:
                 ch.queue_unbind( queue, EXCHANGE, testcase.get_routing_key())
 
+            queue_lengths = check_queues(conn)
             if queue_lengths['results'] > MAX_RESULTS:
-                testcase.set_status('WAITING', "Results queue too long, skipping")
+                testcase.set_status('WAITING', "Results queue too long")
                 conn.commit()
                 continue
 
@@ -202,7 +207,7 @@ def main():
             testcase.update_last_check()
             conn.commit()
     
-            logging.debug("Starting url send at id %s", testcase['last_id'])
+            logging.info("Starting url send at id %s", testcase['last_id'])
     
             sendcount = 0
             for (urlid, url, urlhash) in testcase.get_urls():
@@ -217,10 +222,12 @@ def main():
                 conn.commit()
                 sendcount += 1
                 
-            logging.debug("Sent %d urls", sendcount)
+            logging.info("Sent %d urls", sendcount)
             if sendcount == 0:
                 testcase.set_status('COMPLETE')
                 conn.commit()
+        else:
+            queue_lengths = check_queues(conn)
                
         conn.commit()
         time.sleep(DELAY)
