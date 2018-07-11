@@ -36,6 +36,7 @@ class Test(DBObject):
         'name', 'status', 'tags', 'filter', 'sent',
         'total', 'received', 'isps', 'check_interval',
         'last_check', 'repeat_interval', 'last_run', 'batch_size', 'last_id',
+        'message'
     ]
 
     @classmethod
@@ -81,10 +82,14 @@ class Test(DBObject):
     def get_routing_key(self):
         return "test." + re.sub('[^\w]','', self['name'].lower())
         
-    def set_status(self, newstatus):
+    def set_status(self, newstatus, message=None):
         if newstatus == 'RUNNING' and self['status'] == 'NEW':
             self['last_run'] = datetime.datetime.now()
         self['status'] = newstatus
+        if message is not None:
+            self['status_message'] = message
+        if message:
+            logging.warn("Status: %s, %s", newstatus, message)
         self.store()
 
 def update_lastpolled(conn, urlid):
@@ -110,14 +115,22 @@ def read_queues():
     logging.debug("Got list: %s", queues)
     return queues
 
-def check_queues():
+def check_queues(conn):
+    c = conn.cursor()
     proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','list_queues','name','messages'], stdout=subprocess.PIPE)
     queuelength = {}
     for row in proc.stdout:
         parts = row.strip().split('\t')
         if parts[0].startswith('url.') or parts[0] == 'results':
             logging.debug("Queue: %s; length: %s", parts[0], parts[1])
+            c.execute("update tests.queue_status set message_count = %s, last_updated = now() where queue_name = %s",
+                      [parts[1], parts[0]])
+            if c.rowcount == 0:
+                c.execute("insert into tests.queue_status (message_count, last_updated, queue_name) values(%s, now(), %s)",
+                          [parts[1], parts[0]])
+
             queuelength[parts[0]] = int(parts[1])
+    conn.commit()
     proc.wait()
     avg = float(sum(queuelength.values())) / len(queuelength)
     logging.info("Avg length: %s", avg)
@@ -143,6 +156,8 @@ def main():
         row = q.fetchone()
         logging.debug("DB timestamp: %s", row['now'])
         q.close()
+
+        queue_lengths = check_queues(conn)
     
         for testcase in Test.get_runnable(conn):
             logging.info("Test case %s(%s)", testcase['name'], testcase['id'])
@@ -159,28 +174,31 @@ def main():
     
             for queue in remove_isps:
                 ch.queue_unbind( queue, EXCHANGE, testcase.get_routing_key())
-    
-            queue_lengths = check_queues()
+
             if queue_lengths['results'] > MAX_RESULTS:
-                logging.warn("Results queue too long, skipping")
-                testcase.set_status('WAITING')
+                testcase.set_status('WAITING', "Results queue too long, skipping")
                 conn.commit()
                 continue
-                
+
+            if len(testcase['isps']) == 0:
+                testcase.set_status('ERROR', 'No ISPs selected')
+                conn.commit()
+                continue
+    
             avg_queue_length = sum([queue_lengths[qname(isp)] for isp in testcase['isps'] if isp in queue_lengths]) / float(len(testcase['isps']))
             if avg_queue_length > MAX_AVG_QUEUE_LENGTH:
-                logging.warn("Avg queue too long: %s", avg_queue_length)
-                testcase.set_status('WAITING')
+                logging.warn()
+                testcase.set_status('WAITING', "Avg queue too long: {0}".format(avg_queue_length))
                 conn.commit()
                 continue
                 
             if any([queue_lengths[qname(isp)] > MAX_QUEUE_LENGTH for isp in testcase['isps'] if isp in queue_lengths]):
-                logging.warn("Queue too long")
-                testcase.set_status('WAITING')
+                logging.warn()
+                testcase.set_status('WAITING', "Queue too long")
                 conn.commit()
                 continue
     
-            testcase.set_status('RUNNING')
+            testcase.set_status('RUNNING','')
             testcase.update_last_check()
             conn.commit()
     
