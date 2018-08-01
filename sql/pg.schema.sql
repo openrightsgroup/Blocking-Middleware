@@ -397,7 +397,7 @@ CREATE TABLE isp_cache (
 --
 
 CREATE TABLE isp_reports (
-    id integer,
+    id serial primary key not null,
     name text,
     email text,
     urlid integer,
@@ -414,7 +414,8 @@ CREATE TABLE isp_reports (
     allow_publish int default 0,
     status enum_report_status default 'new',
     site_category varchar(64),
-    allow_contact int default 0
+    allow_contact int default 0,
+    mailname varchar(32) null unique
 );
 
 
@@ -1409,4 +1410,13 @@ alter table courtorder_urls add foreign key (order_id) references courtorders(id
 create unique index courtorder_isp_order_network on courtorder_isp_urls(order_id, isp_id);
 alter table courtorder_isp_urls add foreign key (order_id) references courtorders(id) on delete cascade;
 
+
+create table isp_report_emails(
+    id serial primary key not null,
+    report_id int not null,
+    message text,
+    created timestamptz
+    );
+
+alter table isp_report_emails add foreign key (report_id) references isp_reports(id) on delete cascade;
 

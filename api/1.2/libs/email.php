@@ -1,10 +1,15 @@
 <?php
 
-function sendISPReport($name, $email, $network, $url, $message, $report_type, $category, $renderer) {
+function sendISPReport($mailname, $name, $email, $network, $url, $message, $report_type, $category, $renderer) {
     $msg = new PHPMailer();
-    $msg->AddReplyTo($email, $name);
-    $msg->setFrom(SITE_EMAIL, $name . ' via Blocked.org.uk');
-    $msg->Sender = SITE_EMAIL;
+    if (FEATURE_EMAIL_TRACKING) {
+        $msg->setFrom($mailname . '@' . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
+        $msg->Sender = $mailname.'@'.MAIL_DOMAIN;
+    } else {
+        $msg->AddReplyTo($email, $name);
+        $msg->setFrom(SITE_EMAIL, $name . ' via Blocked.org.uk');
+        $msg->Sender = SITE_EMAIL;
+    }
     $msg->addBCC(SITE_EMAIL);
     $msg->addAddress($network['admin_email'], $network['admin_name']);
     $msg->Subject = "Website blocking enquiry - " . $url;
