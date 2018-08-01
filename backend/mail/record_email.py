@@ -19,7 +19,7 @@ def import_mail(conn, fp):
     name, addr = email.utils.parseaddr(to)
     print name, addr
 
-    mailname = addr.split('@')[0]
+    mailname = addr.split('@')[0].lower()
     
     print mailname
 

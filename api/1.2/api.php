@@ -1603,7 +1603,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
         if ($app['db.ispreport.load']->can_report($url['urlid'], $network_name)) {
 
-            $mailname = "reply-" . Middleware::generateSharedSecret(12);
+            $mailname = "reply-" . strtolower(Middleware::generateSharedSecret(12));
             $ids[$network_name] = $app['db.ispreport.load']->insert(
                 $mailname,
                 $data['reporter']['name'],
