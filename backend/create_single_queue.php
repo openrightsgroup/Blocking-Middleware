@@ -46,7 +46,7 @@ function createqueue($name,  $key='', $ttl=0, $recreate=true) {
     }
 }
 
-if (strpos($argv[2], ".public") !== false) {
+if (strpos($argv[1], ".public") !== false) {
     $timeout = AMQP_PUBLIC_QUEUE_TIMEOUT;
 } else {
     $timeout = 0;
