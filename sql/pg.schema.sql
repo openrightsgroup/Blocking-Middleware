@@ -1420,3 +1420,12 @@ create table isp_report_emails(
 
 alter table isp_report_emails add foreign key (report_id) references isp_reports(id) on delete cascade;
 
+
+CREATE TABLE tabs (
+    id varchar not null primary key,
+    name varchar(64),
+    description text,
+    type varchar(32)
+);
+
+create rule tag_insert_ignore  as on insert to tags where (exists(select 1 from tags where tags.id = new.id)) do instead nothing;
