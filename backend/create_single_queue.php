@@ -3,18 +3,16 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
-$conn = db_connect();
 
 list($amqp, $ch) = amqp_connect_full();
 
 
-function createqueue($name,  $key='', $ttl=0, $recreate=false) {
-    global $amqp;
+function createqueue($name,  $key='', $ttl=0, $recreate=true) {
+    global $amqp, $ch;
     $exchange = 'org.blocked';
 
     try {
-        $c = new AMQPChannel($amqp);
-        $q = new AMQPQueue($c);
+        $q = new AMQPQueue($ch);
         $q->setName($name);
         $q->setFlags(AMQP_DURABLE);
         if ($ttl) {
@@ -29,8 +27,7 @@ function createqueue($name,  $key='', $ttl=0, $recreate=false) {
             try {
                 print "Recreating $name\n";
                 delete_queue($name);
-                $c = new AMQPChannel($amqp);
-                $q = new AMQPQueue($c);
+                $q = new AMQPQueue($ch);
                 $q->setName($name);
                 $q->setFlags(AMQP_DURABLE);
                 if ($ttl) {
