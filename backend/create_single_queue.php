@@ -52,4 +52,4 @@ if (strpos($argv[2], ".public") !== false) {
     $timeout = 0;
 }
 
-create_queue($argv[1], $argv[2], $timeout);
+createqueue($argv[1], $argv[2], $timeout);
