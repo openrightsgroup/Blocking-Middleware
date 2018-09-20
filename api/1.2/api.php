@@ -937,6 +937,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
     }
 
     if ($req->get('format', 'networkrow') == 'networkrow') {
+        /*
         $rs = $conn->query("select url, network_name, fmtime(uls.first_blocked) as first_blocked,
             fmtime(uls.last_blocked) as last_blocked
             from url_latest_status uls 
@@ -944,6 +945,12 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             inner join isps on uls.network_name = isps.name
             where blocktype = 'COPYRIGHT'  and urls.status = 'ok' and regions && makearray(?) and urls.url ~* '^https?://[^/]+$'
             order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
+            offset $off limit 25", array($region));
+         */
+        $rs = $conn->query("select url, unnest(networks) as network_name, first_blocked , last_blocked,
+            from stats.cache_copyright_blocks cb
+            where regions && makearray(?)
+            order by first_blocked desc
             offset $off limit 25", array($region));
 
         $output = array();
