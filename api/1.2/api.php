@@ -947,7 +947,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
             order by max(uls.first_blocked) over (partition by urlid) desc, urlid, uls.first_blocked desc
             offset $off limit 25", array($region));
          */
-        $rs = $conn->query("select url, unnest(networks) as network_name, first_blocked , last_blocked,
+        $rs = $conn->query("select url, unnest(networks) as network_name, first_blocked , last_blocked
             from stats.cache_copyright_blocks cb
             where regions && makearray(?)
             order by first_blocked desc
