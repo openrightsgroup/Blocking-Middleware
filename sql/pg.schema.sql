@@ -637,7 +637,7 @@ CREATE SEQUENCE results_id_seq
 -- Name: results; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE TABLE results_base (
+CREATE TABLE results(
     id integer DEFAULT nextval('results_id_seq'::regclass) NOT NULL,
     urlid integer,
     probeid integer,
@@ -657,9 +657,6 @@ CREATE TABLE results_base (
     request_id int,
     final_url varchar(2048)
 );
-
-CREATE TABLE results ()
-INHERIT (results_base);
 
 
 --
@@ -1421,7 +1418,7 @@ create table isp_report_emails(
 alter table isp_report_emails add foreign key (report_id) references isp_reports(id) on delete cascade;
 
 
-CREATE TABLE tabs (
+CREATE TABLE tags (
     id varchar not null primary key,
     name varchar(64),
     description text,
