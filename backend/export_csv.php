@@ -3,11 +3,11 @@
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
 
-PG_HOST='localhost'; # use local DB
+$PG_HOST='localhost'; # use local DB
 
 $conn = db_connect();
 
-$exclude_tags = "{uk-zone,com-zone,org-zone}";
+$exclude_tags = "{uk-zone,com-zone,dotorg,dot-uk-zone,me-uk-zone,misc-uk-zone,org-uk-zone}";
 
 $result = $conn->query(
     "select url, urls.inserted url_submitted, network_name, filter_level, uls.status, uls.created, http_status, config, uls.category, uls.blocktype 
