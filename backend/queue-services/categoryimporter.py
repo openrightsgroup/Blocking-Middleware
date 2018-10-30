@@ -67,7 +67,7 @@ class CategoryImporter(QueueService):
 
 
 def main():
-
+    queuelib.setup_logging()
     gather = CategoryImporter()
     gather.run()
 

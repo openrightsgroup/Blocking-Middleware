@@ -87,7 +87,7 @@ class WhoisLookup(QueueService):
 
 def main():
     queuelib.setup_logging()
-    whois = WhoisLookup(cfg, conn, ch)
+    whois = WhoisLookup()
     whois.run()
 
 if __name__ == '__main__':
