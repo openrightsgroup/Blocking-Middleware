@@ -312,7 +312,8 @@ CREATE TABLE categories (
     total_blocked_url_count integer,
     tree ltree,
     name text,
-    name_fts tsvector
+    name_fts tsvector,
+    namespace varchar(16)
 );
 
 
@@ -1189,6 +1190,8 @@ CREATE INDEX cat_tree ON categories USING gist (tree);
 --
 
 CREATE INDEX categories_name_fts ON categories USING gin (name_fts);
+
+CREATE UNIQUE INDEX categories_name on categories (name, namespace);
 
 
 --

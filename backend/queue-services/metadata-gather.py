@@ -1,25 +1,16 @@
 #!/usr/bin/env python2
 
-import os
 import sys
 import json
 import logging
-import psycopg2
 import resource
-import urlparse
-import robotparser
-import ConfigParser
+
+import queuelib
+from queuelib import QueueService
 
 import requests
-#import requests_cache
 import bs4
 
-import amqplib.client_0_8 as amqp
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s\t%(levelname)s\t%(message)s",
-    datefmt="[%Y-%m-%d %H:%M:%S]",
-    )
 
 """
 This daemon listens on a dedicated queue for URLs fetch, and extracts metadata from the HTML.
@@ -27,13 +18,12 @@ This daemon listens on a dedicated queue for URLs fetch, and extracts metadata f
 The metadata is saved to the site_description table.
 
 """
-class MetadataGatherer(object):
-    def __init__(self, config, conn, ch):
-        self.config = config
-        self.conn = conn
-        self.ch = ch
-        self.headers = {'User-agent': self.config.get('daemon','useragent')}
+
+class MetadataGatherer(QueueService):
+    def __init__(self):
+        super(QueueService, self).__init__()
         self.count = 0
+        self.headers = {'User-agent': self.config.get('useragent')}
 
     def save_description(self, url, data):
         c = self.conn.cursor()
@@ -48,9 +38,12 @@ class MetadataGatherer(object):
         c.close()
         self.conn.commit()
 
-    def get_metadata(self,msg):
-        data = json.loads(msg.body)
-        self.ch.basic_ack(msg.delivery_tag)
+    def setup_bindings(self):
+        self.ch.queue_declare("metadata", durable=True, auto_delete=False)
+        self.ch.queue_bind("metadata", "org.blocked", "url.org")
+        self.ch.queue_bind("metadata", "org.blocked", "url.public")
+
+    def process_message(self,data):
         # now fetch the page to extract data
         try:
             descdata = {}
@@ -89,31 +82,9 @@ class MetadataGatherer(object):
         return True
 
 def main():
-
-    # set up cache for robots.txt content
-    cfg = ConfigParser.ConfigParser()
-    assert(len(cfg.read(['config.ini'])) == 1)
-
-    # create MySQL connection
-    pgopts = dict(cfg.items('db'))
-    conn = psycopg2.connect(**pgopts)
-
-    # Create AMQP connection
-    amqpopts = dict(cfg.items('amqp'))
-    amqpconn = amqp.Connection( **amqpopts)
-    ch = amqpconn.channel()
-    ch.basic_qos(0,10,False)
-
-    gather = MetadataGatherer(cfg, conn, ch)
-
-    ch.queue_declare("metadata", durable=True, auto_delete=False)
-    ch.queue_bind("metadata", "org.blocked", "url.org")
-    ch.queue_bind("metadata", "org.blocked", "url.public")
-
-    # create consumer, enter mainloop
-    ch.basic_consume("metadata", consumer_tag='metadata1', callback=gather.get_metadata)
-    while True:
-        ch.wait()
+    queuelib.setup_logging()
+    gather = MetadataGatherer()
+    gather.run()
 
 if __name__ == '__main__':
     main()
