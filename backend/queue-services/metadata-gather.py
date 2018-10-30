@@ -20,6 +20,7 @@ The metadata is saved to the site_description table.
 """
 
 class MetadataGatherer(QueueService):
+    QUEUE_NAME = 'metadata'
     def __init__(self):
         super(MetadataGatherer, self).__init__()
         self.count = 0
@@ -39,9 +40,9 @@ class MetadataGatherer(QueueService):
         self.conn.commit()
 
     def setup_bindings(self):
-        self.ch.queue_declare("metadata", durable=True, auto_delete=False)
-        self.ch.queue_bind("metadata", "org.blocked", "url.org")
-        self.ch.queue_bind("metadata", "org.blocked", "url.public")
+        self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
+        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.org")
+        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.public")
 
     def process_message(self,data):
         # now fetch the page to extract data
