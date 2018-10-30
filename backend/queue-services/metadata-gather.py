@@ -21,7 +21,7 @@ The metadata is saved to the site_description table.
 
 class MetadataGatherer(QueueService):
     def __init__(self):
-        super(QueueService, self).__init__()
+        super(MetadataGatherer, self).__init__()
         self.count = 0
         self.headers = {'User-agent': self.config.get('useragent')}
 

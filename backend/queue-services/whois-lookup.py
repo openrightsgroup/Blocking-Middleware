@@ -20,8 +20,8 @@ class WhoisLookup(QueueService):
     AGE = 180
     QUEUE_NAME = 'whois'
 
-    def __init__(self, config, conn, ch):
-        super(QueueService, self).__init__()
+    def __init__(self):
+        super(WhoisLookup, self).__init__()
         self.count = 0
 
     def setup_bindings(self):
