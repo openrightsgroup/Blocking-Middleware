@@ -15,7 +15,7 @@ class CategoryImporter(QueueService):
     def setup_bindings(self):
         self.ch.queue_declare("category", durable=True, auto_delete=False)
         self.ch.queue_bind("category", "org.blocked", "url.org")
-        #self.ch.queue_bind("category", "org.blocked", "url.public")
+        self.ch.queue_bind("category", "org.blocked", "url.public")
 
     def process_message(self, data):
         url = data['url']

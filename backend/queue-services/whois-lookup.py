@@ -27,7 +27,7 @@ class WhoisLookup(QueueService):
     def setup_bindings(self):
         self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
         self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.org")
-        #self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.public")
+        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.public")
 
     def check_expiry_cache(self, url):
         """Returns True if cache is expired"""
