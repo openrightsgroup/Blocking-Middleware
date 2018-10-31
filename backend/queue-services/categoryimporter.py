@@ -2,6 +2,7 @@
 import psycopg2
 import logging
 
+import queuelib
 from queuelib import QueueService
 
 import urlparse
@@ -50,15 +51,16 @@ class CategoryImporter(QueueService):
             except psycopg2.DatabaseError:
                 logging.warn("Duplicated category: %s", cat)
                 c.execute("ROLLBACK TO save1")
-                c.execute("select id from categories where name = %s", [cat])
+                c.execute("select id from categories where name = %s and namespace = 'categorify'", [cat])
                 row = c.fetchone()
                 cat_id = row[0]
 
             try:
-                c.execute("insert into url_category select urlid, %s from urls where url = %s", 
-                          [ url, cat_id ])
+                c.execute("insert into url_categories(urlid, category_id, created) select urlid, %s, now() from urls where url = %s", 
+                          [  cat_id, url, ])
                 logging.info("Added assignment: %s -> %s", url, cat)
-            except psycopg2.DatabaseError:
+            except psycopg2.DatabaseError as exc:
+                logging.warn("Exception: %s", repr(exc))
                 logging.warn("Duplicate assignment: %s -> %s", url, cat)
                 c.execute("ROLLBACK TO save1")
 

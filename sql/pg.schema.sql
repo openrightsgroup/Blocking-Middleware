@@ -730,7 +730,8 @@ CREATE SEQUENCE url_categories_id_seq
 CREATE TABLE url_categories (
     id integer DEFAULT nextval('url_categories_id_seq'::regclass),
     urlid integer,
-    category_id integer
+    category_id integer,
+    created timestamptz
 );
 
 
@@ -1191,7 +1192,7 @@ CREATE INDEX cat_tree ON categories USING gist (tree);
 
 CREATE INDEX categories_name_fts ON categories USING gin (name_fts);
 
-CREATE UNIQUE INDEX categories_name on categories (name, namespace);
+CREATE UNIQUE INDEX categories_name on categories (name, namespace) where namespace <> 'dmoz';
 
 
 --
