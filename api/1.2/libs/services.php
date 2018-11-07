@@ -105,12 +105,25 @@ class UrlLoader {
 		$this->conn = $conn;
 	}
 
-    function insert($url, $source="user") {
+    function make_pg_array($values) {
+        return '{' . implode(",",$values) . "}";
+    }
+
+    function insert($url, $source="user", $tags=null) {
         /* Insert user record.  Does not return ID.
         AN insert rule emulates INSERT IGNORE */
+
+        if (is_null($tags)) {
+            $tags = array($source);
+        } else {
+            if (!in_array($source, $tags)) {
+                $tags[] = $source;
+            }
+        }
+
         $result = $this->conn->query(
-            "insert into urls (URL, hash, source, url_type, tags, lastPolled, inserted) values (?,?,?,?, makearray(?), now(), now() )",
-            array($url, md5($url), $source, categorize_url($url), $source)
+            "insert into urls (URL, hash, source, url_type, tags, lastPolled, inserted) values (?,?,?,?, ?::varchar[], now(), now() )",
+            array($url, md5($url), $source, categorize_url($url), $this->make_pg_array($tags))
         );
         /* returns true/false for whether a row was really inserted. */
 
@@ -118,8 +131,11 @@ class UrlLoader {
             return true;
         } else {
             // add tag if not already listed for this URL
-            $this->conn->query("update urls set tags = array_append(tags, ?) where not makearray(?) && tags and url = ?",
-                array($source, $source, $url));
+            foreach ($tags as $tag) {
+                $this->conn->query("update urls set tags = array_append(tags, ?) where not makearray(?) && tags and url = ?",
+                    array($tag, $tag, $url)
+                );
+            }
             return false;
         }
 
@@ -1148,5 +1164,57 @@ class CourtOrderLoader {
         return $output;
     }
 
+}
+
+class CategoryLoader {
+    function __construct($conn) {
+        $this->conn = $conn;
+    }
+
+    function load($id) {
+        $result = $this->conn->query("select * from categories where id = ?",
+            array($id)
+        );
+        $row = $result->fetch();
+        return $row;
+    }
+
+    function load_by_name($name, $namespace) {
+        $result = $this->conn->query("select * from categories where name = ? and namespace = ?",
+            array($name, $namespace)
+        );
+        $row = $result->fetch();
+        return $row;
+    }
+
+    function insert($name, $display_name, $namespace) {
+        $result = $this->conn->query("insert into categories(name, display_name, namespace) values (?,?,?) returning id as id",
+            array($name, $display_name, $namespace)
+        );
+        $row = $result->fetch();
+        return $row['id'];
+    }
+
+    function add_url_category($name, $namespace, $url) {
+        $cat = $this->load_by_name($name, $namespace);
+        if ($cat) {
+            $catid = $cat['id'];
+        } else {
+            $catid = $this->insert($name, $name, $namespace);
+        }
+
+        $result = $this->conn->query("insert into url_categories(urlid, category_id, created) 
+            select urlid, ?, now()
+            from urls
+            where url = ?",
+            array($catid, $url)
+        );
+
+        if (!$result) {
+            throw new DatabaseError();
+        }
+
+
+    }
 }
 

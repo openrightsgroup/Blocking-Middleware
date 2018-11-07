@@ -10,6 +10,8 @@ Parameters:
 -v                      verbose operation
 -f <filename>           File to import
 --source <str>          Insert URLs with this source/tag
+--tags <str>            Comma-separated tags for this URL
+--resolve               Attempt DNS resolution of domains
 
 MESSAGE POSTING:
 
@@ -28,6 +30,8 @@ FILE HANDLING:
 
 --column <int>          CSV column to use for domain; default 0
 --start <int>           Skip first <n> in list
+--categorycolumn <int>  Add category from column <int>
+--categorynamespace <str>   Add categories with namespace <str>
 
 RUN MODES:
 
@@ -58,7 +62,7 @@ function check_parameter($f) {
     }
 }
 
-function opt($name, $default) {
+function opt($name, $default=null) {
     global $opts;
     return isset($opts[$name]) ? $opts[$name] : $default;
 }
@@ -107,7 +111,8 @@ function dns_lookup($name) {
     return $ip;
 }
 
-$opts = getopt('vf:', array('watch:','limit:', 'source:', 'start:', 'delay:','mean','max','exchange:','key:','interval:','status','help'));
+$opts = getopt('vf:', array('watch:','limit:', 'source:', 'start:', 'delay:','mean','max','exchange:','key:','interval:','status','help','column:','categorycolumn:','categorynamespace:','tags:','resolve'));
+
 
 if (isset($opts['help'])) {
     print $HELP;
@@ -118,14 +123,22 @@ check_parameter('f');
 check_parameter('source');
 $VERBOSE = isset($opts['v']);
 
-// check queue lengths every $check_interval urls
-$check_interval = opt('interval', 200) ; 
-dbg("Check interval: $check_interval");
+if ($VERBOSE) {
+    print_r($opts);
+}
 
-// sleep if the queue is longer than queuelen_limit
-$queuelen_limit = opt('limit', 1000); 
+// work out whether to use an AMQP connection and post URLs
+$AMQP = isset($opts['exchange']) || isset($opts['key']);
+
 
 $delay = opt('delay', 30); 
+
+if (opt('tags')) {
+    $tags = explode(",",$opts['tags']);
+} else {
+    $tags = null;
+}
+    
 
 if (isset($opts['status'])) {
     print check_queues() . "\n";
@@ -134,21 +147,36 @@ if (isset($opts['status'])) {
 
 // begin importing file
 
-$fp = fopen($opts['f'],"r");
+if ($opts['f'] == '--') {
+    $fp = open("php://stdin","r");
+} else {
+    $fp = fopen($opts['f'],"r");
+}
+
 if (!$fp) {
     die ("Unable to open $opts[f]");
 }
 
 $conn = db_connect();
 $loader = new UrlLoader($conn);
+$catloader = new CategoryLoader($conn);
 
 $offset = opt('start', 0);
 
-$ch = amqp_connect();
-$ex = new AMQPExchange($ch);
-$ex->setName(opt('exchange', 'org.blocked'));
+if ($AMQP) {
+    // check queue lengths every $check_interval urls
+    $check_interval = opt('interval', 200) ; 
+    dbg("Check interval: $check_interval");
 
-$key = opt('key', 'check.public'); 
+    // sleep if the queue is longer than queuelen_limit
+    $queuelen_limit = opt('limit', 1000); 
+
+    $ch = amqp_connect();
+    $ex = new AMQPExchange($ch);
+    $ex->setName(opt('exchange'));
+
+    $key = opt('key', 'check.public'); 
+}
 
 $col = opt('column', 0);
 
@@ -158,32 +186,62 @@ while ($line = fgetcsv($fp)) {
     if ($n < $offset) {
         continue;
     }
-    $domain = $line[$col] ;
 
-    $ip = dns_lookup("www.$domain");
-    if (!$ip) {
-        $ip = dns_lookup($domain);
-        if (!$ip) {
-            continue;
-        }
-    } else {
-        $domain = "www.$domain";
+    if ($VERBOSE) {
+        print_r($line);
     }
-    $isnew = $loader->insert("http://$domain", $opts['source']);
+
+    $url = $line[$col];
+
+    if (strpos(strtolower($url),"http")!==0) {
+        $domain = $url;
+        $url = "http://$url";
+    } else {
+        $domain = preg_replace('!^https?://!i', '',  $url);
+    }
+    
+    if (isset($opts['resolve'])) {
+
+        $ip = false;
+        # if domain does not start with www., try www. domain
+        if (strpos($domain, 'www.') !== 0) { 
+            $ip = dns_lookup("www.$domain");
+            if ($ip) {
+                $domain = "www.$domain";
+            }   
+        }
+        # if not found, try resolving domain
+        if (!$ip) {
+            $ip = dns_lookup($domain);
+            if (!$ip) {
+                continue;
+            }
+        }
+    }
+    $isnew = $loader->insert($url, $opts['source'], $tags);
 
     if ($isnew) {
-        dbg( "Inserted: $domain", 1);
-        $msgbody = json_encode(array('url'=>"http://$domain", 'hash'=>md5($domain)));
+        dbg( "Inserted: $url", 1);
 
-        dbg("Posting $domain with $key");
-        $ex->publish($msgbody, $key, AMQP_NOPARAM);
+
+        if ($AMQP) {
+            $msgbody = json_encode(array('url'=>$url, 'hash'=>md5($url)));
+            dbg("Posting $url with $key");
+            $ex->publish($msgbody, $key, AMQP_NOPARAM);
+        }
     }
-    if ($n % $check_interval == 0) {
-        $len = check_queues();
-        while ($len > $queuelen_limit) {
-            dbg( "Sleeping: len=$len / $queuelen_limit n=$n", 1);
-            sleep($delay);
+    if (isset($opts['categorycolumn'])) {
+        dbg("Adding category: " . $line[opt('categorycolumn')]);
+        $catloader->add_url_category($line[opt('categorycolumn')], $opts['categorynamespace'], $url);
+    }
+    if ($AMQP) {
+        if ($n % $check_interval == 0) {
             $len = check_queues();
+            while ($len > $queuelen_limit) {
+                dbg( "Sleeping: len=$len / $queuelen_limit n=$n", 1);
+                sleep($delay);
+                $len = check_queues();
+            }
         }
     }
 }
