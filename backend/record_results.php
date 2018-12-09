@@ -31,6 +31,8 @@ $q->setName(opt('queue', 'results'));
 $q->setFlags(AMQP_DURABLE);
 $q->declare();
 
+$q->bind('org.blocked', opt('queue', 'results') . '.#');
+
 $conn = db_connect();
 
 $VERIFY = 1;
@@ -50,7 +52,7 @@ $processor = new ResultProcessorService(
 );
 
 function process_result($msg, $queue) {
-  global $processor, $ex;
+  global $processor, $ex, $VERIFY;
 
   try {
 
