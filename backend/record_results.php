@@ -7,7 +7,7 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-$opts = getopt('v', array('exchange:','queue:','no-verify'));
+$opts = getopt('v', array('exchange:','queue:','no-verify','debug'));
 
 function opt($name, $default) {
     global $opts;
@@ -68,7 +68,7 @@ function process_result($msg, $queue) {
       return true;
     }
 
-    if (flag('v')) {
+    if (flag('debug')) {
         var_dump($data);
     }
     # workaround for unicode encoding bug
