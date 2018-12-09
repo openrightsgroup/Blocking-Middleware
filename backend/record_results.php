@@ -7,15 +7,40 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
+$opts = getopt('v', array('exchange:','queue:','no-verify'));
+
+function opt($name, $default) {
+    global $opts;
+    
+    return (isset($opts[$name])) ? $opts[$name] : $default;
+}
+
+function flag($flag) {
+    global $opts;
+    
+    return isset($opts[$flag]);
+}
+
 $ch = amqp_connect();
 
 $ex = new AMQPExchange($ch);
-$ex->setName('org.results');
+$ex->setName(opt('exchange', 'org.results'));
 
 $q = new AMQPQueue($ch);
-$q->setName('results');
+$q->setName(opt('queue', 'results'));
+$q->setFlags(AMQP_DURABLE);
+$q->declare();
 
 $conn = db_connect();
+
+$VERIFY = 1;
+if (flag('no-verify')) {
+    $VERIFY = 0;
+}
+
+if (flag('v')) {
+    print "Listening on " . opt('queue','results') . "\n";
+}
 
 $processor = new ResultProcessorService(
   $conn,
@@ -41,24 +66,28 @@ function process_result($msg, $queue) {
       return true;
     }
 
-    var_dump($data);
+    if (flag('v')) {
+        var_dump($data);
+    }
     # workaround for unicode encoding bug
     if (is_null($data['url'])) {
       return true;
     }
 
-    Middleware::verifyUserMessage(
-      implode(":", array(
-        $data['probe_uuid'],
-        $data['url'],
-        $data['status'],
-        $data['date'],
-        $data['config']
-        )
-      ),
-      $probe['secret'],
-      $data['signature']
-    );
+    if ($VERIFY) {
+        Middleware::verifyUserMessage(
+          implode(":", array(
+            $data['probe_uuid'],
+            $data['url'],
+            $data['status'],
+            $data['date'],
+            $data['config']
+            )
+          ),
+          $probe['secret'],
+          $data['signature']
+        );
+    }
 
     try {
       $processor->process_result($data, $probe);
