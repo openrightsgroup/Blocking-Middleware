@@ -51,6 +51,7 @@ foreach($q as $result) {
         $url = $urlloader->loadByID($row['urlid']);
 
         $res = sendISPReport(
+            $row['mailname'],
             $row['name'],
             $row['email'],
             $network, 
