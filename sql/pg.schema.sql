@@ -328,7 +328,9 @@ CREATE TABLE contacts (
     joinlist smallint DEFAULT 0 NOT NULL,
     fullname character varying(60),
     createdat timestamp with time zone,
-    token character varying(36)
+    token character varying(36),
+    verify_attempts smallint default 0,
+    verify_last_attempt timestamp with time zone
 );
 
 

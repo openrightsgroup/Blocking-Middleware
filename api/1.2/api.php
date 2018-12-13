@@ -1545,7 +1545,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             Middleware::generateSharedSecret(10));
 
         $conn->query("update contacts set
-            token = ?  where id = ?",
+            token = ?, verify_attempts=1, verify_last_attempt=now()  where id = ?",
             array( $token, $contact['id'])
             );
 
