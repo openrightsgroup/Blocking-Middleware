@@ -821,7 +821,7 @@ class ISPReportLoader {
         }
 
         if ($is_admin) {
-            $admin_fields = 'isp_reports.status,isp_reports.email,';
+            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified';
             $filter = '';
         } else {
             $admin_fields = '';
@@ -837,6 +837,7 @@ class ISPReportLoader {
             from isp_reports
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
+            left join contacts on contacts.id = isp_reports.contact_id
             where report_type = ? $network_clause  $filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
