@@ -821,7 +821,7 @@ class ISPReportLoader {
         }
 
         if ($is_admin) {
-            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified';
+            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,';
             $filter = '';
         } else {
             $admin_fields = '';
