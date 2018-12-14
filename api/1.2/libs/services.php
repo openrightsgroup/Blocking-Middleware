@@ -307,6 +307,10 @@ class ContactLoader {
 
     }
 
+    function set_verify_attempt($email, $attempt) {
+        $this->conn->query("update contacts set verify_attempts = ?, verify_last_attempt=now() where email = ?",
+            array($attempt, $email));
+    }
 }
 
 

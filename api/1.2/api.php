@@ -1549,31 +1549,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             array( $token, $contact['id'])
             );
 
+        sendUserVerification($data['reporter']['email'], $data['reporter']['name'], $token, 1, $app['service.template']);
 
-        $msg = new PHPMailer();
-        $msg->setFrom(SITE_EMAIL, SITE_NAME);
-        $msg->addAddress(
-            $data['reporter']['email'],
-            $data['reporter']['name']
-            );
-        $msg->Subject = "Confirm your email address";
-        $msg->isHTML(false);
-        $msg->CharSet = "utf-8";
-        $msg->Body = $app['service.template']->render(
-            'verify_email.txt',
-            array(
-                'name' => $data['reporter']['name'],
-                'email' => $data['reporter']['email'],
-                'confirm_url' => VERIFY_URL,
-                'token' => $token,
-                'site_url' => SITE_URL,
-                'site_name' => SITE_NAME,
-                'site_email' => SITE_EMAIL
-            )
-        );
-        if (!$msg->Send()) {
-            error_log("Unable to send message: " . $msg->ErrorInfo);
-        }
     }
 
     $ids = array();

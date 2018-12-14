@@ -34,3 +34,31 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     }
     return true;
 }
+
+function sendUserVerification($email, $name, $token, $attempt, $renderer) {
+    $msg = new PHPMailer();
+    $msg->setFrom(SITE_EMAIL, SITE_NAME);
+    $msg->addAddress(
+        $email,
+        $name
+        );
+    $msg->Subject = ($attempt > 1 ? 'Reminder: ' : '') . "Confirm your email address";
+    $msg->isHTML(false);
+    $msg->CharSet = "utf-8";
+    $msg->Body = $renderer->render(
+        'verify_email.txt',
+        array(
+            'name' => $name,
+            'email' => $email,
+            'confirm_url' => VERIFY_URL,
+            'token' => $token,
+            'site_url' => SITE_URL,
+            'site_name' => SITE_NAME,
+            'site_email' => SITE_EMAIL
+        )
+    );
+    if (!$msg->Send()) {
+        error_log("Unable to send message: " . $msg->ErrorInfo);
+    }
+
+}
