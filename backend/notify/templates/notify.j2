@@ -1,0 +1,34 @@
+{%- if servicestate -%}
+
+{{ '*' * (notificationtype|length + 6) }}
+{{notificationtype|upper}} ALERT
+{{ '*' * (notificationtype|length + 6) }}
+
+  Date:    {{shortdatetime}}
+  Host:    {{hostalias}}
+  Service: {{servicedesc}}
+  State:   {{servicestate}}
+
+Info:
+{{serviceoutput|wordwrap(70)|indent(2,indentfirst=True)}}
+
+{%- else -%}
+
+{{ '*' * (notificationtype|length + 6) }}
+{{notificationtype|upper}} ALERT
+{{ '*' * (notificationtype|length + 6) }}
+
+  Date:    {{shortdatetime}}
+  Host:    {{hostalias}}
+  State:   {{hoststate}}
+
+Info:
+{{hostoutput|wordwrap(70)|indent(2,indentfirst=True)}}
+
+{%- if hoststate=='DOWN' %}
+
+Please check that the probe is connected to power and network.
+{%- endif %}
+
+{%- endif %}
+
