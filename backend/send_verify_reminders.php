@@ -19,6 +19,15 @@ $renderer = new Twig_Environment($loader, array(
     'debug' => true
 ));
 
+$opts = getopt("nh");
+
+if (isset($opts['h'])) {
+    print "Usage: {$argv[0]} [-n] [-h]\n\n";
+    print "    -n    dummy mode\n";
+    print "    -h    show help\n\n";
+    exit(0);
+}
+
 /* send verification reminder 1 after 1 day */
 
 $q = $conn->query("select id, fullname, email, token, verify_attempts, verify_last_attempt
@@ -27,7 +36,10 @@ $q = $conn->query("select id, fullname, email, token, verify_attempts, verify_la
     
 foreach ($q as $row) {    
     print "Sending 1day reminder for {$row['email']} : ${row['verify_attempts']} {$row['verify_last_attempt']}\n";
-    
+
+    if (isset($opts['n'])) {
+        continue;
+    }
     sendUserVerification($row['email'], $row['fullname'], $row['token'], $row['verify_attempts']+1, $renderer);
     $contactloader->set_verify_attempt($row['email'], $row['verify_attempts']+1);
 }
@@ -40,6 +52,10 @@ $q = $conn->query("select fullname, email, token, verify_attempts, verify_last_a
     
 foreach ($q as $row) {
     print "Sending 7day reminder for {$row['email']} : ${row['verify_attempts']} {$row['verify_last_attempt']}\n";
+    
+    if (isset($opts['n'])) {
+        continue;
+    }
     
     sendUserVerification($row['email'], $row['fullname'], $row['token'], $row['verify_attempts']+1, $renderer);
     $contactloader->set_verify_attempt($row['email'], $row['verify_attempts']+1);
@@ -54,6 +70,10 @@ $q = $conn->query("select id, fullname, email, token, verify_attempts, verify_la
 foreach ($q as $row) {
     // cancel requests made by this contact.
     print "Cancelling requests made by {$row['email']} : ${row['verify_attempts']} {$row['verify_last_attempt']}\n";
+    
+    if (isset($opts['n'])) {
+        continue;
+    }
     
     $conn->query("update isp_reports set status = ? where contact_id = ?",
         array('cancelled', $row['id']));
