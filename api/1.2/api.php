@@ -662,13 +662,20 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
 
 	$user = $app['db.user.load']->load($req->get('email'));
+    $admin = $user['administrator'];
 	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
 
-    if ($user['administrator'] && $req->get('normalize',1) == 0) {
+    if ($admin && $req->get('normalize',1) == 0) {
         // allow an administrator to work on non-normalized URLs
         $urltext = $req->get('url');
     } else {
     	$urltext = normalize_url($req->get('url'));
+    }
+    
+    if ($admin) {
+        $admin_fields = ',results_base.remote_ip';
+    } else {
+        $admin_fields = '';
     }
 
 	error_log("URL: " . $req->get('url') . "; " . $urltext);
@@ -679,7 +686,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	# Fetch results from status summary table
 	$result = $conn->query("select isps.description, l.status, fmtime(l.created) created,  l.category, l.blocktype,
         fmtime(first_blocked) as first_blocked, fmtime(last_blocked) as last_blocked,
-        isps.name, isps.queue_name, results_base.final_url, isps.regions
+        isps.name, isps.queue_name, results_base.final_url, isps.regions $admin_fields
 		from url_latest_status l
 		inner join isps on isps.name = l.network_name
         left join results_base on results_base.id = l.result_id
@@ -690,7 +697,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	$output = array();
 
     foreach ($result as $row) {
-		$output[] = array(
+		$out = array(
             'network_name' => $row['description'],
             'status' =>  $row['status'],
             'status_timestamp' =>  $row['created'],
@@ -704,6 +711,10 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'isp_active' =>  ($row['queue_name'] != null),
             'final_url' => preg_replace('/&ipaddr=[0-9a-f\.:]*/','',$row['final_url'])
         );
+        if ($admin) {
+            $out['remote_ip'] = $row['remote_ip'];
+        }
+        $output[] = $out;
 	}
 
 	$categories = $app['db.url.load']->load_categories($url['urlid']);
