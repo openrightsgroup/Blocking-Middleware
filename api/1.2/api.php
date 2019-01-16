@@ -673,7 +673,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
     }
     
     if ($admin) {
-        $admin_fields = ',results_base.remote_ip';
+        $admin_fields = ',results_base.remote_ip,results_base.resolved_ip';
     } else {
         $admin_fields = '';
     }
@@ -713,6 +713,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         );
         if ($admin) {
             $out['remote_ip'] = $row['remote_ip'];
+            $out['resolved_ip'] = $row['resolved_ip'];
         }
         $output[] = $out;
 	}
