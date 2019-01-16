@@ -658,7 +658,8 @@ CREATE TABLE results(
     ssl_verified bool, 
     ssl_fingerprint varchar(256),
     request_id int,
-    final_url varchar(2048)
+    final_url varchar(2048),
+    resolved_ip cidr
 );
 
 
