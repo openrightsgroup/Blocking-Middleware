@@ -883,8 +883,6 @@ class ISPReportLoader {
         return $res->fetchColumn(0);
     }
 
-}
-
     function count_open_reports($type, $network=null) {
         $args = array($type);
         if ($network) {

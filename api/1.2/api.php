@@ -1065,7 +1065,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
 
     $count = $app['db.ispreport.load']->count_reports('unblock', $isp, $is_admin);
     $open_count = $app['db.ispreport.load']->count_open_reports('unblock', $isp);
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page, $open, $is_admin);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $open);
 
     $output = array();
     $output['success'] = true;
