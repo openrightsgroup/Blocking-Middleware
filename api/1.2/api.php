@@ -23,7 +23,7 @@ $CORS_HEADERS = array(
 
 
 $app = new Silex\Application();
-$app['debug'] = true;
+# $app['debug'] = true;
 
 $app['service.db'] = $app->share(function() {
     return db_connect();
