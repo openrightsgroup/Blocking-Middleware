@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $open=0, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -822,6 +822,12 @@ class ISPReportLoader {
             $network_clause = " AND network_name = ?";
         } else {
             $network_clause = "";
+        }
+        
+        if ($open) {
+            $open_filter = " and isp_reports.status <= 'sent'";
+        } else {
+            $open_filter = '';
         }
 
         if ($is_admin) {
@@ -842,7 +848,7 @@ class ISPReportLoader {
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
-            where report_type = ? $network_clause  $filter
+            where report_type = ? $network_clause  $filter $open_filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -879,6 +885,26 @@ class ISPReportLoader {
 
 }
 
+    function count_open_reports($type, $network=null) {
+        $args = array($type);
+        if ($network) {
+            $args[] = $network;
+            $network_clause = " AND network_name = ?";
+        } else {
+            $network_clause = "";
+        }
+        
+        $res = $this->conn->query("select
+            count(*)
+            from isp_reports
+            inner join urls using(urlid)
+            where report_type = ? and isp_reports.status <= 'sent' $network_clause  ",
+            $args
+            );
+        return $res->fetchColumn(0);
+    }
+
+}
 
 class ResultProcessorService {
 	function __construct($conn, $url_loader, $probe_loader, $isp_loader) {

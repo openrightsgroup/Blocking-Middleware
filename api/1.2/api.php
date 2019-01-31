@@ -1059,11 +1059,13 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
     $isp = $req->get('isp',null);
+    $open = $req->get('open', null);
     $page = $req->get('page', 0);
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;
 
     $count = $app['db.ispreport.load']->count_reports('unblock', $isp, $is_admin);
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page, $is_admin);
+    $open_count = $app['db.ispreport.load']->count_open_reports('unblock', $isp);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page, $open, $is_admin);
 
     $output = array();
     $output['success'] = true;
@@ -1072,6 +1074,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $output['isp'] = $isp;
     }
     $output['count'] = $count;
+    $output['open_count'] = $open_count;
 
     return $app->json($output);
 });
