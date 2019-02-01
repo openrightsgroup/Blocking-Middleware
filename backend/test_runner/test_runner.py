@@ -10,10 +10,11 @@ import datetime
 import operator
 import subprocess
 import collections
-import configparser
 
+import configparser
 import psycopg2
 import amqplib.client_0_8 as amqp
+import pytz
 
 from NORM import Query, DBObject
 
@@ -106,7 +107,8 @@ def get_changes(orig, new):
 def read_queues(vhosts):
     queues = collections.defaultdict(list)
     for vhost in vhosts:
-        proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','list_bindings','-p',vhost], stdout=subprocess.PIPE)
+        logging.debug("Reading vhost: %s", vhost)
+        proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','-p', vhost, 'list_bindings'], stdout=subprocess.PIPE)
         for row in proc.stdout:
             parts = row.split('\t')
             if parts[0] == '':
@@ -119,7 +121,7 @@ def read_queues(vhosts):
 def check_queues(conn, vhost):
     c = conn.cursor()
     queuelength = {}
-    proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','list_queues', '-p', vhost, 'name', 'messages'], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q', '-p', vhost, 'list_queues', 'name', 'messages'], stdout=subprocess.PIPE)
     for row in proc.stdout:
         parts = row.strip().split('\t')
         if parts[0].startswith('url.') or parts[0] == 'results':
@@ -152,7 +154,7 @@ def main():
     vhosts = amqpopts.pop('vhosts', '/').split(',')
     amqp_connections = {}
     for vhost in vhosts:
-        amqpconn = amqp.Connection(vhost=vhost,**amqpopts)
+        amqpconn = amqp.Connection(virtual_host=vhost,**amqpopts)
         ch = amqpconn.channel()
         amqp_connections[vhost] = (amqpconn, ch)
         del amqpconn, ch
@@ -178,19 +180,19 @@ def main():
                 logging.info("Add: %s", add_isps)
             if remove_isps:
                 logging.info("Remove: %s", remove_isps)
-                
-    
+
             amqpconn, ch = amqp_connections[ testcase['vhost'] ]
     
             for queue in add_isps:
-                if queue in queues:
+                if True: #queue in queues:
+                    logging.info("Added: %s", queue)
                     ch.queue_bind( queue, EXCHANGE, testcase.get_routing_key())
-    
+
             for queue in remove_isps:
                 ch.queue_unbind( queue, EXCHANGE, testcase.get_routing_key())
 
             queue_lengths = check_queues(conn, testcase['vhost'])
-            if queue_lengths[(testcase['vhost'], 'results')] > MAX_RESULTS:
+            if queue_lengths['results'] > MAX_RESULTS:
                 testcase.set_status('WAITING', "Results queue too long")
                 conn.commit()
                 continue
@@ -213,9 +215,9 @@ def main():
                 conn.commit()
                 continue
     
-            testcase.set_status('RUNNING','')
-            if datetime.datetime.now() - testcase['last_check'] > datetime.tzdelta(1, 0)
+            if not testcase['total']:
                 testcase.update_total()
+            testcase.set_status('RUNNING','')
             testcase.update_last_check()
             conn.commit()
     
@@ -239,7 +241,8 @@ def main():
                 testcase.set_status('COMPLETE')
                 conn.commit()
         else:
-            queue_lengths = check_queues(conn)
+            for vhost in vhosts:
+                queue_lengths = check_queues(conn, vhost)
                
         conn.commit()
         time.sleep(DELAY)
