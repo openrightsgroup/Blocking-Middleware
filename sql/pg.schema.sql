@@ -737,7 +737,10 @@ CREATE TABLE url_categories (
     id integer DEFAULT nextval('url_categories_id_seq'::regclass),
     urlid integer,
     category_id integer,
-    created timestamptz
+    enabled bool default true,
+    userid int null,
+    created timestamptz,
+    last_updated timestamptz
 );
 
 
@@ -1446,3 +1449,12 @@ CREATE TABLE tags (
 );
 
 create rule tag_insert_ignore  as on insert to tags where (exists(select 1 from tags where tags.id = new.id)) do instead nothing;
+
+CREATE TABLE search_ignore_terms (
+    id integer not null primary key,
+    term varchar not null,
+    created timestamptz not null,
+    last_updated timestamptz null
+);
+
+CREATE UNIQUE INDEX search_ignore_terms_term on search_ignore_terms(term);
