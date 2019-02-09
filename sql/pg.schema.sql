@@ -421,7 +421,11 @@ CREATE TABLE isp_reports (
     site_category varchar(64),
     allow_contact int default 0,
     mailname varchar(32) null unique,
-    resolved_email_id int null
+    resolved_email_id int null,
+    
+    category_notes text null,
+    review_notes text null,
+    matches_policy bool null default null
 );
 
 
