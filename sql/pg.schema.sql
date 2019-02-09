@@ -746,11 +746,6 @@ CREATE TABLE url_categories (
 
 CREATE UNIQUE INDEX ON url_categories(urlid, category_id);
 
-CREATE RULE url_categories_insert_ignore AS 
-ON INSERT TO url_categories 
-WHERE (EXISTS(SELECT 1 FROM Url_categories 
-        WHERE urlid = new.urlid AND category_id = new.category_id)) 
-DO INSTEAD NOTHING;
 
 ALTER TABLE url_categories ADD FOREIGN KEY(category_id) REFERENCES categories(id);
 
