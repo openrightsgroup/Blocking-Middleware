@@ -1457,3 +1457,5 @@ CREATE TABLE search_ignore_terms (
 );
 
 CREATE UNIQUE INDEX search_ignore_terms_term on search_ignore_terms(term);
+
+CREATE VIEW selected_categories AS SELECT * FROM categories WHERE (namespace != 'dmoz') OR (namespace = 'dmoz' AND tree ~ '!worl13.*{0}');
