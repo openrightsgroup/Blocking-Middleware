@@ -1464,12 +1464,12 @@ CREATE VIEW selected_categories AS SELECT * FROM categories WHERE (namespace != 
 
 CREATE TABLE url_category_comments(
     id serial primary key not null,
-    url_category_id int not null,
+    urlid int not null,
     description text null,
     userid int,
     created timestamptz,
     last_updated timestamptz
 );
 
-CREATE INDEX url_category_comments_category_id on url_category_comments(url_category_id);
-
+CREATE INDEX url_category_comments_urlid on url_category_comments(urlid);
+ALTER TABLE url_category_comments ADD FOREIGN KEY (urlid) REFERENCES urls(id);
