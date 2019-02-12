@@ -425,8 +425,6 @@ CREATE TABLE isp_reports (
     mailname varchar(32) null unique,
     resolved_email_id int null,
     
-    category_notes text null,
-    review_notes text null,
     matches_policy bool null default null
 );
 
@@ -1473,3 +1471,16 @@ CREATE TABLE url_category_comments(
 
 CREATE INDEX url_category_comments_urlid on url_category_comments(urlid);
 ALTER TABLE url_category_comments ADD FOREIGN KEY (urlid) REFERENCES urls(id);
+
+CREATE TABLE isp_report_comments (
+    id serial primary key not null,
+    report_id int not null,
+    matches_policy bool null,
+    review_notes text
+    userid int not null,
+    created timestamptz,
+    last_updated timestamptz
+);
+
+CREATE INDEX isp_report_comments_report_id on isp_report_comments(report_id);
+
