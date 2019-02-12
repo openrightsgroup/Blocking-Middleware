@@ -1476,7 +1476,7 @@ CREATE TABLE isp_report_comments (
     id serial primary key not null,
     report_id int not null,
     matches_policy bool null,
-    review_notes text
+    review_notes text,
     userid int not null,
     created timestamptz,
     last_updated timestamptz
