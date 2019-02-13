@@ -831,7 +831,7 @@ class ISPReportLoader {
         }
 
         if ($is_admin) {
-            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count,';
+            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
             $filter = '';
         } else {
             $admin_fields = '';
