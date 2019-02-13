@@ -425,7 +425,9 @@ CREATE TABLE isp_reports (
     mailname varchar(32) null unique,
     resolved_email_id int null,
     
-    matches_policy bool null default null
+    matches_policy bool null default null,
+    egregious_block bool null,
+    featured_block bool null
 );
 
 
@@ -1476,6 +1478,8 @@ CREATE TABLE isp_report_comments (
     id serial primary key not null,
     report_id int not null,
     matches_policy bool null,
+    egregious_block bool null,
+    featured_block bool null,
     review_notes text,
     userid int not null,
     created timestamptz,
