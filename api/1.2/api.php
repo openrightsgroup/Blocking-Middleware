@@ -229,8 +229,17 @@ $app->get('/search/url', function(Request $req) use ($app) {
 	Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
 
     $exclude_adult = $req->get('exclude_adult', 0);
+    if ($exclude_adult) {
+        $q = $app['service.db']->query("select term from search_exclude_terms where enabled = true order by term", array());
+        $excluded_terms = array();
+        foreach($q as $row) {
+            $excluded_terms[] = $row['term'];
+        }
+    } else {
+        $excluded_terms = array();
+    }
 
-    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $exclude_adult);
+    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms);
     $output = array(
         'success' => true,
         'sites' => $data->results,
