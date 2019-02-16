@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $open=0, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -824,11 +824,28 @@ class ISPReportLoader {
             $network_clause = "";
         }
         
-        if ($open) {
+        if ($state == 'open') {
             $open_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'reviewed') {
+            $open_filter = " and isp_reports.matches_policy is not null";
+        } elseif ($state == 'featured') {
+            $open_filter = " and isp_reports.featured_block is true";
+        } elseif ($state == 'egregious') {
+            $open_filter = " and isp_reports.egregious is true";
         } else {
             $open_filter = '';
         }
+
+        if ($category) {
+            $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
+                inner join categories on category_id = categories.id";
+            $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
+            $args[] = $category;
+        } else {
+            $category_table = '';
+            $category_filter = '';
+        }
+
 
         if ($is_admin) {
             $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
@@ -848,7 +865,8 @@ class ISPReportLoader {
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
-            where report_type = ? $network_clause  $filter $open_filter
+            $category_table
+            where report_type = ? $network_clause $category_filter $filter $open_filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -860,7 +878,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $network=null, $is_admin) {
+    function count_reports($type, $network=null, $category=null, $state=null, $is_admin) {
         $args = array($type);
         if ($network) {
             $args[] = $network;
@@ -873,34 +891,39 @@ class ISPReportLoader {
         } else {
             $filter = "and isp_reports.status not in ('cancelled','abuse')";
         }
+        if ($category) {
+            $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
+                inner join categories on category_id = categories.id";
+            $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
+            $args[] = $category;
+        } else {
+            $category_table = '';
+            $category_filter = '';
+        }
+        
+        if ($state == 'open') {
+            $state_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'reviewed') {
+            $state_filter = " and isp_reports.matches_policy is not null";
+        } elseif ($state == "featured") {
+            $state_filter = " and isp_reports.featured_block is true";
+        } elseif ($state == "egregious") {
+            $state_filter = " and isp_reports.egregious_block is true";
+        } else {
+            $state_filter = '';
+        }
+
         $res = $this->conn->query("select
             count(*)
             from isp_reports
             inner join urls using(urlid)
-            where report_type = ? $network_clause  $filter",
+            $category_table
+            where report_type = ? $network_clause  $category_filter $filter $state_filter",
             $args
             );
         return $res->fetchColumn(0);
     }
 
-    function count_open_reports($type, $network=null) {
-        $args = array($type);
-        if ($network) {
-            $args[] = $network;
-            $network_clause = " AND network_name = ?";
-        } else {
-            $network_clause = "";
-        }
-        
-        $res = $this->conn->query("select
-            count(*)
-            from isp_reports
-            inner join urls using(urlid)
-            where report_type = ? and isp_reports.status <= 'sent' $network_clause  ",
-            $args
-            );
-        return $res->fetchColumn(0);
-    }
 
 }
 
