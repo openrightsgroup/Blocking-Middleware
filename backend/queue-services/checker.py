@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import os
+import re
 import sys
 import json
 import logging
@@ -48,6 +49,20 @@ class BlockedRobotsTxtChecker(object):
         self.conn = conn
         self.ch = ch
         self.headers = {'User-agent': self.config.get('daemon','useragent')}
+        self.load_exclude()
+
+    def load_exclude(self):
+        self.exclude = []
+        try:
+            for (name,value) in self.config.items('robots_override'):
+                # name is always exclude
+                self.exclude.append( re.compile(value) )
+        except ConfigParser.NoSectionError:
+            pass
+        print self.exclude
+
+    def is_excluded(self, url):
+        return any([ exc.match(url) for exc in self.exclude ])
 
     def get_robots_url(self, url):
         """Split URL, add /robots.txt resource"""
@@ -94,7 +109,9 @@ class BlockedRobotsTxtChecker(object):
             rbp.parse(robots_txt.text.splitlines())
 
             # check to see if we're allowed in - test using OrgProbe's useragent
-            if not rbp.can_fetch(self.config.get('daemon','probe_useragent'), data['url']):
+            if self.is_excluded(data['url']):
+                logging.info("Overridden: %s", data['url'])
+            elif not rbp.can_fetch(self.config.get('daemon','probe_useragent'), data['url']):
                 logging.warn("Disallowed: %s", data['url'])
                 # write rejection to DB
                 self.set_url_status(data['url'], 'disallowed-by-robots-txt')
