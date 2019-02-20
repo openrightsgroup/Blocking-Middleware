@@ -427,7 +427,8 @@ CREATE TABLE isp_reports (
     
     matches_policy bool null default null,
     egregious_block bool null,
-    featured_block bool null
+    featured_block bool null,
+    reporter_category_id int
 );
 
 
@@ -1488,3 +1489,33 @@ CREATE TABLE isp_report_comments (
 
 CREATE INDEX isp_report_comments_report_id on isp_report_comments(report_id);
 
+create table isp_report_categories(
+    id serial primary key, 
+    name varchar unique, 
+    category_type varchar(8), 
+    created timestamptz, 
+    last_updated timestamptz
+);
+
+create table isp_report_category_asgt(
+    id serial primary key,
+    report_id int not null,
+    category_id int not null,
+    created timestamptz, 
+    last_updated timestamptz
+);
+
+create unique index isp_report_category_asgt_unq on isp_report_category_asgt(report_id, category_id);
+
+CREATE TABLE isp_report_category_comments(
+    id serial primary key,
+    report_id int not null,
+    damage_category_id int,
+    reporter_category_id int,
+    review_notes text,
+    userid int,
+    created timestamptz,
+    last_updated timestamptz
+);
+
+create index isp_report_category_comments_report_id on isp_report_category_comments(report_id);
