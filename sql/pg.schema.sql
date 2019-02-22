@@ -1504,7 +1504,7 @@ create table url_report_category_asgt(
     last_updated timestamptz
 );
 
-create unique index url_report_category_asgt_unq on url_report_category_asgt(report_id, category_id);
+create unique index url_report_category_asgt_unq on url_report_category_asgt(urlid, category_id);
 
 CREATE TABLE url_report_category_comments(
     id serial primary key,
@@ -1517,4 +1517,4 @@ CREATE TABLE url_report_category_comments(
     last_updated timestamptz
 );
 
-create index url_report_category_comments_report_id on url_report_category_comments(report_id);
+create index url_report_category_comments_report_id on url_report_category_comments(urlid);
