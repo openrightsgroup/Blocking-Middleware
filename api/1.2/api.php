@@ -1068,6 +1068,8 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $state = 'featured';
     } elseif ($req->get('egregious',null)) {
         $state = 'egregious';
+    } elseif ($req->get('harmless',null)) {
+        $state = 'harmless';
     } else {
         $state = '';
     }
@@ -1081,6 +1083,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $open_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open');
     $review_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed');
     $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured');
+    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless');
 
     $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category);
 
@@ -1094,6 +1097,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output['open_count'] = $open_count;
     $output['review_count'] = $review_count;
     $output['feature_count'] = $feature_count;
+    $output['harmless_count'] = $harmless_count;
 
     return $app->json($output);
 });
