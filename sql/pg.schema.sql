@@ -1481,6 +1481,7 @@ CREATE TABLE isp_report_comments (
     matches_policy bool null,
     egregious_block bool null,
     featured_block bool null,
+    maybe_harmless bool null,
     review_notes text,
     userid int not null,
     created timestamptz,
