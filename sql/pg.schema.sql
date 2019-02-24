@@ -427,7 +427,8 @@ CREATE TABLE isp_reports (
     
     matches_policy bool null default null,
     egregious_block bool null,
-    featured_block bool null
+    featured_block bool null,
+    maybe_harmless bool null
 );
 
 

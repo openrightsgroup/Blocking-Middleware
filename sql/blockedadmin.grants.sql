@@ -15,3 +15,4 @@ GRANT SELECT,UPDATE,INSERT,DELETE on table url_report_category_comments to block
 GRANT SELECT,UPDATE on sequence url_report_category_comments_id_seq to blockedadmin;
 
 
+GRANT UPDATE(egregious_block, featured_block, maybe_harmless) ON TABLE isp_reports TO blockedadmin;
