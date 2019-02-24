@@ -832,6 +832,8 @@ class ISPReportLoader {
             $open_filter = " and isp_reports.featured_block is true";
         } elseif ($state == 'egregious') {
             $open_filter = " and isp_reports.egregious is true";
+        } elseif ($state == "harmless") {
+            $state_filter = " and isp_reports.maybe_harmless is true";
         } else {
             $open_filter = '';
         }
@@ -909,6 +911,8 @@ class ISPReportLoader {
             $state_filter = " and isp_reports.featured_block is true";
         } elseif ($state == "egregious") {
             $state_filter = " and isp_reports.egregious_block is true";
+        } elseif ($state == "harmless") {
+            $state_filter = " and isp_reports.maybe_harmless is true";
         } else {
             $state_filter = '';
         }
