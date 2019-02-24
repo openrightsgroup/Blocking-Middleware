@@ -833,7 +833,7 @@ class ISPReportLoader {
         } elseif ($state == 'egregious') {
             $open_filter = " and isp_reports.egregious is true";
         } elseif ($state == "harmless") {
-            $state_filter = " and isp_reports.maybe_harmless is true";
+            $open_filter = " and isp_reports.maybe_harmless is true";
         } else {
             $open_filter = '';
         }
