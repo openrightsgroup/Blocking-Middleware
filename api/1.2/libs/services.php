@@ -849,9 +849,9 @@ class ISPReportLoader {
         }
 
         if ($reportercategory) {
-            $reportercategorytable = "inner join url_reporter_category_asgt asgt on asgt.urlid = urls.urlid
-                inner join url_reporter_categories on asgt.category_id = url_reporter_categories.id";
-            $reportercategoryfilter = " AND url_reporter_categories.name = ?";
+            $reportercategorytable = "inner join url_report_category_asgt asgt on asgt.urlid = urls.urlid
+                inner join url_report_categories on asgt.category_id = url_report_categories.id";
+            $reportercategoryfilter = " AND url_report_categories.name = ?";
             $args[] = $reportercategory;
         } else {
             $reportercategorytable = "";
@@ -928,9 +928,9 @@ class ISPReportLoader {
         }
 
         if ($reportercategory) {
-            $reportercategorytable = "inner join url_reporter_category_asgt asgt on asgt.urlid = urls.urlid
-                inner join url_reporter_categories on asgt.category_id = url_reporter_categories.id";
-            $reportercategoryfilter = " AND url_reporter_categories.name = ?";
+            $reportercategorytable = "inner join url_report_category_asgt asgt on asgt.urlid = urls.urlid
+                inner join url_report_categories on asgt.category_id = url_report_categories.id";
+            $reportercategoryfilter = " AND url_report_categories.name = ?";
             $args[] = $reportercategory;
         } else {
             $reportercategorytable = "";
