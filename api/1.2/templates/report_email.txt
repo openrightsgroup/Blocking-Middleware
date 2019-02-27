@@ -1,6 +1,6 @@
 {% if 'unblock' in report_type %}
 
-Website blocking enquiry from {{reporter_email|raw}}, regarding the website at
+Website blocking enquiry from {{reporter_name|raw}}, regarding the website at
 {{url|raw}}.
 
 The above website has been incorrectly blocked by your filters.
