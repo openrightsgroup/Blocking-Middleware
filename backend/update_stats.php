@@ -190,11 +190,11 @@ if ($argv[1] == 'counters') {
     $conn->beginTransaction();
     $conn->query("delete from stats.mobile_blocks");
 
-    $conn->query("insert into stats.mobile_blocks
-        select network_name, count(*) 
+    $conn->query("insert into stats.mobile_blocks (network_name, count, block_count)
+        select network_name, count(*), sum(case when uls.status = 'blocked' then 1 else 0 end) 
         from public.url_latest_status uls 
         inner join public.isps on isps.name = uls.network_name 
-        where uls.status = 'blocked' and isp_type = 'mobile' and show_results=1 
+        where isp_type = 'mobile' and show_results=1 
         group by network_name;");
     $conn->commit();
 
