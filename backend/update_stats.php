@@ -4,7 +4,7 @@ include_once __DIR__ . "/../api/1.2/libs/DB.php";
 $conn = db_connect();
 
 if(count($argv) == 1) {
-	echo "Required arg: <counters|isps|block-category>\n";
+	echo "Required arg: <counters|isps|block-category|mobile-blocks>\n";
 	exit(1);
 }
 
@@ -184,5 +184,18 @@ if ($argv[1] == 'counters') {
 
         $conn->commit();
     }
+
+} elseif ($argv[1] == 'mobile-blocks') {
+
+    $conn->beginTransaction();
+    $conn->query("delete from stats.mobile_blocks");
+
+    $conn->query("insert into stats.mobile_blocks
+        select network_name, count(*) 
+        from public.url_latest_status uls 
+        inner join public.isps on isps.name = uls.network_name 
+        where uls.status = 'blocked' and isp_type = 'mobile' and show_results=1 
+        group by network_name;");
+    $conn->commit();
 
 }

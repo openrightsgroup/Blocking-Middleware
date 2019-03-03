@@ -1520,3 +1520,9 @@ CREATE TABLE url_report_category_comments(
 );
 
 create index url_report_category_comments_report_id on url_report_category_comments(urlid);
+
+CREATE TABLE stats.mobile_blocks (
+    network_name text,
+    count bigint
+);
+
