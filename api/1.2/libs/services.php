@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
