@@ -839,10 +839,16 @@ class ISPReportLoader {
         }
 
         if ($category) {
-            $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
-                inner join categories on category_id = categories.id";
-            $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
-            $args[] = $category;
+            if ($category == '_unassigned_') {
+                $category_table = "left join (url_categories 
+                    inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
+                $category_filter = "AND categories.id is null";
+            } else {
+                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
+                    inner join categories on category_id = categories.id";
+                $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
+                $args[] = $category;
+            }
         } else {
             $category_table = '';
             $category_filter = '';
