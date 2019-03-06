@@ -1095,7 +1095,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory, $is_admin);
     $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory, $is_admin);
 
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory, $is_admin);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory);
 
     $output = array();
     $output['success'] = true;
