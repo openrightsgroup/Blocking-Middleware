@@ -1030,7 +1030,7 @@ class ElasticService {
     }
 
     function query($term, $index = '', $sort=null, $page=0, $pagesize=20, $excluded_terms=null) {
-        if (!is_null($excluded_terms) && array_count($excluded_terms) > 0) {
+        if (!is_null($excluded_terms) && count($excluded_terms) > 0) {
             $query_string = trim($term) . " AND NOT (" . implode(" OR ", $excluded_terms) . ")";
         } else {
             $query_string = trim($term);

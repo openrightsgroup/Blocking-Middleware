@@ -1453,7 +1453,7 @@ CREATE TABLE tags (
 create rule tag_insert_ignore  as on insert to tags where (exists(select 1 from tags where tags.id = new.id)) do instead nothing;
 
 CREATE TABLE search_ignore_terms (
-    id integer not null primary key,
+    id serial not null primary key,
     term varchar not null,
     enabled bool not null default true,
     created timestamptz not null,
