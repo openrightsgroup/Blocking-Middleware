@@ -1090,12 +1090,12 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;
 
     $count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, $state, $reportercategory, $is_admin);
-    $open_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open', $reportercategory);
-    $review_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed', $reportercategory);
-    $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory);
-    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory);
+    $open_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open', $reportercategory, $is_admin);
+    $review_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed', $reportercategory, $is_admin);
+    $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory, $is_admin);
+    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory, $is_admin);
 
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory, $is_admin);
 
     $output = array();
     $output['success'] = true;
