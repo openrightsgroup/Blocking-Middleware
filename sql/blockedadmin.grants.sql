@@ -16,3 +16,7 @@ GRANT SELECT,UPDATE on sequence url_report_category_comments_id_seq to blockedad
 
 
 GRANT UPDATE(egregious_block, featured_block, maybe_harmless) ON TABLE isp_reports TO blockedadmin;
+
+GRANT USAGE ON SCHEMA stats TO blockedadmin;
+GRANT SELECT ON ALL TABLES IN SCHEMA stats TO blockedadmin;
+GRANT SELECT,UPDATE,INSERT,DELETE ON search_ignore_terms TO blockedadmin;

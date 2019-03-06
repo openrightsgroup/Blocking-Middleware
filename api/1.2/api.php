@@ -230,7 +230,7 @@ $app->get('/search/url', function(Request $req) use ($app) {
 
     $exclude_adult = $req->get('exclude_adult', 0);
     if ($exclude_adult) {
-        $q = $app['service.db']->query("select term from search_exclude_terms where enabled = true order by term", array());
+        $q = $app['service.db']->query("select term from search_ignore_terms where enabled = true order by term", array());
         $excluded_terms = array();
         foreach($q as $row) {
             $excluded_terms[] = $row['term'];

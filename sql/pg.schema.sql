@@ -1455,6 +1455,7 @@ create rule tag_insert_ignore  as on insert to tags where (exists(select 1 from 
 CREATE TABLE search_ignore_terms (
     id integer not null primary key,
     term varchar not null,
+    enabled bool not null default true,
     created timestamptz not null,
     last_updated timestamptz null
 );
