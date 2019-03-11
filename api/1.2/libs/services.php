@@ -844,7 +844,7 @@ class ISPReportLoader {
                     inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
                 $category_filter = "AND categories.id is null";
             } else {
-                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
+                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid and url_categories.enabled = true
                     inner join categories on category_id = categories.id";
                 $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
                 $args[] = $category;
@@ -915,7 +915,7 @@ class ISPReportLoader {
                     inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
                 $category_filter = "AND categories.id is null";
             } else {
-                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid
+                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid and url_categories.enabled = true
                     inner join categories on category_id = categories.id";
                 $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
                 $args[] = $category;
