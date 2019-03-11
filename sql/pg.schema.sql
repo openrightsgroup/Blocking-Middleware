@@ -1528,3 +1528,5 @@ CREATE TABLE stats.mobile_blocks (
     block_count bigint
 );
 
+
+CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected');
