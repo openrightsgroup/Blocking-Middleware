@@ -20,3 +20,7 @@ GRANT UPDATE(egregious_block, featured_block, maybe_harmless) ON TABLE isp_repor
 GRANT USAGE ON SCHEMA stats TO blockedadmin;
 GRANT SELECT ON ALL TABLES IN SCHEMA stats TO blockedadmin;
 GRANT SELECT,UPDATE,INSERT,DELETE ON search_ignore_terms TO blockedadmin;
+GRANT SELECT,UPDATE ON search_ignore_terms_id_seq TO blockedadmin;
+
+GRANT update,insert,delete on url_categories to blockedadmin;
+GRANT update,insert,delete on categories to blockedadmin;
