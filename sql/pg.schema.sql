@@ -745,6 +745,7 @@ CREATE TABLE url_categories (
     urlid integer,
     category_id integer,
     enabled bool default true,
+    primary_category bool default null,
     userid int null,
     created timestamptz,
     last_updated timestamptz
@@ -752,6 +753,7 @@ CREATE TABLE url_categories (
 
 
 CREATE UNIQUE INDEX ON url_categories(urlid, category_id);
+CREATE UNIQUE INDEX ON url_categories(urlid) where primary_category = true;
 
 
 ALTER TABLE url_categories ADD FOREIGN KEY(category_id) REFERENCES categories(id);
