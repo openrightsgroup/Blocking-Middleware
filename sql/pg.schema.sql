@@ -1532,3 +1532,6 @@ CREATE TABLE stats.mobile_blocks (
 
 
 CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected');
+
+CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
+
