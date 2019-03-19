@@ -78,6 +78,8 @@ def update_elastic(row, categories=[]):
         'tags': row['tags'],
         'url': row['url'], 
         'source': row['source'],
+        'block_networks': row['block_networks'],
+        'tls': row['tld'],
         'categories': categories
         }
     try:
@@ -104,24 +106,30 @@ def update_elastic(row, categories=[]):
     if r.status_code not in (200,201):
         debug_response(data, r)
 
+def get_tld(url):
+    parts = urlparse.parse(url)
+    return parts.netloc.split('.')[-1]
+
 @register
 def urls(conn):
     c = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    c.execute("""select urls.urlid, url, tags, source, title, description, blocked_dmoz.urlid as blocked_dmoz
+    c.execute("""select urls.urlid, url, tags, source, title, description, block_networks
         from urls
         left join site_description using (urlid)
-        left join blocked_dmoz on blocked_dmoz.urlid = urls.urlid
         left join isp_reports on isp_reports.urlid = urls.urlid and network_name = 'ORG'
-        where urls.urlid in (select urlid from url_latest_status where status = 'blocked' and network_name in 
-            (select name from isps where queue_name is not null)
-            ) and isp_reports.id is null
+        inner join (select urlid, array_agg(network_name) as block_networks
+                    from url_latest_status 
+                    inner join isps on isps.name = network_name
+                    where status = 'blocked' and queue_name is not null
+                    group by urlid
+                   ) x on x.urlid = urls.urlid 
+        where isp_reports.id is null
         order by urlid
         """)
     logging.info("Found: %s", c.rowcount)
     for row in c:
-        categories = None
-        if row['blocked_dmoz']:
-            categories = get_categories(conn, row['urlid'])
+        row['tld'] = get_tld(row['url'])
+        categories = get_categories(conn, row['urlid'])
         update_elastic(row, categories)
 
 @register
