@@ -239,7 +239,12 @@ $app->get('/search/url', function(Request $req) use ($app) {
         $excluded_terms = array();
     }
 
-    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms);
+    $networks = $req->get('networks', null);
+    if (!is_null($networks) && !is_array($networks)) {
+        $networks = array($networks);
+    }
+
+    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks);
     $output = array(
         'success' => true,
         'sites' => $data->results,
