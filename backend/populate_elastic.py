@@ -72,7 +72,7 @@ def get_categories(conn, urlid):
     c.close()
     return out
 
-def update_elastic(row, categories=[]):
+def update_elastic(row, categories=[], **kw):
     data = {
         'id': row['urlid'],
         'title': row['title'],
@@ -80,9 +80,9 @@ def update_elastic(row, categories=[]):
         'url': row['url'], 
         'source': row['source'],
         'block_networks': row['block_networks'],
-        'tls': row['tld'],
         'categories': categories
         }
+    data.update(kw)
     try:
         desc = json.loads(row['description'])
         if 'keywords' in desc:
@@ -129,9 +129,8 @@ def urls(conn):
         """)
     logging.info("Found: %s", c.rowcount)
     for row in c:
-        row['tld'] = get_tld(row['url'])
         categories = get_categories(conn, row['urlid'])
-        update_elastic(row, categories)
+        update_elastic(row, categories, tld=get_tld(row['url']))
 
 @register
 def changes(conn):
