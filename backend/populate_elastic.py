@@ -5,6 +5,7 @@ import sys
 import json
 import logging
 import argparse
+import urlparse
 
 import psycopg2
 import psycopg2.extras
