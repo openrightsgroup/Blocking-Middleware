@@ -108,7 +108,7 @@ def update_elastic(row, categories=[]):
         debug_response(data, r)
 
 def get_tld(url):
-    parts = urlparse.parse(url)
+    parts = urlparse.urlparse(url)
     return parts.netloc.split('.')[-1]
 
 @register
