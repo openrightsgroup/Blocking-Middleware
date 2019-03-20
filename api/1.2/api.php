@@ -240,8 +240,19 @@ $app->get('/search/url', function(Request $req) use ($app) {
     }
 
     $networks = $req->get('networks', null);
-    if (!is_null($networks) && !is_array($networks)) {
-        $networks = array($networks);
+    if (!is_null($networks)) {
+        if (!is_array($networks)) {
+            $networks = array($networks);
+        }
+        if ($networks[0] == '_mobile' || $networks[0] == '_fixed') {
+            $query = $app['service.db']->query("select name from isps where isp_type = ? and queue_name is not null and show_results = 1 order by name", array(substr($networks[0],1)));
+            $networks = array();
+
+            foreach($query as $row) {
+                $networks[] = strtolower($row['name']);
+            }
+
+        }
     }
 
     $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks);
