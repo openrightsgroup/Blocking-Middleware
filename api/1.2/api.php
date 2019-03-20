@@ -1089,6 +1089,8 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $state = 'open';
     } elseif ($req->get('reviewed',null)) {
         $state = 'reviewed';
+    } elseif ($req->get('cancelled',null)) {
+        $state = 'cancelled';
     } elseif ($req->get('featured',null)) {
         $state = 'featured';
     } elseif ($req->get('egregious',null)) {
@@ -1109,6 +1111,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $open_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open', $reportercategory, $is_admin);
     $review_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed', $reportercategory, $is_admin);
     $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory, $is_admin);
+    $cancel_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'cancelled', $reportercategory, $is_admin);
     $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory, $is_admin);
 
     $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory);
@@ -1123,6 +1126,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output['open_count'] = $open_count;
     $output['review_count'] = $review_count;
     $output['feature_count'] = $feature_count;
+    $output['cancel_count'] = $cancel_count;
     $output['harmless_count'] = $harmless_count;
 
     return $app->json($output);
