@@ -828,6 +828,8 @@ class ISPReportLoader {
             $open_filter = " and isp_reports.status <= 'sent'";
         } elseif ($state == 'reviewed') {
             $open_filter = " and isp_reports.matches_policy is not null";
+        } elseif ($state == 'cancelled') {
+            $open_filter = " and isp_reports.status = 'cancelled'";
         } elseif ($state == 'featured') {
             $open_filter = " and isp_reports.featured_block is true";
         } elseif ($state == 'egregious') {
@@ -927,6 +929,8 @@ class ISPReportLoader {
         
         if ($state == 'open') {
             $state_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'cancelled') {
+            $state_filter = " and isp_reports.status = 'cancelled'";
         } elseif ($state == 'reviewed') {
             $state_filter = " and isp_reports.matches_policy is not null";
         } elseif ($state == "featured") {
