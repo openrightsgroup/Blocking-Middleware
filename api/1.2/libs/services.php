@@ -1071,8 +1071,7 @@ class ElasticService {
             if (!@$search['query']['bool']['filter']) {
                 $search['query']['bool']['filter'] = array();
             }
-            $search['query']['bool']['filter'][] = 
-                array('terms' => array('tld' => $tld));
+            $search['query']['bool']['filter'][] = array('terms' => array('tld' => $tld));
         }
         if ($sort) {
             $search['sort'] = $sort;
