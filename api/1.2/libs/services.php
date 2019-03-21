@@ -1057,7 +1057,7 @@ class ElasticService {
             )
         );
         if (!is_null($networks)) {
-            if (int($exclude)) {
+            if ((int)$exclude) {
                 $opt = 'must_not';
             } else {
                 $opt = 'filter';
