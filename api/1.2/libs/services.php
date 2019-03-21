@@ -1039,7 +1039,7 @@ class ElasticService {
         $this->addr = $addr;
     }
 
-    function query($term, $index = '', $sort=null, $page=0, $pagesize=20, $excluded_terms=null, $networks=null, $exclude=0) {
+    function query($term, $index = '', $sort=null, $page=0, $pagesize=20, $excluded_terms=null, $networks=null, $exclude=0, $domain=null) {
         if (!is_null($excluded_terms) && count($excluded_terms) > 0) {
             $query_string = trim($term) . " AND NOT (" . implode(" OR ", $excluded_terms) . ")";
         } else {
@@ -1062,8 +1062,17 @@ class ElasticService {
             } else {
                 $opt = 'filter';
             }
-            $search['query']['bool'][$opt] = 
-                array('terms' => array('block_networks' => $networks));
+            $search['query']['bool'][$opt] = array(
+                array('terms' => array('block_networks' => $networks))
+            );
+        }
+
+        if (!is_null($domain)) {
+            if (!@$search['query']['bool']['filter']) {
+                $search['query']['bool']['filter'] = array();
+            }
+            $search['query']['bool']['filter'][] = 
+                array('terms' => array('tld' => $tld));
         }
         if ($sort) {
             $search['sort'] = $sort;
