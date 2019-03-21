@@ -254,8 +254,9 @@ $app->get('/search/url', function(Request $req) use ($app) {
 
         }
     }
+    $exclude = $req->get('exclude', 0);
 
-    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks);
+    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks, $exclude);
     $output = array(
         'success' => true,
         'sites' => $data->results,
