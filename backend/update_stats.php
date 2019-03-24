@@ -51,6 +51,14 @@ if ($argv[1] == 'counters') {
 	$row = $result->fetch(PDO::FETCH_NUM);
 	$stats['blocked_sites_detected_total'] = $row[0];
 
+    $query = $conn->query("select count(distinct urlid) from isp_reports where status in ('sent','unblocked','rejected')", array());
+    $row = $result->fetch(PDO::FETCH_NUM);
+    $stats['isp_reports_made'] = $row[0];
+
+    $query = $conn->query("select count(distinct urlid) from isp_reports where (status = 'sent' and unblocked = 1) or (status = 'unblocked')", array());
+    $row = $result->fetch(PDO::FETCH_NUM);
+    $stats['isp_reports_unblocked'] = $row[0];
+
 	print_r($stats);
 
     $conn->beginTransaction();
