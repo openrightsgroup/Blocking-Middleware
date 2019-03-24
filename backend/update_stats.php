@@ -59,6 +59,10 @@ if ($argv[1] == 'counters') {
     $row = $result->fetch(PDO::FETCH_NUM);
     $stats['isp_reports_unblocked'] = $row[0];
 
+    $query = $conn->query("select count(distinct url) from frontend.savedlists inner join frontend.items on list_id = savedlists.id where public = true", array());
+    $row = $result->fetch(PDO::FETCH_NUM);
+    $stats['suspected_errors'] = $row[0];
+
 	print_r($stats);
 
     $conn->beginTransaction();
