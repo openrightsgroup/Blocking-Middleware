@@ -166,7 +166,7 @@ if ($argv[1] == 'counters') {
         $q = $conn->query("select count(distinct urlid) as blockcount 
             from url_latest_status uls 
             inner join urls using(urlid) 
-            where tags && makearray(?) and uls.status = 'blocked'",
+            where tags && makearray(?) and uls.status = 'blocked' and blocktype = 'PARENTAL'",
             array($row['id'])
             );
         $blockcount = $q->fetchColumn();
