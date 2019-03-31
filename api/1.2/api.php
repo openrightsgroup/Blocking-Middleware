@@ -1109,7 +1109,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $list = $req->get('list',null);
     $policy = $req->get('policy', null);
     if (!is_null($policy)) {
-        $policy = ($policy == "false") ? false : true;
+        $policy = in_array($policy, array("false", "False", "0", "f", 0)) ? false : true;
     }
 
     $page = $req->get('page', 0);
