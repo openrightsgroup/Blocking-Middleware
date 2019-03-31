@@ -885,7 +885,7 @@ class ISPReportLoader {
         }
 
         $res = $this->conn->query("select
-            url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
+            urls.url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
                 $admin_fields
                 isps.description as description,
                 case when allow_publish = 1 then isp_reports.name else '' end as name,
