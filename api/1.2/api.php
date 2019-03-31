@@ -1107,18 +1107,22 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $category = $req->get('category',null);
     $reportercategory = $req->get('reportercategory', null);
     $list = $req->get('list',null);
+    $policy = $req->get('policy', null);
+    if (!is_null($policy)) {
+        $policy = ($policy == "false" ? false : true;
+    }
 
     $page = $req->get('page', 0);
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;
 
-    $count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, $state, $reportercategory, $list, $is_admin);
-    $open_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open', $reportercategory, $list, $is_admin);
-    $review_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed', $reportercategory, $list, $is_admin);
-    $feature_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory, $list, $is_admin);
-    $cancel_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'cancelled', $reportercategory, $list, $is_admin);
-    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory, $list, $is_admin);
+    $count          = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, $state, $reportercategory, $list, $policy, $is_admin);
+    $open_count     = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'open', $reportercategory, $list, $policy, $is_admin);
+    $review_count   = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'reviewed', $reportercategory, $list, $policy, $is_admin);
+    $feature_count  = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'featured', $reportercategory, $list, $policy, $is_admin);
+    $cancel_count   = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'cancelled', $reportercategory, $list, $policy, $is_admin);
+    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', $isp, $category, 'harmless', $reportercategory, $list, $policy, $is_admin);
 
-    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory, $list);
+    $reports = $app['db.ispreport.load']->get_reports('unblock', $isp, $page,  $is_admin, $state, $category, $reportercategory, $list, $policy);
 
     $output = array();
     $output['success'] = true;

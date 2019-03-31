@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $policy=null, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -826,6 +826,10 @@ class ISPReportLoader {
         
         if ($state == 'open') {
             $open_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'closed') {
+            $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
+        } elseif ($state == 'rejected') {
+            $state_filter = " and isp_reports.status in ('rejected'))";
         } elseif ($state == 'reviewed') {
             $open_filter = " and isp_reports.matches_policy is not null";
         } elseif ($state == 'cancelled') {
@@ -839,6 +843,15 @@ class ISPReportLoader {
         } else {
             $open_filter = '';
         }
+
+        if (!is_null($policy)) {
+            if ($policy) {
+                $policy_filter = " and matches_policy is true";
+            } else {
+                $policy_filter = " and matches_policy is false";
+            }
+        }
+
 
         if ($category) {
             if ($category == '_unassigned_') {
@@ -895,7 +908,7 @@ class ISPReportLoader {
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
             $category_table $reportercategorytable $listtable
-            where report_type = ? $network_clause $category_filter $reportercategoryfilter $filter $open_filter $listfilter
+            where report_type = ? $network_clause $category_filter $reportercategoryfilter $filter $open_filter $listfilter $policy_filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -938,6 +951,10 @@ class ISPReportLoader {
         
         if ($state == 'open') {
             $state_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'closed') {
+            $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
+        } elseif ($state == 'rejected') {
+            $state_filter = " and isp_reports.status in ('rejected'))";
         } elseif ($state == 'cancelled') {
             $state_filter = " and isp_reports.status = 'cancelled'";
         } elseif ($state == 'reviewed') {
@@ -950,6 +967,14 @@ class ISPReportLoader {
             $state_filter = " and isp_reports.maybe_harmless is true";
         } else {
             $state_filter = '';
+        }
+
+        if (!is_null($policy)) {
+            if ($policy) {
+                $policy_filter = " and matches_policy is true";
+            } else {
+                $policy_filter = " and matches_policy is false";
+            }
         }
 
         if ($reportercategory) {
@@ -977,7 +1002,7 @@ class ISPReportLoader {
             from isp_reports
             inner join urls using(urlid)
             $category_table $reportercategorytable $listtable
-            where report_type = ? $network_clause  $category_filter $reportercategoryfilter $filter $state_filter $listfilter",
+            where report_type = ? $network_clause  $category_filter $reportercategoryfilter $filter $state_filter $listfilter $policy_filter",
             $args
             );
         return $res->fetchColumn(0);
