@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -866,6 +866,15 @@ class ISPReportLoader {
             $reportercategoryfilter = "";
         }
 
+        if ($list) {
+            $listtable = "inner join frontend.items listasgt on listasgt.url = urls.url
+                inner join frontend.savedlists on listasgt.list_id = savedlists.id";
+            $listfilter = " AND savedlists.name = ?";
+            $args[] = $list;
+        } else {
+            $listtable = "";
+            $listfilter = "";
+        }
 
         if ($is_admin) {
             $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
@@ -885,8 +894,8 @@ class ISPReportLoader {
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
-            $category_table $reportercategorytable
-            where report_type = ? $network_clause $category_filter $reportercategoryfilter $filter $open_filter
+            $category_table $reportercategorytable $listtable
+            where report_type = ? $network_clause $category_filter $reportercategoryfilter $filter $open_filter $listfilter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -898,7 +907,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $network=null, $category=null, $state=null, $reportercategory=null, $is_admin) {
+    function count_reports($type, $network=null, $category=null, $state=null, $reportercategory=null, $list=null, $is_admin) {
         $args = array($type);
         if ($network) {
             $args[] = $network;
@@ -953,12 +962,22 @@ class ISPReportLoader {
             $reportercategoryfilter = "";
         }
 
+        if ($list) {
+            $listtable = "inner join frontend.items listasgt on listasgt.url = urls.url
+                inner join frontend.savedlists on listasgt.list_id = savedlists.id";
+            $listfilter = " AND savedlists.name = ?";
+            $args[] = $list;
+        } else {
+            $listtable = "";
+            $listfilter = "";
+        }
+
         $res = $this->conn->query("select
             count(*)
             from isp_reports
             inner join urls using(urlid)
-            $category_table $reportercategorytable
-            where report_type = ? $network_clause  $category_filter $reportercategoryfilter $filter $state_filter",
+            $category_table $reportercategorytable $listtable
+            where report_type = ? $network_clause  $category_filter $reportercategoryfilter $filter $state_filter $listfilter",
             $args
             );
         return $res->fetchColumn(0);
