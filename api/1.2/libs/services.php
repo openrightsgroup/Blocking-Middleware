@@ -831,7 +831,7 @@ class ISPReportLoader {
         } elseif ($state == 'closed') {
             $open_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
         } elseif ($state == 'rejected') {
-            $open_filter = " and isp_reports.status in ('rejected'))";
+            $open_filter = " and isp_reports.status in ('rejected')";
         } elseif ($state == 'reviewed') {
             $open_filter = " and isp_reports.matches_policy is not null";
         } elseif ($state == 'cancelled') {
@@ -976,7 +976,7 @@ class ISPReportLoader {
         } elseif ($state == 'closed') {
             $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
         } elseif ($state == 'rejected') {
-            $state_filter = " and isp_reports.status in ('rejected'))";
+            $state_filter = " and isp_reports.status in ('rejected')";
         } elseif ($state == 'cancelled') {
             $state_filter = " and isp_reports.status = 'cancelled'";
         } elseif ($state == 'reviewed') {
