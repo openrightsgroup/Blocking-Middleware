@@ -1090,6 +1090,8 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
 
     if ($req->get('open',null)) {
         $state = 'open';
+    } elseif ($req->get('rejected',null)) {
+        $state = 'rejected';
     } elseif ($req->get('reviewed',null)) {
         $state = 'reviewed';
     } elseif ($req->get('cancelled',null)) {
