@@ -812,7 +812,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $policy=null, $pagesize=25) {
+    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $policy=null, $year=null, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
@@ -826,10 +826,12 @@ class ISPReportLoader {
         
         if ($state == 'open') {
             $open_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'sent') {
+            $open_filter = " and isp_reports.status = 'sent'";
         } elseif ($state == 'closed') {
-            $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
+            $open_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
         } elseif ($state == 'rejected') {
-            $state_filter = " and isp_reports.status in ('rejected'))";
+            $open_filter = " and isp_reports.status in ('rejected'))";
         } elseif ($state == 'reviewed') {
             $open_filter = " and isp_reports.matches_policy is not null";
         } elseif ($state == 'cancelled') {
@@ -850,8 +852,9 @@ class ISPReportLoader {
             } else {
                 $policy_filter = " and matches_policy is false";
             }
+        } else {
+            $policy_filter = "";
         }
-
 
         if ($category) {
             if ($category == '_unassigned_') {
@@ -889,6 +892,14 @@ class ISPReportLoader {
             $listfilter = "";
         }
 
+        if (!is_null($year)) {
+            $year_filter = " and date_part('year', isp_reports.created) = ?";
+            $args[] = $year;
+        } else {
+            $year_filter = "";
+        }
+
+
         if ($is_admin) {
             $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
             $filter = '';
@@ -908,7 +919,16 @@ class ISPReportLoader {
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
             $category_table $reportercategorytable $listtable
-            where report_type = ? $network_clause $category_filter $reportercategoryfilter $filter $open_filter $listfilter $policy_filter
+            where report_type = ? 
+                $network_clause
+                $category_filter
+                $reportercategoryfilter
+                $listfilter
+                $year_filter
+
+                $filter
+                $open_filter
+                $policy_filter
             order by isp_reports.created desc
             limit $pagesize offset $off",
             $args
@@ -920,7 +940,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $network=null, $category=null, $state=null, $reportercategory=null, $list=null, $is_admin) {
+    function count_reports($type, $network=null, $category=null, $state=null, $reportercategory=null, $list=null, $policy=null, $year=null, $is_admin) {
         $args = array($type);
         if ($network) {
             $args[] = $network;
@@ -951,6 +971,8 @@ class ISPReportLoader {
         
         if ($state == 'open') {
             $state_filter = " and isp_reports.status <= 'sent'";
+        } elseif ($state == 'sent') {
+            $state_filter = " and isp_reports.status = 'sent'";
         } elseif ($state == 'closed') {
             $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
         } elseif ($state == 'rejected') {
@@ -975,6 +997,8 @@ class ISPReportLoader {
             } else {
                 $policy_filter = " and matches_policy is false";
             }
+        } else {
+            $policy_filter = "";
         }
 
         if ($reportercategory) {
@@ -997,15 +1021,33 @@ class ISPReportLoader {
             $listfilter = "";
         }
 
+        if (!is_null($year)) {
+            $year_filter = " and date_part('year', isp_reports.created) = ?";
+            $args[] = $year;
+        } else {
+            $year_filter = "";
+        }
+
         $res = $this->conn->query("select
             count(*)
             from isp_reports
             inner join urls using(urlid)
             $category_table $reportercategorytable $listtable
-            where report_type = ? $network_clause  $category_filter $reportercategoryfilter $filter $state_filter $listfilter $policy_filter",
+            where report_type = ? 
+                $network_clause
+                $category_filter
+                $reportercategoryfilter
+                $listfilter
+                $year_filter
+
+                $filter
+                $state_filter
+                $policy_filter",
             $args
             );
-        return $res->fetchColumn(0);
+        $ct = $res->fetchColumn(0);
+        error_log("Count: $ct");
+        return $ct;
     }
 
 
