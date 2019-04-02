@@ -10,6 +10,7 @@ if(count($argv) == 1) {
 
 if ($argv[1] == 'counters') {
 
+
 	$result = $conn->query(" select count(*) from urls where not (source = 'dmoz' and lastPolled is null)", array());
 	$row = $result->fetch(PDO::FETCH_NUM);
 
@@ -52,15 +53,15 @@ if ($argv[1] == 'counters') {
 	$stats['blocked_sites_detected_total'] = $row[0];
 
     $query = $conn->query("select count(distinct urlid) from isp_reports where status in ('sent','unblocked','rejected')", array());
-    $row = $result->fetch(PDO::FETCH_NUM);
+    $row = $query->fetch(PDO::FETCH_NUM);
     $stats['isp_reports_made'] = $row[0];
 
     $query = $conn->query("select count(distinct urlid) from isp_reports where (status = 'sent' and unblocked = 1) or (status = 'unblocked')", array());
-    $row = $result->fetch(PDO::FETCH_NUM);
+    $row = $query->fetch(PDO::FETCH_NUM);
     $stats['isp_reports_unblocked'] = $row[0];
 
     $query = $conn->query("select count(distinct url) from frontend.savedlists inner join frontend.items on list_id = savedlists.id where public = true", array());
-    $row = $result->fetch(PDO::FETCH_NUM);
+    $row = $query->fetch(PDO::FETCH_NUM);
     $stats['suspected_errors'] = $row[0];
 
 	print_r($stats);
@@ -72,7 +73,7 @@ if ($argv[1] == 'counters') {
             array($name)
             );
 		$conn->query(
-			"insert into stats_cache (name, value) values (?,?)",
+			"insert into stats_cache (name, value, last_updated) values (?,?, now())",
 			array($name, $value)
 			);
 	}
@@ -151,6 +152,7 @@ if ($argv[1] == 'counters') {
         where category is not null and category <> '' and status='blocked' 
         group by category, network_name");
     $conn->commit();
+
 } elseif ($argv[1] == 'domain-category') {
 
     $rs = $conn->query("select * from tags where type = ?",
@@ -189,7 +191,7 @@ if ($argv[1] == 'counters') {
             from url_latest_status uls 
             inner join urls on uls.urlid = urls.urlid
             inner join isps on isps.name = uls.network_name
-            where tags && makearray(?) and uls.status = 'blocked' and isps.regions && '{gb}'
+            where tags && makearray(?) and uls.status = 'blocked' and isps.regions && '{gb}' 
             group by uls.network_name",
             array($row['id'], $row['id'])
             );
