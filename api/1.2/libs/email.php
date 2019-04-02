@@ -23,6 +23,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
             'reporter_name' => $name,
             'url' => $url,
             'message' => $message,
+            'network' => $network,
             'report_type' => explode(",", $report_type),
             'category' => $category
             )

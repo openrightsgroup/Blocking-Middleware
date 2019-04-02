@@ -14,6 +14,10 @@ Thanks,
 
 {{reporter_name|raw}}
 
+{% if network == 'VirginMedia' %}
+Please reply directly to the user at this email address to ensure that they receive your response. Do not combine responses as they will be sent to the wrong person.
+
+{% endif %}
 You can view details including when the block was detected and which other ISPs appear to be blocking the site at: https://www.blocked.org.uk/site/{{url|raw}}
 
 This email was sent from https://www.blocked.org.uk — you can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
