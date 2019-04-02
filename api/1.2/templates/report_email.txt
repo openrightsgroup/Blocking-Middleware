@@ -14,7 +14,7 @@ Thanks,
 
 {{reporter_name|raw}}
 
-{% if network == 'VirginMedia' %}
+{% if network['name'] == 'VirginMedia' %}
 Please reply directly to the user at this email address to ensure that they receive your response. Do not combine responses as they will be sent to the wrong person.
 
 {% endif %}
