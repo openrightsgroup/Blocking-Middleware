@@ -858,7 +858,7 @@ class ISPReportLoader {
             $output->args[] = $filter['network'];
         }
 
-        if (@$filter['policy']) {
+        if (!is_null(@$filter['policy'])) {
             if ($filter['policy']) {
                 $output->filters[] = " and matches_policy is true";
             } else {
