@@ -812,101 +812,110 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function get_reports($type, $network=null, $page=0, $is_admin, $state='', $category='', $reportercategory='', $list='', $policy=null, $year=null, $pagesize=25) {
+    function process_filter($filter) {
+        $output = new stdClass();
+        $output->tables = array();
+        $output->filters = array();
+        $output->args = array();
+
+        if (is_null($filter)) {
+            return $output;
+        }
+
+        
+        switch(@$filter['state']) {
+        case 'open':
+            $output->filters[] = " and isp_reports.status <= 'sent'";
+            break;
+        case 'sent':
+            $output->filters[] = " and isp_reports.status = 'sent'";
+            break;
+        case 'closed':
+            $output->filters[] = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
+            break;
+        case 'rejected':
+            $output->filters[] = " and isp_reports.status in ('rejected')";
+            break;
+        case 'reviewed':
+            $output->filters[] = " and isp_reports.matches_policy is not null";
+            break;
+        case 'cancelled':
+            $output->filters[] = " and isp_reports.status = 'cancelled'";
+            break;
+        case 'featured':
+            $output->filters[] = " and isp_reports.featured_block is true";
+            break;
+        case 'egregious':
+            $output->filters[] = " and isp_reports.egregious is true";
+            break;
+        case "harmless":
+            $output->filters[] = " and isp_reports.maybe_harmless is true";
+            break;
+        };
+
+        if (@$filter['network']) {
+            $output->filters[] = " AND network_name = ?";
+            $output->args[] = $filter['network'];
+        }
+
+        if (@$filter['policy']) {
+            if ($filter['policy']) {
+                $output->filters[] = " and matches_policy is true";
+            } else {
+                $output->filters[] = " and matches_policy is false";
+            }
+        }
+
+        if (@$filter['category']) {
+            if ($filter['category'] == '_unassigned_') {
+                $output->tables[] = "left join (url_categories 
+                    inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
+                $output->filters[] = "AND categories.id is null";
+            } else {
+                $output->tables[] = "inner join url_categories on url_categories.urlid = urls.urlid and url_categories.enabled = true
+                    inner join categories on category_id = categories.id";
+                $output->filters[] = "AND namespace = 'ORG' AND categories.name = ?";
+                $output->args[] = $filter['category'];
+            }
+        }
+
+        if (@$filter['reportercategory']) {
+            $output->tables[] = "inner join url_report_category_asgt asgt on asgt.urlid = urls.urlid
+                inner join url_report_categories on asgt.category_id = url_report_categories.id";
+            $output->filters[] = " AND url_report_categories.name = ?";
+            $output->args[] = $filter['reportercategory'];
+        }
+
+        if (@$filter['list']) {
+            $output->tables[] = "inner join frontend.items listasgt on listasgt.url = urls.url
+                inner join frontend.savedlists on listasgt.list_id = savedlists.id";
+            $output->filters[] = " AND savedlists.name = ?";
+            $output->args[] = $filter['list'];
+        }
+        if (@$filter['year']) {
+            $output->filters[] = " and date_part('year', isp_reports.created) = ?";
+            $output->args[] = $filter['year'];
+        }
+
+        return $output;
+    }
+
+    function get_reports($type, $filter=null, $page=0, $is_admin, $pagesize=25) {
 
         $off = ((int)$page) * $pagesize;
 
-        $args = array($type);
-        if ($network) {
-            $args[] = $network;
-            $network_clause = " AND network_name = ?";
-        } else {
-            $network_clause = "";
-        }
-        
-        if ($state == 'open') {
-            $open_filter = " and isp_reports.status <= 'sent'";
-        } elseif ($state == 'sent') {
-            $open_filter = " and isp_reports.status = 'sent'";
-        } elseif ($state == 'closed') {
-            $open_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
-        } elseif ($state == 'rejected') {
-            $open_filter = " and isp_reports.status in ('rejected')";
-        } elseif ($state == 'reviewed') {
-            $open_filter = " and isp_reports.matches_policy is not null";
-        } elseif ($state == 'cancelled') {
-            $open_filter = " and isp_reports.status = 'cancelled'";
-        } elseif ($state == 'featured') {
-            $open_filter = " and isp_reports.featured_block is true";
-        } elseif ($state == 'egregious') {
-            $open_filter = " and isp_reports.egregious is true";
-        } elseif ($state == "harmless") {
-            $open_filter = " and isp_reports.maybe_harmless is true";
-        } else {
-            $open_filter = '';
-        }
-
-        if (!is_null($policy)) {
-            if ($policy) {
-                $policy_filter = " and matches_policy is true";
-            } else {
-                $policy_filter = " and matches_policy is false";
-            }
-        } else {
-            $policy_filter = "";
-        }
-
-        if ($category) {
-            if ($category == '_unassigned_') {
-                $category_table = "left join (url_categories 
-                    inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
-                $category_filter = "AND categories.id is null";
-            } else {
-                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid and url_categories.enabled = true
-                    inner join categories on category_id = categories.id";
-                $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
-                $args[] = $category;
-            }
-        } else {
-            $category_table = '';
-            $category_filter = '';
-        }
-
-        if ($reportercategory) {
-            $reportercategorytable = "inner join url_report_category_asgt asgt on asgt.urlid = urls.urlid
-                inner join url_report_categories on asgt.category_id = url_report_categories.id";
-            $reportercategoryfilter = " AND url_report_categories.name = ?";
-            $args[] = $reportercategory;
-        } else {
-            $reportercategorytable = "";
-            $reportercategoryfilter = "";
-        }
-
-        if ($list) {
-            $listtable = "inner join frontend.items listasgt on listasgt.url = urls.url
-                inner join frontend.savedlists on listasgt.list_id = savedlists.id";
-            $listfilter = " AND savedlists.name = ?";
-            $args[] = $list;
-        } else {
-            $listtable = "";
-            $listfilter = "";
-        }
-
-        if (!is_null($year)) {
-            $year_filter = " and date_part('year', isp_reports.created) = ?";
-            $args[] = $year;
-        } else {
-            $year_filter = "";
-        }
-
+        $proc = $this->process_filter($filter);
 
         if ($is_admin) {
             $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
-            $filter = '';
         } else {
             $admin_fields = '';
-            $filter = "and isp_reports.status not in ('cancelled','abuse')";
+            $proc->filters[] = " and isp_reports.status not in ('cancelled','abuse')";
         }
+
+        $tables = implode(" ", $proc->tables);
+        $filters = implode(" ", $proc->filters);
+        array_unshift($proc->args, $type);
 
         $res = $this->conn->query("select
             urls.url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
@@ -918,20 +927,11 @@ class ISPReportLoader {
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
             left join contacts on contacts.id = isp_reports.contact_id
-            $category_table $reportercategorytable $listtable
-            where report_type = ? 
-                $network_clause
-                $category_filter
-                $reportercategoryfilter
-                $listfilter
-                $year_filter
-
-                $filter
-                $open_filter
-                $policy_filter
+            $tables
+            where report_type = ? $filters
             order by isp_reports.created desc
             limit $pagesize offset $off",
-            $args
+            $proc->args
             );
         $reports = array();
         foreach ($res as $row) {
@@ -940,110 +940,25 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $network=null, $category=null, $state=null, $reportercategory=null, $list=null, $policy=null, $year=null, $is_admin) {
+    function count_reports($type, $cfilter, $is_admin) {
         $args = array($type);
-        if ($network) {
-            $args[] = $network;
-            $network_clause = " AND network_name = ?";
-        } else {
-            $network_clause = "";
-        }
-        if ($is_admin) {
-            $filter = '';
-        } else {
-            $filter = "and isp_reports.status not in ('cancelled','abuse')";
-        }
-        if ($category) {
-            if ($category == '_unassigned_') {
-                $category_table = "left join (url_categories 
-                    inner join categories on category_id = categories.id and namespace = 'ORG') using (urlid)";
-                $category_filter = "AND categories.id is null";
-            } else {
-                $category_table = "inner join url_categories on url_categories.urlid = urls.urlid and url_categories.enabled = true
-                    inner join categories on category_id = categories.id";
-                $category_filter = "AND namespace = 'ORG' AND categories.name = ?";
-                $args[] = $category;
-            }
-        } else {
-            $category_table = '';
-            $category_filter = '';
-        }
-        
-        if ($state == 'open') {
-            $state_filter = " and isp_reports.status <= 'sent'";
-        } elseif ($state == 'sent') {
-            $state_filter = " and isp_reports.status = 'sent'";
-        } elseif ($state == 'closed') {
-            $state_filter = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
-        } elseif ($state == 'rejected') {
-            $state_filter = " and isp_reports.status in ('rejected')";
-        } elseif ($state == 'cancelled') {
-            $state_filter = " and isp_reports.status = 'cancelled'";
-        } elseif ($state == 'reviewed') {
-            $state_filter = " and isp_reports.matches_policy is not null";
-        } elseif ($state == "featured") {
-            $state_filter = " and isp_reports.featured_block is true";
-        } elseif ($state == "egregious") {
-            $state_filter = " and isp_reports.egregious_block is true";
-        } elseif ($state == "harmless") {
-            $state_filter = " and isp_reports.maybe_harmless is true";
-        } else {
-            $state_filter = '';
+        $proc = $this->process_filter($filter);
+
+        if (!$is_admin) {
+            $proc->filters[] = " and isp_reports.status not in ('cancelled','abuse')";
         }
 
-        if (!is_null($policy)) {
-            if ($policy) {
-                $policy_filter = " and matches_policy is true";
-            } else {
-                $policy_filter = " and matches_policy is false";
-            }
-        } else {
-            $policy_filter = "";
-        }
-
-        if ($reportercategory) {
-            $reportercategorytable = "inner join url_report_category_asgt asgt on asgt.urlid = urls.urlid
-                inner join url_report_categories on asgt.category_id = url_report_categories.id";
-            $reportercategoryfilter = " AND url_report_categories.name = ?";
-            $args[] = $reportercategory;
-        } else {
-            $reportercategorytable = "";
-            $reportercategoryfilter = "";
-        }
-
-        if ($list) {
-            $listtable = "inner join frontend.items listasgt on listasgt.url = urls.url
-                inner join frontend.savedlists on listasgt.list_id = savedlists.id";
-            $listfilter = " AND savedlists.name = ?";
-            $args[] = $list;
-        } else {
-            $listtable = "";
-            $listfilter = "";
-        }
-
-        if (!is_null($year)) {
-            $year_filter = " and date_part('year', isp_reports.created) = ?";
-            $args[] = $year;
-        } else {
-            $year_filter = "";
-        }
+        $tables = implode(" ", $proc->tables);
+        $filters = implode(" ", $proc->filters);
+        array_unshift($proc->args, $type);
 
         $res = $this->conn->query("select
             count(*)
             from isp_reports
             inner join urls using(urlid)
-            $category_table $reportercategorytable $listtable
-            where report_type = ? 
-                $network_clause
-                $category_filter
-                $reportercategoryfilter
-                $listfilter
-                $year_filter
-
-                $filter
-                $state_filter
-                $policy_filter",
-            $args
+            $tables
+            where report_type = ? $filters",
+            $proc->args
             );
         $ct = $res->fetchColumn(0);
         error_log("Count: $ct");
