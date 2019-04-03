@@ -1089,22 +1089,12 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $isp = $req->get('isp',null);
 
     $filter = array();
-    if ($req->get('open',null)) {
-        $filter['state'] = 'open';
-    } elseif ($req->get('rejected',null)) {
-        $filter['state'] = 'rejected';
-    } elseif ($req->get('reviewed',null)) {
-        $filter['state'] = 'reviewed';
-    } elseif ($req->get('cancelled',null)) {
-        $filter['state'] = 'cancelled';
-    } elseif ($req->get('featured',null)) {
-        $filter['state'] = 'featured';
-    } elseif ($req->get('egregious',null)) {
-        $filter['state'] = 'egregious';
-    } elseif ($req->get('harmless',null)) {
-        $filter['state'] = 'harmless';
-    } elseif ($req->get('sent',null)) {
-        $filter['state'] = 'sent';
+
+    foreach(array('open','sent','unresolved','rejected','reviewed','cancelled','featured','egregious','harmless') as $ftype) {
+        if ($req->get($ftype,null)) {
+            $filter['state'] = $ftype;
+            break;
+        }
     }
 
     $filter['network'] = $isp;

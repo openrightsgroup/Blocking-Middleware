@@ -830,6 +830,9 @@ class ISPReportLoader {
         case 'sent':
             $output->filters[] = " and isp_reports.status = 'sent'";
             break;
+        case 'unresolved':
+            $output->filters[] = " and (isp_reports.status = 'sent' and isp_reports.unblocked = 0)";
+            break;
         case 'closed':
             $output->filters[] = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
             break;
