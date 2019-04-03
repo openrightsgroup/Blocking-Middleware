@@ -944,7 +944,7 @@ class ISPReportLoader {
         return $reports;
     }
 
-    function count_reports($type, $cfilter, $is_admin) {
+    function count_reports($type, $filter, $is_admin) {
         $args = array($type);
         $proc = $this->process_filter($filter);
 
