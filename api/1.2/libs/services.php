@@ -853,11 +853,6 @@ class ISPReportLoader {
             break;
         };
 
-        if (@$filter['network']) {
-            $output->filters[] = " AND network_name = ?";
-            $output->args[] = $filter['network'];
-        }
-
         if (!is_null(@$filter['policy'])) {
             if ($filter['policy']) {
                 $output->filters[] = " and matches_policy is true";
@@ -865,6 +860,12 @@ class ISPReportLoader {
                 $output->filters[] = " and matches_policy is false";
             }
         }
+
+        if (@$filter['network']) {
+            $output->filters[] = " AND network_name = ?";
+            $output->args[] = $filter['network'];
+        }
+
 
         if (@$filter['category']) {
             if ($filter['category'] == '_unassigned_') {
