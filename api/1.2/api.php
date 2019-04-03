@@ -1107,7 +1107,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $filter['state'] = 'sent';
     }
 
-    $filter['isp'] = $isp;
+    $filter['network'] = $isp;
     $filter['category'] = $req->get('category',null);
     $filter['reportercategory'] = $req->get('reportercategory', null);
     $filter['list'] = $req->get('list',null);
