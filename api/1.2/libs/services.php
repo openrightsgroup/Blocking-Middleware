@@ -737,7 +737,7 @@ class ISPReportLoader {
     function can_report($urlID, $network_name) {
         // find out if site has already been reported on this network
         $res = $this->conn->query("select count(*) from isp_reports
-            where urlID = ? and network_name = ? and unblocked = 0",
+            where urlID = ? and network_name = ? and unblocked = 0 and status not in ('cancelled')",
             array($urlID, $network_name));
         $row = $res->fetch(PDO::FETCH_NUM);
         if ($row[0] != 0) {
@@ -748,7 +748,7 @@ class ISPReportLoader {
         $res = $this->conn->query("select count(*) from isp_reports
             inner join isps on (isp_reports.network_name = isps.name)
             inner join isps isps2 on (isps2.admin_email = isps.admin_email)
-            where urlid = ? and isps2.name = ?",
+            where urlid = ? and isps2.name = ? and isp_reports.status not in ('cancelled')",
             array($urlID, $network_name));
         $row = $res->fetch(PDO::FETCH_NUM);
         if ($row[0] != 0) {
