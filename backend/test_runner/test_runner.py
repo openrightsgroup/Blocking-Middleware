@@ -10,11 +10,10 @@ import datetime
 import operator
 import subprocess
 import collections
-
 import configparser
+
 import psycopg2
 import amqplib.client_0_8 as amqp
-import pytz
 
 from NORM import Query, DBObject
 
@@ -37,7 +36,7 @@ class Test(DBObject):
         'name', 'status', 'tags', 'filter', 'sent',
         'total', 'received', 'isps', 'check_interval',
         'last_check', 'repeat_interval', 'last_run', 'batch_size', 'last_id',
-        'message', 'vhost'
+        'message'
     ]
 
     @classmethod
@@ -104,33 +103,31 @@ def get_changes(orig, new):
 
     return (orig_set.difference(new_set), new_set.difference(orig_set))
 
-def read_queues(vhosts):
+def read_queues():
+    proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','list_bindings'], stdout=subprocess.PIPE)
     queues = collections.defaultdict(list)
-    for vhost in vhosts:
-        logging.debug("Reading vhost: %s", vhost)
-        proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','-p', vhost, 'list_bindings'], stdout=subprocess.PIPE)
-        for row in proc.stdout:
-            parts = row.split('\t')
-            if parts[0] == '':
-                continue
-            queues[(vhost,parts[0],parts[4])].append(parts[2])
-        proc.wait()
+    for row in proc.stdout:
+        parts = row.split('\t')
+        if parts[0] == '':
+            continue
+        queues[(parts[0],parts[4])].append(parts[2])
+    proc.wait()
     logging.debug("Got list: %s", queues)
     return queues
 
-def check_queues(conn, vhost):
+def check_queues(conn):
     c = conn.cursor()
+    proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q','list_queues','name','messages'], stdout=subprocess.PIPE)
     queuelength = {}
-    proc = subprocess.Popen(CONFIG.get('rabbit','ctl').split() + ['-q', '-p', vhost, 'list_queues', 'name', 'messages'], stdout=subprocess.PIPE)
     for row in proc.stdout:
         parts = row.strip().split('\t')
         if parts[0].startswith('url.') or parts[0] == 'results':
             logging.debug("Queue: %s; length: %s", parts[0], parts[1])
-            c.execute("update tests.queue_status set message_count = %s, last_updated = now() where vhost = %s and queue_name = %s",
-                      [parts[1], vhost, parts[0]])
+            c.execute("update tests.queue_status set message_count = %s, last_updated = now() where queue_name = %s",
+                      [parts[1], parts[0]])
             if c.rowcount == 0:
-                c.execute("insert into tests.queue_status (message_count, last_updated, vhost, queue_name) values(%s, now(), %s, %s)",
-                          [parts[1], vhost, parts[0]])
+                c.execute("insert into tests.queue_status (message_count, last_updated, queue_name) values(%s, now(), %s)",
+                          [parts[1], parts[0]])
 
             queuelength[parts[0]] = int(parts[1])
     conn.commit()
@@ -151,17 +148,11 @@ def main():
     dbopts = dict(CONFIG.items('db'))
     conn = psycopg2.connect(**dbopts)
     amqpopts = dict(CONFIG.items('amqp'))
-    vhosts = amqpopts.pop('vhosts', '/').split(',')
-    amqp_connections = {}
-    for vhost in vhosts:
-        amqpconn = amqp.Connection(virtual_host=vhost,**amqpopts)
-        ch = amqpconn.channel()
-        amqp_connections[vhost] = (amqpconn, ch)
-        del amqpconn, ch
-        
+    amqpconn = amqp.Connection(**amqpopts)
+    ch = amqpconn.channel()
 
     while True:
-        bindings = read_queues(vhosts)
+        bindings = read_queues()
         queues = set(reduce(operator.add, bindings.values()))
     
         q = Query(conn, "select now() as now", [])
@@ -171,27 +162,24 @@ def main():
 
     
         for testcase in Test.get_runnable(conn):
-            logging.info("Test case %s(%s) : %s", testcase['name'], testcase['id'], testcase['vhost'])
-            logging.debug("Routing: %s / %s", EXCHANGE, testcase.get_routing_key())
-            add_isps, remove_isps = get_changes(map(qname, testcase['isps']), 
-                                                bindings[(testcase['vhost'], EXCHANGE, testcase.get_routing_key())]
-                                                )
+            logging.info("Test case %s(%s)", testcase['name'], testcase['id'])
+            logging.debug("Routing: %s / %s", EXCHANGE,testcase.get_routing_key())
+            add_isps, remove_isps = get_changes(map(qname, testcase['isps']), bindings[(EXCHANGE,testcase.get_routing_key())])
             if add_isps:
                 logging.info("Add: %s", add_isps)
             if remove_isps:
                 logging.info("Remove: %s", remove_isps)
-
-            amqpconn, ch = amqp_connections[ testcase['vhost'] ]
+    
+            testcase.update_total()
     
             for queue in add_isps:
-                if True: #queue in queues:
-                    logging.info("Added: %s", queue)
+                if queue in queues:
                     ch.queue_bind( queue, EXCHANGE, testcase.get_routing_key())
-
+    
             for queue in remove_isps:
                 ch.queue_unbind( queue, EXCHANGE, testcase.get_routing_key())
 
-            queue_lengths = check_queues(conn, testcase['vhost'])
+            queue_lengths = check_queues(conn)
             if queue_lengths['results'] > MAX_RESULTS:
                 testcase.set_status('WAITING', "Results queue too long")
                 conn.commit()
@@ -215,8 +203,6 @@ def main():
                 conn.commit()
                 continue
     
-            if not testcase['total']:
-                testcase.update_total()
             testcase.set_status('RUNNING','')
             testcase.update_last_check()
             conn.commit()
@@ -241,8 +227,7 @@ def main():
                 testcase.set_status('COMPLETE')
                 conn.commit()
         else:
-            for vhost in vhosts:
-                queue_lengths = check_queues(conn, vhost)
+            queue_lengths = check_queues(conn)
                
         conn.commit()
         time.sleep(DELAY)
