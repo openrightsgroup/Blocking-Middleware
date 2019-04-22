@@ -22,6 +22,8 @@ You can view details including when the block was detected and which other ISPs 
 
 This email was sent from https://www.blocked.org.uk — you can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
 
+Please note that responses are recorded and may be republished on https://www.blocked.org.uk.  
+
 {% else %}
 
 The site {{url|raw}} has been flagged by user {{reporter_name|raw}} ({{reporter_email|raw}}).
