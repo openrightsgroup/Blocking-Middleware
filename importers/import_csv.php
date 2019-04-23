@@ -208,6 +208,7 @@ while ($line = fgetcsv($fp)) {
             $ip = dns_lookup("www.$domain");
             if ($ip) {
                 $domain = "www.$domain";
+                $url = "http://$domain";
             }   
         }
         # if not found, try resolving domain
