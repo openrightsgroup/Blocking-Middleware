@@ -9,6 +9,13 @@ include_once __DIR__ . "/../api/1.2/libs/services.php";
 
 $opts = getopt('v', array('queue:'));
 
+function dbg($msg, $level=0) {
+    global $VERBOSE;
+    if ($level || $VERBOSE) {
+        error_log($msg);
+    }
+}
+
 function opt($name, $default) {
     global $opts;
     
@@ -19,6 +26,15 @@ function flag($flag) {
     global $opts;
     
     return isset($opts[$flag]);
+}
+
+function dns_lookup($name) {
+    $ip = gethostbyname($name);
+    if ($ip == $name) {
+        dbg("lookup of $name failed");
+        return FALSE;
+    }
+    return $ip;
 }
 
 $ch = amqp_connect();
@@ -83,7 +99,9 @@ function process_import($msg, $queue) {
 
     $isnew = $loader->insert($url, $data['source'], $data['tags']);
     if ($isnew) {
-        error_log("Inserted: $url");
+        dbg("Inserted: $url");
+    } else {
+        dbg("Updated: $url");
     }
 
   } catch (Exception $e) {
