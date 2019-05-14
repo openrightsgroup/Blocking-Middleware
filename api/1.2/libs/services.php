@@ -204,7 +204,7 @@ class UrlLoader {
 	}
 	function load_categories_ns($urlID) {
 		$result = $this->conn->query(
-			"select display_name, namespace, categories.id from categories
+			"select display_name, namespace, name, categories.id from categories
 			inner join url_categories on category_id = categories.id
 			where urlID = ?",
             array($urlID),
@@ -212,7 +212,7 @@ class UrlLoader {
             );
 		$out = array();
         foreach ($result as $row) {
-			$out[] = array($row[0], $row[1], $row[2]);
+			$out[] = array($row[0], $row[1], $row[2], $row[3]);
 		}
 		return $out;
 	}
