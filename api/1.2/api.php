@@ -747,6 +747,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 	}
 
 	$categories = $app['db.url.load']->load_categories($url['urlid']);
+	$categories_ns = $app['db.url.load']->load_categories_ns($url['urlid']);
 
     $reports = array();
     foreach ($app['db.ispreport.load']->get_url_reports($url['urlid']) as $report) {
@@ -766,6 +767,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		"results" => $output,
 		"url-status" => $url['status'],
 		"categories" => $categories,
+		"categories_full" => $categories_ns,
         "reports" => $reports,
         'last_report_timestamp' =>  $url['last_reported'],
         'blacklisted' => $app['db.blacklist.load']->check($url['url']),
