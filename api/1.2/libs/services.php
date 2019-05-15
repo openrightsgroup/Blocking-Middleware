@@ -262,7 +262,33 @@ class UrlLoader {
         return true;
     }
 
+    function get_related($url) {
+        # takes urlobj
+        $out = array();
+        if (strstr($url['url'], 'http:') !== false) {
+            $new_url = str_replace("http:","https:",$url['url']);
+            $new_proto = "https";
+        } elseif (strstr($url['url'], "https:") !== false) {
+            $new_url = str_replace("https:","http:",$url['url']);
+            $new_proto = "http";
+        } else {
+            return $out;
+        }
 
+        try {
+            $newurlobj = $this->load($new_url);
+            $out[] = array(
+                "urlid" => $newurlobj['urlid'],
+                "url" => $newurlobj['url'],
+                "rel" => "scheme",
+                "scheme" => $new_proto
+            );
+        } catch (UrlLookupError $e) {
+            // do nothing
+        }
+
+        return $out;
+    }
 }
 
 

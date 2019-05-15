@@ -746,6 +746,8 @@ $app->get('/status/url', function (Request $req) use ($app) {
         $output[] = $out;
 	}
 
+    $related = $app['db.url.load']->get_related($url);
+
 	$categories = $app['db.url.load']->load_categories($url['urlid']);
 	$categories_ns = $app['db.url.load']->load_categories_ns($url['urlid']);
 
@@ -769,6 +771,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 		"categories" => $categories,
 		"categories_full" => $categories_ns,
         "reports" => $reports,
+        "related" => $related,
         'last_report_timestamp' =>  $url['last_reported'],
         'blacklisted' => $app['db.blacklist.load']->check($url['url']),
 	);
