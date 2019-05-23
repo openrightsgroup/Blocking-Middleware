@@ -733,11 +733,21 @@ class ISPReportLoader {
         $this->conn = $conn;
     }
 
-    function insert($mailname, $name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category='', $allow_contact=0) {
+    function make_pg_array($values) {
+        if (is_null($values)) {
+            return null;
+        }
+        if (!is_array($values)) {
+            return null;
+        }
+        return '{' . implode(",",$values) . "}";
+    }
+
+    function insert($mailname, $name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category='', $allow_contact=0, $usertype=null) {
         $q = $this->conn->query("insert into isp_reports
-        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, site_category, allow_contact, mailname,created)
-        values (?,?,?,?,?,?,?,?,?,?,?,?,?,now()) returning id as id",
-        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category, $allow_contact, $mailname)
+        (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, site_category, allow_contact, mailname, user_type, created)
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) returning id as id",
+        array($name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category, $allow_contact, $mailname, $this->make_pg_array($usertype))
         );
         $row = $q->fetch();
         if ($status == 'sent') {
