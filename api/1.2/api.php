@@ -1222,7 +1222,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 
 		$q->setFlags(AMQP_AUTODELETE|AMQP_EXCLUSIVE);
 		$q->declare();
-		$q->bind("org.results", "results.*." . $hash);
+		$q->bind("org.results", "results.*." . $hash . '.*');
 
 
 		$tag = $hash . "-" . time();

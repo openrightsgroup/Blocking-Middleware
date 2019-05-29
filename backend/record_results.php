@@ -105,7 +105,7 @@ function process_result($msg, $queue) {
       'status' => $data['status'],
       'blocktype' => $data['blocktype']
     );
-    $ex->publish(json_encode($forward), $msg->getRoutingKey(), AMQP_NOPARAM);
+    $ex->publish(json_encode($forward), $msg->getRoutingKey() . '.' . $data['status'], AMQP_NOPARAM);
 
   } catch (Exception $e) {
     error_log("process_result failed.");
