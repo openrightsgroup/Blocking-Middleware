@@ -1537,3 +1537,16 @@ CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
 
+CREATE OR REPLACE FUNCTION get_blocked_networks(p_urlid int) RETURNS varchar[] AS $$
+ DECLARE
+ out varchar[];
+ rec RECORD;
+ BEGIN
+   FOR rec IN select * FROM url_latest_status WHERE STATUS = 'blocked' AND urlid = p_urlid ORDER BY network_name LOOP
+      out = array_append(out , rec.network_name::varchar);
+   END LOOP;
+   RETURN out;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION get_blocked_networks(int) TO PUBLIC;
