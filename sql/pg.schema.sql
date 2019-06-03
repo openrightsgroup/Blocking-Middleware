@@ -1542,7 +1542,7 @@ CREATE OR REPLACE FUNCTION get_blocked_networks(p_urlid int) RETURNS varchar[] A
  out varchar[];
  rec RECORD;
  BEGIN
-   FOR rec IN select * FROM url_latest_status WHERE STATUS = 'blocked' AND urlid = p_urlid ORDER BY network_name LOOP
+   FOR rec IN select * FROM public.url_latest_status WHERE STATUS = 'blocked' AND urlid = p_urlid ORDER BY network_name LOOP
       out = array_append(out , rec.network_name::varchar);
    END LOOP;
    RETURN out;
