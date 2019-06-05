@@ -20,7 +20,8 @@ Please reply directly to the user at this email address to ensure that they rece
 {% endif %}
 You can view details including when the block was detected and which other ISPs appear to be blocking the site at: https://www.blocked.org.uk/site/{{url|raw}}
 
-This email was sent from https://www.blocked.org.uk — you can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
+This email was sent from https://www.blocked.org.uk — the user making the report may not be a customer of your ISP.
+You can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
 
 Please note that responses are recorded and may be republished on https://www.blocked.org.uk.  
 
