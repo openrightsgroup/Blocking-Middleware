@@ -136,8 +136,8 @@ def urls(conn):
 def changes(conn):
     c = conn.cursor()
     c2 = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    if args.since is None and args.interval is None:
-        print "Required args: <since> or <interval>"
+    if args.since is None and args.interval is None and args.urlid is None:
+        print "Required args: <since> or <interval> or <urlid>"
         sys.exit(1)
 
     if args.since:
@@ -146,6 +146,8 @@ def changes(conn):
     elif args.interval:
         c.execute("select distinct urlid from url_status_changes where created >= CURRENT_TIMESTAMP - INTERVAL %s",
             [args.interval])
+    elif args.urlid:
+        c = [[args.urlid]]
 
     for row in c:
         # count up blocks from active networks
@@ -217,6 +219,7 @@ if __name__ == '__main__':
         help="Dummy mode")
     parser.add_argument('--since', default=None, help="Start timestamp for changes")
     parser.add_argument('--interval', default=None, help="timeperiod for changes")
+    parser.add_argument('--urlid', help="urlid to update")
     parser.add_argument(dest='loaders', nargs="*", default='all',
         choices=LOADERS.keys() + ['all'], help="loaders to run")
     args = parser.parse_args()
