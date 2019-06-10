@@ -187,7 +187,7 @@ def changes(conn):
             row2 = c2.fetchone()
 
             if not args.dummy:
-                update_elastic(row2, get_categories(conn, urlid))
+                update_elastic(row2, get_categories(conn, urlid), tld=get_tld(row2['url']))
 
             # find out if the URL is in any categories
             c2.execute("select count(*) ct from url_categories where urlid = %s",
