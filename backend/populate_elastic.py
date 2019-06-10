@@ -172,7 +172,7 @@ def changes(conn):
             # blocked on active networks
 
             # get data for elastic
-            c2.execute("""select urlid, url, tags, source, title, description, block_networks
+            c2.execute("""select urls.urlid, url, tags, source, title, description, block_networks
                 from urls
                 left join site_description using (urlid)
                 inner join (select urlid, array_agg(network_name) as block_networks
