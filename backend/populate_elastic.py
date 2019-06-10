@@ -172,9 +172,15 @@ def changes(conn):
             # blocked on active networks
 
             # get data for elastic
-            c2.execute("""select urlid, url, tags, source, title, description
+            c2.execute("""select urlid, url, tags, source, title, description, block_networks
                 from urls
                 left join site_description using (urlid)
+                inner join (select urlid, array_agg(network_name) as block_networks
+                    from url_latest_status 
+                    inner join isps on isps.name = network_name
+                    where status = 'blocked' and queue_name is not null
+                    group by urlid
+                   ) x on x.urlid = urls.urlid 
                 where urlid = %s
                 """,
                 [urlid])
