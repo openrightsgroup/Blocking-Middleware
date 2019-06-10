@@ -155,7 +155,7 @@ def changes(conn):
         logging.info("Processing urlid: %s", urlid)
         c2.execute("""select count(*) ct from url_latest_status where 
                 status = 'blocked' AND 
-                network_name in (select name from isps where queue_name is not null)
+                network_name in (select name from isps where queue_name is not null and queue_name <> 'bt-strict')
                 AND urlid = %s""",
             [urlid])
         row2 = c2.fetchone()
