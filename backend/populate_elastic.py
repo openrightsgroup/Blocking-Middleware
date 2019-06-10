@@ -121,7 +121,7 @@ def urls(conn):
         inner join (select urlid, array_agg(network_name) as block_networks
                     from url_latest_status 
                     inner join isps on isps.name = network_name
-                    where status = 'blocked' and queue_name is not null
+                    where status = 'blocked' and queue_name is not null and network_name <> 'BT-Strict'
                     group by urlid
                    ) x on x.urlid = urls.urlid 
         where isp_reports.id is null
