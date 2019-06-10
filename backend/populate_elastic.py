@@ -181,7 +181,7 @@ def changes(conn):
                     where status = 'blocked' and queue_name is not null
                     group by urlid
                    ) x on x.urlid = urls.urlid 
-                where urlid = %s
+                where urls.urlid = %s
                 """,
                 [urlid])
             row2 = c2.fetchone()
