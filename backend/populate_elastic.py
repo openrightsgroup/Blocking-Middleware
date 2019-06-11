@@ -124,7 +124,7 @@ def urls(conn):
                     where status = 'blocked' and queue_name is not null and network_name <> 'BT-Strict'
                     group by urlid
                    ) x on x.urlid = urls.urlid 
-        where isp_reports.id is null
+        where isp_reports.id is null and urls.status = 'ok'
         order by urlid
         """)
     logging.info("Found: %s", c.rowcount)
@@ -153,8 +153,10 @@ def changes(conn):
         # count up blocks from active networks
         urlid = row[0]
         logging.info("Processing urlid: %s", urlid)
-        c2.execute("""select count(*) ct from url_latest_status where 
-                status = 'blocked' AND 
+        c2.execute("""select count(*) ct from url_latest_status 
+                inner join urls using (urlid)
+                where 
+                url_latest_status.status = 'blocked' AND urls.status = 'ok' AND
                 network_name in (select name from isps where queue_name is not null and queue_name <> 'bt-strict')
                 AND urlid = %s""",
             [urlid])
