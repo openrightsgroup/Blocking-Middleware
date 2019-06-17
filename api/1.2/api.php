@@ -671,7 +671,7 @@ $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) 
 	$conn = $app['service.db'];
     $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen, probe_status, location, proberesprecv as tests_run,
         filter_level, filter_enabled,
-        regions, owner_link
+        regions, owner_link, uuid
         from probes inner join isps on isp_id = isps.id
         where regions && makearray(?)
         order by lastseen desc",
