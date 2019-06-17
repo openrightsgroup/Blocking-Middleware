@@ -28,4 +28,5 @@ GRANT update,insert,delete on categories to blockedadmin;
 GRANT SELECT ON isp_reports_sent TO blockedadmin;
 GRANT SELECT ON url_primary_categories TO blockedadmin;
 GRANT select ON contacts to blockedadmin;
+GRANT select ON tags to blockedadmin;
 
