@@ -904,6 +904,14 @@ class ISPReportLoader {
         case "harmless":
             $output->filters[] = " and isp_reports.maybe_harmless is true";
             break;
+        case "resubmit":
+            $output->filters[] = " and (
+                    isp_reports.status in ('cancelled') 
+                    or (isp_reports.status = 'sent' and isp_reports.unblocked = 0 and contacts.verified = 0)
+                )
+                and isp_reports.unblocked = 0 
+                and (isp_reports.created < now() - interval '30 days')";
+            break;
         };
 
         if (!is_null(@$filter['policy'])) {
@@ -971,6 +979,11 @@ class ISPReportLoader {
         $filters = implode(" ", $proc->filters);
         array_unshift($proc->args, $type);
 
+        switch(@$filter['order']) {
+            case 'asc': $order = 'asc'; break;
+            default: $order = 'desc'; break;
+        };
+
         $res = $this->conn->query("select
             urls.url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
                 $admin_fields
@@ -983,7 +996,7 @@ class ISPReportLoader {
             left join contacts on contacts.id = isp_reports.contact_id
             $tables
             where report_type = ? $filters
-            order by isp_reports.created desc
+            order by isp_reports.created $order
             limit $pagesize offset $off",
             $proc->args
             );
@@ -1010,6 +1023,7 @@ class ISPReportLoader {
             count(*)
             from isp_reports
             inner join urls using(urlid)
+            left join contacts on contacts.id = isp_reports.contact_id            
             $tables
             where report_type = ? $filters",
             $proc->args

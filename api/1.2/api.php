@@ -1091,21 +1091,24 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
 $app->get('/status/ispreports', function (Request $req) use ($app) {
     $user = $app['db.user.load']->load($req->get('email'));
 	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
-    $isp = $req->get('isp',null);
 
     $filter = array();
 
-    foreach(array('open','sent','unresolved','rejected','reviewed','cancelled','featured','egregious','harmless') as $ftype) {
+    foreach(array('open','sent','unresolved','rejected','reviewed','cancelled','featured','egregious','harmless','resubmit') as $ftype) {
         if ($req->get($ftype,null)) {
             $filter['state'] = $ftype;
             break;
         }
     }
 
-    $filter['network'] = $isp;
+    $filter['network'] = $req->get('isp',null);
     $filter['category'] = $req->get('category',null);
     $filter['reportercategory'] = $req->get('reportercategory', null);
     $filter['list'] = $req->get('list',null);
+    $filter['order'] = $req->get('order', 'desc');
+    if (!in_array($filter['order'], array('asc','desc'))) {
+        throw new InvalidSortError();
+    }
     $filter['policy'] = $req->get('policy', null);
     if (!is_null($filter['policy'])) {
         // convert to bool
@@ -1122,14 +1125,15 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $feature_count  = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'featured')), $is_admin);
     $cancel_count   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'cancelled')), $is_admin);
     $harmless_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'harmless')), $is_admin);
+    $resubmit_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'resubmit')), $is_admin);
 
     $reports = $app['db.ispreport.load']->get_reports('unblock', $filter, $page,  $is_admin);
 
     $output = array();
     $output['success'] = true;
     $output['reports'] = $reports;
-    if ($isp) {
-        $output['isp'] = $isp;
+    if ($filter['network']) {
+        $output['isp'] = $filter['network'];
     }
     $output['count'] = $count;
     $output['open_count'] = $open_count;
@@ -1137,6 +1141,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output['feature_count'] = $feature_count;
     $output['cancel_count'] = $cancel_count;
     $output['harmless_count'] = $harmless_count;
+    $output['resubmit_count'] = $resubmit_count;
 
     return $app->json($output);
 });
