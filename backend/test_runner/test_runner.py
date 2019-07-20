@@ -43,8 +43,12 @@ class Test(DBObject):
     @classmethod
     def get_runnable(klass, conn, vhost):
         q = Query(conn, """select test_cases.* from tests.test_cases
-            where status >= 'RUNNING' and status <= 'WAITING' and vhost = %s
-            and (last_check is null or last_check + check_interval <= now())
+            where (
+              (status >= 'RUNNING' and status <= 'WAITING' and (last_check is null or last_check + check_interval <= now()) )
+              OR 
+              (status = 'COMPLETE' and repeat_interval is not null and last_run + repeat_interval < now())
+            )
+            and vhost = %s            
             order by id""", [vhost])
         for row in q:
             yield klass(conn, data=row)
@@ -67,6 +71,11 @@ class Test(DBObject):
         q.close()
         return row['ct']
 
+    def reset_sent(self):
+        self['sent'] = 0
+        self['last_id'] = 0
+        self.store()
+
     def update_sent(self, urlid):
         self['sent'] += 1
         self['last_id'] = urlid
@@ -75,6 +84,10 @@ class Test(DBObject):
     def update_last_check(self):
         self['last_check'] = datetime.datetime.now()
         self.store()
+        
+    def update_last_run(self):
+        self['last_run'] = datetime.datetime.now()
+        self.store()        
 
     def update_total(self):
         self['total'] = self.get_total_urls()
@@ -164,7 +177,6 @@ def main():
         logging.debug("DB timestamp: %s", row['now'])
         q.close()
 
-    
         for testcase in Test.get_runnable(conn, vhost):
             logging.info("Test case %s(%s) : %s", testcase['name'], testcase['id'], testcase['vhost'])
             logging.debug("Routing: %s / %s", EXCHANGE, testcase.get_routing_key())
@@ -173,6 +185,12 @@ def main():
                 logging.info("Add: %s", add_isps)
             if remove_isps:
                 logging.info("Remove: %s", remove_isps)
+
+            if testcase['status'] == 'COMPLETE' and testcase['repeat_interval'] is not None:
+                # start of repeat run
+                testcase.update_last_run()
+                testcase.reset_sent()
+                testcase.update_total()
     
             # testcase.update_total()
     
