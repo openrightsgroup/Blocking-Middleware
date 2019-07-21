@@ -258,7 +258,7 @@ $app->get('/search/url', function(Request $req) use ($app) {
 
     $tld = $req->get('domain', null);
 
-    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks, $exclude, $domain);
+    $data = $app['service.elastic']->query(trim($q) . "*", '/urls', null, $page, 20, $excluded_terms, $networks, $exclude, $tld);
     $output = array(
         'success' => true,
         'sites' => $data->results,
