@@ -332,7 +332,17 @@
             "blocktype":[
                 "COPYRIGHT"
             ]
-        }
+        },
+        {
+            "isp": "Vodafone PT",
+            "match":[
+                "re:url:http://mobilegen.vodafone.pt/denied/dn"
+            ],
+            "blocktype":[
+                "COPYRIGHT"
+            ]
+
+       }
     ],
     "org-block-rules": "0.2.3",
     "version": "2019072901",
