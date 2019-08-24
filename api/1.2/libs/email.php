@@ -55,12 +55,6 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
     
     $rsp = $req->send();
     
-    
-    $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
-        ->setBody(json_encode($search))
-        ->setHeader('Content-type: application/json')
-        ->send();
-        
     $form_html = $rsp->getBody();
     
     preg_match('/form_build_id" value="(.*)"/', $form_html, $matches);
