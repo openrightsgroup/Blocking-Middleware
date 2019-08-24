@@ -36,6 +36,71 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     return true;
 }
 
+function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $previous, $additional_contact) {
+    
+    #    <option value="" selected="selected">- Select -</option>
+    #    <option value="3">3</option>
+    #    <option value="EE">EE</option>
+    #    <option value="EE Strict">EE Strict (for EE customers under the age of 12)</option>
+    #    <option value="O2">O2</option>
+    #    <option value="Vodafone">Vodafone</option>
+    #    <option value="Other">Other</option>
+    
+    if ($network == "Three") {
+        $network = "3"; 
+    }
+    
+    
+    $req = new HTTP_Request2(BBFC_FORM_URL);
+    
+    $rsp = $req->send();
+    
+    
+    $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
+        ->setBody(json_encode($search))
+        ->setHeader('Content-type: application/json')
+        ->send();
+        
+    $form_html = $rsp->getBody();
+    
+    preg_match('/form_build_id" value="(.*)"/', $form_html, $matches);
+    $form_build_id = $matches[1];
+    preg_match('/form_id" value="(.*)"/', $form_html, $matches);
+    $form_id = $matches[1];
+    
+    // $form_build_id = 'ABCDEF';
+    // $form_id = 'ABC';
+           
+    $data = array(
+        "submitted[who_is_your_mobile_network_operator]" => $network,
+        "submitted[please_specify]" => "",  # other ISP
+        "submitted[have_you_contacted_your_mobile_operator]" => "01", # yes "01"
+        "submitted[what_was_your_mobile_operators_response_to_your_complaint]" => $previous, # multine
+        "submitted[your_name]" => $name,
+        "submitted[your_email]" => $mailname . '@' . MAIL_DOMAIN,
+        "submitted[additional_contact_information]" => $additional_contact,
+        "submitted[url_of_the_content_in_question]" => $url,
+        "submitted[nature_of_the_complaint]" => $message,
+        # "details[sid]" 
+        "details[page_num]" => "1",
+        "details[page_count]" => "1",
+        "details[finished]" => "0",
+
+        "form_build_id" => $form_build_id,
+        "form_id" => $form_id,
+        "op" => "Submit"
+        );
+
+    
+    $req = new HTTP_Request2(BBFC_SUBMIT_URL);
+    $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
+        ->addPostParameter($data)
+        ->send();   
+    $body = $rsp->getBody();
+        
+    return true;
+}
+
 function sendUserVerification($email, $name, $token, $attempt, $renderer) {
     $msg = new PHPMailer();
     $msg->setFrom(SITE_EMAIL, SITE_NAME);

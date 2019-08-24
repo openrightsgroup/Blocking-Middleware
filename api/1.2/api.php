@@ -1602,8 +1602,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
-    if (!(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
-        // we are submittingt to ISPs, not feedback to ORG
+    if (!(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
+        // we are submittingt to ISPs, not feedback to ORG or BBFC
         if ($app['db.blacklist.load']->check($url['url'])) {
             error_log("{$url['url']} is blacklisted; not submitting");
             return $app->json(array('success' => false, 'message' => 'domain rejected'));
@@ -1621,8 +1621,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         error_log("Unreported: " . implode(",", $data['networks']));
     }
 
-    if (!$contact['verified'] && !(count($data['networks']) == 1 && $data['networks'][0] == 'ORG')) {
-        // reports sent to ORG only are exempt from validation
+    if (!$contact['verified'] && !(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == 'BBFC') )) {
+        // reports sent to ORG or BBFC only are exempt from validation
         $token = "B" . md5($contact['id'] . "-" .
             Middleware::generateSharedSecret(10));
 
@@ -1645,7 +1645,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
         // check latest status
         // special case for the pseudo-isp ORG
-        if ($network_name != "ORG") {
+        if ($network_name != "ORG" && $network_name != "BBFC") {
             $q = $app['service.db']->query("select id, (now()-created) > interval '14 days' as age_limit
                 from url_latest_status
                 where urlID = ? and network_name = ? and status = 'blocked'",
@@ -1688,7 +1688,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 );
             # send email here
 
-            if (($contact['verified'] || $network_name == 'ORG') && $age_limit == false) {
+            if (($contact['verified'] || $network_name == 'ORG') && $network_name != 'BBFC' && $age_limit == false) {
                 sendISPReport(
                     $mailname,
                     $data['reporter']['name'],
@@ -1700,6 +1700,19 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                     $data['category'],
                     $app['service.template']
                     );
+            }
+            if ($network_name == "BBFC") {
+                sendBBFCReport($mailname,
+                               $data['reporter']['name'],
+                               $data['reporter']['email'],
+                               $data['original_network'],
+                               $url['url'],
+                               $data['message'],
+                               $data['previous'],
+                               $data['additional_contact']
+                               );
+                               
+                               
             }
 
 

@@ -44,4 +44,8 @@ $ELASTIC = "http://localhost:9200";
 
 define('ELASTIC_ADULT_FILTER', 'escort~ OR fetish OR stripper~ OR porn~ OR blowjob~ OR femdom~ OR fuck~');
 
+# https://bbfc.co.uk/what-classification/mobile-content/appeals/mobile-complaint-form
+define('BBFC_FORM_URL', 'https://bbfc.co.uk/what-classification/mobile-content/appeals/mobile-complaint-form');
+define('BBFC_SUBMIT_URL', 'https://bbfc.co.uk/what-classification/mobile-content/appeals/mobile-complaint-form');
+
 $REQUEUE_EXCLUDE_SOURCES = array();
