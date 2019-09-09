@@ -758,6 +758,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'created' => $report['created'],
             'network_name' => $report['network_name'],
             'name' => $report['allow_publish'] ? $report['name'] : "",
+            'reply_count' => $report['reply_count'],
             'message' => ($report['allow_publish'] && $report['status'] != 'abuse') ? $report['message'] : ""
             );
     }
