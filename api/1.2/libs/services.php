@@ -1400,3 +1400,19 @@ class CategoryLoader {
     }
 }
 
+class DynamoWrapper {
+    function __construct($host, $port, $access, $secret) {
+        $this->host = $host;
+        $this->port = $port;
+        $this->access = $access;
+        $this->secret = $secret;
+    }
+    
+    function store($id, $data) {
+        
+    }
+    
+    function get($id) {
+        
+    }
+}

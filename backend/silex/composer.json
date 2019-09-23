@@ -4,6 +4,7 @@
         "twig/twig": "~1.0",
         "phpmailer/phpmailer": "^5.2",
         "pear/HTTP2": "^1.1",
-        "pear/HTTP_Request2": "^2.3"
+        "pear/HTTP_Request2": "^2.3",
+        "aws/aws-sdk-php": "^3.112"
     }
 }
