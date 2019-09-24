@@ -33,6 +33,8 @@ $q->declare();
 
 $q->bind('org.blocked', opt('queue', 'results') . '.#');
 
+$dynamo = new DynamoWrapper();
+
 $conn = db_connect();
 
 $VERIFY = 1;
@@ -93,6 +95,17 @@ function process_result($msg, $queue) {
 
     try {
       $processor->process_result($data, $probe);
+      
+      if (array_has_key($data, 'request_data')) {
+          $reqdata = array(
+            'url' => $data['url'], 
+            'created' => $data['date'],
+            'id' => $data['test_uuid'],
+            'requests' => $data['request_data']
+            );
+            
+      }
+      
     } catch (Exception $e) {
       error_log("processor->process_result failed.");
       error_log("Caught exception: " . get_class($e));

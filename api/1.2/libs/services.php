@@ -1406,6 +1406,12 @@ class DynamoWrapper {
         $this->port = $port;
         $this->access = $access;
         $this->secret = $secret;
+        
+        $this->_client = new AWS\DynamoDb\DynamoDbClient::factory(array(
+            'credentials' =>  array('key' => 'foo', 'secret' => 'secret'),
+            'region' => 'eu-west-1',
+            'endpoint' => 'http://localhost:8000'
+            ));
     }
     
     function store($id, $data) {
