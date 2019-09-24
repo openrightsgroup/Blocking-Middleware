@@ -29,6 +29,14 @@ $app['service.db'] = $app->share(function() {
     return db_connect();
 });
 
+$app['service.dynamo'] = $app->share(function() {
+    return new DynamoWrapper(
+        AWS_DYNAMODB_URL,
+        AWS_DYNAMODB_ACCESS_KEY,
+        AWS_DYNAMODB_SECRET_KEY
+    );
+});
+    
 
 $app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
@@ -953,6 +961,19 @@ $app->get('/status/country-stats', function(Request $req) use ($app) {
         'stats' => $output
     ));
 
+});
+
+$app->get('/status/result/{uuid}', function (Request $req, $uuid) use ($app) {
+    checkParameters($req, array('email','signature','date'));
+    $user = $app['db.user.load']->load($req->get('email'));
+	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    
+    $data = $app['service.dynamo']->get($uuid);
+    
+    return $app->json(array(
+        'success' => true,
+        'result' => $data
+    ));
 });
 
 $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) {
