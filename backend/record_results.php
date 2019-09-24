@@ -1,5 +1,6 @@
 <?php
 
+include_once __DIR__ . "/silex/vendor/autoload.php";
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
 include_once __DIR__ . "/../api/1.2/libs/amqp.php";
@@ -58,7 +59,7 @@ $processor = new ResultProcessorService(
 );
 
 function process_result($msg, $queue) {
-  global $processor, $ex, $VERIFY;
+  global $processor, $ex, $dynamo, $VERIFY;
 
   try {
 
@@ -100,14 +101,14 @@ function process_result($msg, $queue) {
     try {
       $processor->process_result($data, $probe);
       
-      if (array_has_key($data, 'request_data')) {
+      if (array_key_exists('request_data', $data)) {
           $reqdata = array(
             'url' => $data['url'], 
             'created' => $data['date'],
             'id' => $data['test_uuid'],
             'requests' => $data['request_data']
             );
-            
+        $dynamo->store($reqdata);
       }
       
     } catch (Exception $e) {
@@ -133,4 +134,5 @@ function process_result($msg, $queue) {
   return true;
 }
 
+// $dynamo->createTable();
 $q->consume("process_result");

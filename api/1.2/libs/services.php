@@ -1414,14 +1414,14 @@ class DynamoWrapper {
             'endpoint' => $endpoint,
             'version' => 'latest'
         ));
-        $this->_db = $sdk->createDynamoDb();
+        $this->_db = $this->_sdk->createDynamoDb();
         $this->_marshaller = new Marshaler();
     }
     
     function store($data) {
         $params = array(
             'TableName' => $this->_tablename,
-            'Item' => $this->_marshaller->marshallJson($data)
+            'Item' => $this->_marshaller->marshalItem($data)
         );
         return $this->_db->putItem($params);
     }
@@ -1429,7 +1429,7 @@ class DynamoWrapper {
     function get($id) {
         $params = array(
             'TableName' => $this->_tablename,
-            'Key' => $this->_marshaller->marshallJson(array('id' => $id))
+            'Key' => $this->_marshaller->marshalValue(array('id' => $id))
         );
         $result = $this->_db->getItem($params);
         return $result;
@@ -1452,6 +1452,22 @@ class DynamoWrapper {
                 array(
                     'AttributeName' => 'url',
                     'AttributeType' => 'S'
+                )
+            ),
+            'GlobalSecondaryIndexes' => array(
+                array(
+                    'IndexName' => 'results_url',
+                    'KeySchema' => array(
+                        array(
+                            'AttributeName' => 'url',
+                            'KeyType' => 'HASH'
+                        )
+                    ),
+                    'ProvisionedThroughput' => array(
+                        'ReadCapacityUnits' => 1,
+                        'WriteCapacityUnits' => 1
+                    ),
+                    'Projection' => array('ProjectionType' => 'KEYS_ONLY')
                 )
             ),
             'ProvisionedThroughput' => array(
