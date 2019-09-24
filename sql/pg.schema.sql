@@ -671,7 +671,8 @@ CREATE TABLE results(
     ssl_fingerprint varchar(256),
     request_id int,
     final_url varchar(2048),
-    resolved_ip cidr
+    resolved_ip cidr,
+    result_uuid uuid
 );
 
 
