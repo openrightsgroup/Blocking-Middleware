@@ -33,7 +33,11 @@ $q->declare();
 
 $q->bind('org.blocked', opt('queue', 'results') . '.#');
 
-$dynamo = new DynamoWrapper();
+$dynamo = new DynamoWrapper(
+    AWS_DYNAMODB_URL,
+    AWS_DYNAMODB_ACCESS_KEY,
+    AWS_DYNAMODB_SECRET_KEY
+);
 
 $conn = db_connect();
 

@@ -2,6 +2,9 @@
 
 include_once "url.php";
 
+use Aws\DynamoDb\Exception\DynamoDbException;
+use Aws\DynamoDb\Marshaler;
+
 class UserLoader {
 	function __construct($conn) {
 		$this->conn = $conn;
@@ -1400,25 +1403,62 @@ class CategoryLoader {
     }
 }
 
+
 class DynamoWrapper {
-    function __construct($host, $port, $access, $secret) {
-        $this->host = $host;
-        $this->port = $port;
-        $this->access = $access;
-        $this->secret = $secret;
+    function __construct($endpoint, $access, $secret) {
+        $this->_tablename = 'results';
         
-        $this->_client = new AWS\DynamoDb\DynamoDbClient::factory(array(
-            'credentials' =>  array('key' => 'foo', 'secret' => 'secret'),
+        $this->_sdk = new Aws\Sdk(array(
+            'credentials' =>  array('key' => $access, 'secret' => $secret),
             'region' => 'eu-west-1',
-            'endpoint' => 'http://localhost:8000'
-            ));
+            'endpoint' => $endpoint,
+            'version' => 'latest'
+        ));
+        $this->_db = $sdk->createDynamoDb();
+        $this->_marshaller = new Marshaler();
     }
     
-    function store($id, $data) {
-        
+    function store($data) {
+        $params = array(
+            'TableName' => $this->_tablename,
+            'Item' => $this->_marshaller->marshallJson($data)
+        );
+        return $this->_db->putItem($params);
     }
     
     function get($id) {
-        
+        $params = array(
+            'TableName' => $this->_tablename,
+            'Key' => $this->_marshaller->marshallJson(array('id' => $id))
+        );
+        $result = $this->_db->getItem($params);
+        return $result;
+    }
+
+    function createTable() {
+        $params = array(
+            'TableName' => $this->_tablename,
+            'KeySchema' => array(
+                array(
+                    'AttributeName' => 'id',
+                    'KeyType' => 'HASH'
+                )
+            ),
+            'AttributeDefinitions' => array(
+                array(
+                    'AttributeName' => 'id',
+                    'AttributeType' => 'S'
+                ),
+                array(
+                    'AttributeName' => 'url',
+                    'AttributeType' => 'S'
+                )
+            ),
+            'ProvisionedThroughput' => array(
+                'ReadCapacityUnits' => 1,
+                'WriteCapacityUnits' => 1
+            )
+        );
+        return $this->_db->createTable($params);
     }
 }
