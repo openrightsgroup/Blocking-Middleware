@@ -1405,15 +1405,18 @@ class CategoryLoader {
 
 
 class DynamoWrapper {
-    function __construct($endpoint, $access, $secret) {
-        $this->_tablename = 'results';
+    function __construct($access, $secret, $endpoint=null ) {
+        $this->_tablename = 'responses';
         
-        $this->_sdk = new Aws\Sdk(array(
+        $opts = array(
             'credentials' =>  array('key' => $access, 'secret' => $secret),
-            'region' => 'eu-west-1',
-            'endpoint' => $endpoint,
+            'region' => 'eu-west-2',
             'version' => 'latest'
-        ));
+        );
+        if ($endpoint) {
+            $opts['endpoint'] = $endpoint;
+        }
+        $this->_sdk = new Aws\Sdk($opts);
         $this->_db = $this->_sdk->createDynamoDb();
         $this->_marshaller = new Marshaler();
     }
@@ -1429,9 +1432,9 @@ class DynamoWrapper {
     function get($id) {
         $params = array(
             'TableName' => $this->_tablename,
-            'Key' => $this->_marshaller->marshalValue(array('id' => $id))
+            'Key' => $this->_marshaller->marshalItem(array('id' => $id))
         );
-        $result = $this->_db->getItem($params);
+        $result = $this->_marshaller->unmarshalItem($this->_db->getItem($params));
         return $result;
     }
 
