@@ -10,16 +10,16 @@ services:
       - POSTGRES_PASSWORD=blocked
   amqp:
     image: rabbitmq:3
+    environment:
+      - RABBITMQ_DEFAULT_USER=blocked
+      - RABBITMQ_DEFAULT_PASS=blocked
   api:
     build:
-      context: ./api
+      context: .
       dockerfile: Dockerfile
     links:
       - db
       - amqp
-    environment:
-      - RABBITMQ_DEFAULT_USER=blocked
-      - RABBITMQ_DEFAULT_PASS=blocked
 
 
 
