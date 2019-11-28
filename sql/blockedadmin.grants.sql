@@ -1,3 +1,8 @@
+
+CREATE ROLE blockedadmin;
+
+GRANT blockedadmin to blocked;
+
 GRANT UPDATE(tags) ON TABLE urls TO blockedadmin;
 GRANT UPDATE(unblocked) ON TABLE isp_reports TO blockedadmin;
 GRANT UPDATE(last_updated) ON TABLE isp_reports TO blockedadmin;

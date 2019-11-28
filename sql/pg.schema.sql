@@ -759,7 +759,6 @@ CREATE UNIQUE INDEX ON url_categories(urlid, category_id);
 CREATE UNIQUE INDEX ON url_categories(urlid) where primary_category = true;
 
 
-ALTER TABLE url_categories ADD FOREIGN KEY(category_id) REFERENCES categories(id);
 
 --
 -- Name: url_latest_status_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -1342,14 +1341,13 @@ ALTER TABLE ONLY isp_aliases
 ALTER TABLE ONLY requests
     ADD CONSTRAINT requests_contactid_fkey FOREIGN KEY (contactid) REFERENCES contacts(id) ON DELETE SET NULL;
 
+ALTER TABLE url_categories ADD FOREIGN KEY(category_id) REFERENCES categories(id);
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: -
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
@@ -1479,7 +1477,7 @@ CREATE TABLE url_category_comments(
 );
 
 CREATE INDEX url_category_comments_urlid on url_category_comments(urlid);
-ALTER TABLE url_category_comments ADD FOREIGN KEY (urlid) REFERENCES urls(id);
+ALTER TABLE url_category_comments ADD FOREIGN KEY (urlid) REFERENCES urls(urlid);
 
 CREATE TABLE isp_report_comments (
     id serial primary key not null,
@@ -1512,7 +1510,7 @@ create table url_report_category_asgt(
     last_updated timestamptz
 );
 
-create unique index url_report_category_asgt_unq on url_report_category_asgt(urlid, category_id);
+create unique index url_report_category_asgt_unq on url_report_category_asgt(report_id, category_id);
 
 CREATE TABLE url_report_category_comments(
     id serial primary key,
@@ -1525,7 +1523,7 @@ CREATE TABLE url_report_category_comments(
     last_updated timestamptz
 );
 
-create index url_report_category_comments_report_id on url_report_category_comments(urlid);
+create index url_report_category_comments_report_id on url_report_category_comments(report_id);
 
 CREATE TABLE stats.mobile_blocks (
     network_name text,
