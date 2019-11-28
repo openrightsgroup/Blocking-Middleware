@@ -1,0 +1,25 @@
+---
+version: "3"
+services:
+  db:
+    build:
+      context: ./sql
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_USER=blocked
+      - POSTGRES_PASSWORD=blocked
+  amqp:
+    image: rabbitmq:3
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    links:
+      - db
+      - amqp
+    environment:
+      - RABBITMQ_DEFAULT_USER=blocked
+      - RABBITMQ_DEFAULT_PASS=blocked
+
+
+
