@@ -17,9 +17,43 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: -S 0.0.0.0:8080
+    ports:
+      - 8080:8080
     links:
       - db
       - amqp
+  init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: php ../backend/create_queues.php
+    links:
+      - db
+      - amqp
+  record:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: php ../backend/record_results.php
+    depends_on:
+      - init
+    links:
+      - db
+      - amqp
+  example:
+    build:
+      context: example-client
+      dockerfile: Dockerfile
+    command: -S 0.0.0.0:8081
+    ports:
+      - 8081:8081
+    links:
+      - api
+
+
+
+
 
 
 

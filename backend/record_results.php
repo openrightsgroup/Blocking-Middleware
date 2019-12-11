@@ -34,11 +34,15 @@ $q->declare();
 
 $q->bind('org.blocked', opt('queue', 'results') . '.#');
 
-$dynamo = new DynamoWrapper(
-    AWS_DYNAMODB_ACCESS_KEY,
-    AWS_DYNAMODB_SECRET_KEY,
-    AWS_DYNAMODB_URL,
-);
+if (defined('AWS_DYNAMODB_URL')) {
+    $dynamo = new DynamoWrapper(
+        AWS_DYNAMODB_ACCESS_KEY,
+        AWS_DYNAMODB_SECRET_KEY,
+        AWS_DYNAMODB_URL,
+    );
+} else {
+    $dynamo = null;
+}
 
 $conn = db_connect();
 
@@ -101,7 +105,7 @@ function process_result($msg, $queue) {
     try {
       $processor->process_result($data, $probe);
       
-      if (array_key_exists('request_data', $data)) {
+      if (array_key_exists('request_data', $data) && $dynamo) {
           $reqdata = array(
             'url' => $data['url'], 
             'created' => $data['date'],
