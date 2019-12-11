@@ -1549,3 +1549,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 GRANT EXECUTE ON FUNCTION get_blocked_networks(int) TO PUBLIC;
+
+CREATE VIEW results_base as select * from results;
