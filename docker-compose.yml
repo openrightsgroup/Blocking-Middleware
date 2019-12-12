@@ -72,6 +72,14 @@ services:
     links:
       - db
       - amqp
+  whois:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python whois-lookup.py
+    links:
+      - db
+      - amqp
 
 
 
