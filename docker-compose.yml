@@ -59,7 +59,16 @@ services:
   checker:
     build:
       context: backend/queue-services
-      dockerfile: Dockerfile.checker
+      dockerfile: Dockerfile
+    command: python checker.py
+    links:
+      - db
+      - amqp
+  metadata:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python metadata-gather.py
     links:
       - db
       - amqp

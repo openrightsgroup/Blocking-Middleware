@@ -16,8 +16,8 @@ $AMQP_USER = 'blocked';
 $AMQP_PASS = 'blocked';
 $AMQP_VHOST= '/';
 
-# $SUBMIT_ROUTING_KEY = 'check.org'; # submit via robots.txt checker
-$SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
+$SUBMIT_ROUTING_KEY = 'check.org'; # submit via robots.txt checker
+# $SUBMIT_ROUTING_KEY = 'url.org'; # submit directly to ISP queues
 
 define('SITE_EMAIL', 'blocked@example.com');
 define('SITE_NAME', 'Example.com');

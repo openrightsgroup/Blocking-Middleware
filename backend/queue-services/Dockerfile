@@ -10,4 +10,3 @@ COPY config.docker.ini /srv/queue-service/config.ini
 
 WORKDIR /srv/queue-service
 
-CMD python checker.py
