@@ -50,6 +50,12 @@ services:
       - 8081:8081
     links:
       - api
+  fakeprobe:
+    build:
+      context: backend/fakeprobe
+      dockerfile: Dockerfile
+    links:
+      - amqp
 
 
 

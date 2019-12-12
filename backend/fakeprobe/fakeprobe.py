@@ -70,13 +70,13 @@ def recvmsg(msg):
 
 	msgbody = json.dumps(report)
 	msgout = amqp.Message(msgbody)
-	key = 'results.'+cfg.get('probe','network')+ ('.'+urlhash if urlhash is not None else '')
+	key = 'results.'+ cfg.get('probe','network').lower() + ('.'+urlhash if urlhash is not None else '')
 	logging.info("Sending result with key: %s", key)
 	ch.basic_publish(msgout, cfg.get('probe','results'), key)
 
 amqpopts = dict(cfg.items('amqp'))
 amqpconn = amqp.Connection(**amqpopts)
 ch = amqpconn.channel()
-ch.basic_consume('url.'+cfg.get('probe','network')+'.org', consumer_tag='checker1', callback=recvmsg)
+ch.basic_consume('url.'+cfg.get('probe','network').lower() +'.org', consumer_tag='checker1', callback=recvmsg)
 while True:
 	ch.wait()

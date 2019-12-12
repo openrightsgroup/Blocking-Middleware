@@ -1,11 +1,12 @@
 
 FROM python:2.7
 
-COPY fakeprobe.py /fakeprobe.py
 COPY requirements.txt /requirements.txt
-COPY fakeprobe.docker.ini /fakeprobe.ini
 
-RUN pip -r /requirements.txt
+RUN pip install -r /requirements.txt
+
+COPY fakeprobe.py /fakeprobe.py
+COPY fakeprobe.docker.ini /fakeprobe.ini
 
 WORKDIR /
 CMD python fakeprobe.py
