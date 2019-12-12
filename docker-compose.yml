@@ -56,6 +56,13 @@ services:
       dockerfile: Dockerfile
     links:
       - amqp
+  checker:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile.checker
+    links:
+      - db
+      - amqp
 
 
 
