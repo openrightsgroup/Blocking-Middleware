@@ -80,7 +80,14 @@ services:
     links:
       - db
       - amqp
-
+  category:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python categoryimporter.py
+    links:
+      - db
+      - amqp
 
 
 
