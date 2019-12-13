@@ -149,6 +149,40 @@ function split_pg_array($value) {
 
 }
 
+function checkAuth($app, $req, $key, $admin=false) {
+    if ($req->getUser()) {
+        // check basic auth credentials against database
+        $user = $app['db.user.load']->load($req->getUser());
+        if ($user['secret'] != $req->getPassword()) {
+            throw new UserLookupError();
+        }
+    } else {
+        // older signature verification method
+        $user = $app['db.user.load']->load($req->get('email'));
+        if ($key) {
+            if (is_array($key)) {
+                $hashvalues = array();
+                foreach ($key as $f) {
+                    $hashvalues[] = $req->get($f);
+                }
+                $sigstring = implode(":", $hashvalues);
+            } elseif (is_string($key)) {
+                $sigstring = $key;
+            }
+            #Middleware::checkMessageTimestamp($req->get('date'));
+            Middleware::verifyUserMessage($sigstring, $user['secret'], $req->get('signature'));
+        }
+    }
+
+    if ($admin) {
+        checkAdministrator($user);
+    } else {
+        checkUser($user);
+    }
+
+    return $user;
+}
+
 $app->error(function(APIException $e, $code) {
 	$error_class = get_class($e);
 	switch($error_class) {
@@ -199,10 +233,8 @@ $app->error(function(APIException $e, $code) {
 		case 'IpLookupError':
 			$code = 500;
 			$message = "An error occurred gathering IP information";
-		case 'BadUrlError':
-			$code = 400;
-			$message = $e->getMessage();
 			break;
+		case 'BadUrlError':
         case 'InvalidSortError':
 			$code = 400;
 			$message = $e->getMessage();
@@ -232,9 +264,7 @@ $app->get('/search/url', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','q'));
     $q = $req->get('q');
     $page = $req->get('page', 0);
-	$user = $app['db.user.load']->load($req->get('email'));
-	#Middleware::checkMessageTimestamp($req->get('date'));
-	Middleware::verifyUserMessage($q, $user['secret'], $req->get('signature'));
+	checkAuth($app, $req, ['q']);
 
     $exclude_adult = $req->get('exclude_adult', 0);
     if ($exclude_adult) {
@@ -288,8 +318,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	checkParameters($req, array('email','signature','url'));
 
-	$row = $app['db.user.load']->load($req->get('email'));
-	checkUser($row);
+	$row = checkAuth($app, $req, ['url']);
 
     $is_admin = $row['administrator'];
 
@@ -299,10 +328,6 @@ $app->post('/submit/url', function(Request $req) use ($app) {
     } else {
         $target_queue = null;
     }
-
-	Middleware::verifyUserMessage($req->get('url'), $row['secret'],
-		$req->get('signature')
-	);
 
 	if (trim($req->get('url')) == '') {
 		throw new InputError();
@@ -446,13 +471,7 @@ $app->get('/status/user',function(Request $req) use ($app) {
 
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$row = $app['db.user.load']->load($req->get('email'));
-
-	Middleware::verifyUserMessage( $req->get('email') .':'. $req->get('date'),
-		$row['secret'], $req->get('signature'));
-
+	$row = checkAuth($app, $req, ['email','date']);
 
 	return $app->json(array('success'=>'true', 'status'=> $row['status']));
 
@@ -496,14 +515,9 @@ $app->post('/register/user', function(Request $req) use ($app) {
 $app->post('/prepare/probe', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
 	$conn = $app['service.db'];
 
-	$row = $app['db.user.load']->load($req->get('email'));
-	checkUser($row);
-
-	Middleware::verifyUserMessage($req->get('email') . ':' . $req->get('date'), $row['secret'], $req->get('signature'));
+	checkAuth($app, $req, ['email','date']);
 
 	$probeHMAC = Middleware::generateSharedSecret(32);
 
@@ -521,8 +535,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$conn = $app['service.db'];
-	$row = $app['db.user.load']->load($req->get('email'));
-	checkUser($row);
+	$row = checkAuth($app, $req);
 
 	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probehmac']);
 	if ($check_uuid != $req->get('probe_uuid')) {
@@ -673,8 +686,7 @@ $app->post('/status/probe/{probe}', function (Request $req, $probe) use ($app) {
 $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
 
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	$user = checkAuth($app, $req, ['date']);
 
 	$conn = $app['service.db'];
     $result = $conn->query("select name, description, isp_status, fmtime(lastseen) as lastseen, probe_status, location, proberesprecv as tests_run,
@@ -697,9 +709,8 @@ $app->get('/status/probes/{region}', function(Request $req, $region) use ($app) 
 $app->get('/status/url', function (Request $req) use ($app) {
 	checkParameters($req, array('url','email','signature'));
 
-	$user = $app['db.user.load']->load($req->get('email'));
+	$user = checkAuth($app, $req, ['url']);
     $admin = $user['administrator'];
-	Middleware::verifyUserMessage($req->get('url'), $user['secret'], $req->get('signature'));
 
     if ($admin && $req->get('normalize',1) == 0) {
         // allow an administrator to work on non-normalized URLs
@@ -794,8 +805,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
 $app->get('/status/stats', function( Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	$user = checkAuth($app, $req, ['date']);
 
 	$conn = $app['service.db'];
 
@@ -810,8 +820,7 @@ $app->get('/status/stats', function( Request $req) use ($app) {
 
 $app->get('/status/category-stats', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+	$user = checkAuth($app, $req, ['date']);
 
 	$conn = $app['service.db'];
     $stats = array();
@@ -828,8 +837,7 @@ $app->get('/status/category-stats', function(Request $req) use ($app) {
 
 $app->get('/status/domain-stats', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
 	$conn = $app['service.db'];
     $stats = array();
@@ -871,8 +879,7 @@ $app->get('/status/isp-stats/{region}', function(Request $req, $region) use ($ap
 	}
 
 	checkParameters($req, array('email','signature','date'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
 	$conn = $app['service.db'];
 
@@ -895,8 +902,7 @@ $app->get('/status/isp-stats/{region}', function(Request $req, $region) use ($ap
 
 $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
-    $user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
     $conn = $app['service.db'];
 
@@ -941,8 +947,7 @@ $app->get('/status/ispreport-stats', function (Request $req) use ($app) {
 
 $app->get('/status/country-stats', function(Request $req) use ($app) {
     checkParameters($req, array('email','signature','date'));
-    $user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
     $conn = $app['service.db'];
 
@@ -965,9 +970,8 @@ $app->get('/status/country-stats', function(Request $req) use ($app) {
 
 $app->get('/status/result/{uuid}', function (Request $req, $uuid) use ($app) {
     checkParameters($req, array('email','signature','date'));
-    $user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
-    
+    $user = checkAuth($app, $req, ['date']);
+
     $data = $app['service.dynamo']->get($uuid);
     
     return $app->json(array(
@@ -978,8 +982,7 @@ $app->get('/status/result/{uuid}', function (Request $req, $uuid) use ($app) {
 
 $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) {
     checkParameters($req, array('email','signature','date'));
-    $user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
     $conn = $app['service.db'];
     $page = $req->get('page', 0);
@@ -1111,8 +1114,7 @@ $app->get('/status/blocks/{region}', function(Request $req, $region) use ($app) 
 })->value('region', 'gb');
 
 $app->get('/status/ispreports', function (Request $req) use ($app) {
-    $user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['date']);
 
     $filter = array();
 
@@ -1218,11 +1220,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 	ob_implicit_flush(true);
 
 	checkParameters($req, array('email','signature','url','date'));
-
-	$user = $app['db.user.load']->load($req->get('email'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-	Middleware::verifyUserMessage($req->get('url').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['url','date']);
 
 	$timeout = (int)$req->get('timeout');
 	if ($timeout) {
@@ -1314,10 +1312,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 
 $app->post('/verify/email', function (Request $req) use ($app) {
 	#checkParameters($req, array('email','signature','token','date'));
-	$user = $app['db.user.load']->load($req->get('email'));
-
-	Middleware::checkMessageTimestamp($req->get('date'));
-	Middleware::verifyUserMessage($req->get('token').':'.$req->get('date'), $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['token','date']);
 
 	$conn = $app['service.db'];
     $token = $req->get('token');
@@ -1412,8 +1407,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 $app->get('/category/search', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','search'));
     $search = $req->get('search');
-	#$user = $app['db.user.load']->load($req->get('email'));
-	#Middleware::verifyUserMessage($search, $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, ['search']);
 
     $output = array('success' => true, 'categories' => array());
 
@@ -1441,7 +1435,7 @@ $app->get('/category/search', function(Request $req) use ($app) {
 
 $app->get('/category/random', function (Request $req) use ($app) {
     checkParameters($req, array('email','signature'));
-    $user = $app['db.user.load']->load($req->get('email'));
+    $user = checkAuth($app, $req, []);
 
     $output = array('success' => true);
 
@@ -1463,8 +1457,7 @@ $app->get('/category/random', function (Request $req) use ($app) {
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, $parent);
 
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
@@ -1523,8 +1516,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($parent, $user['secret'], $req->get('signature'));
+    $user = checkAuth($app, $req, $parent);
 
     $cat = $app['db.category.load']->load($parent);
     if (!$cat) {
@@ -1613,7 +1605,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     $conn = $app['service.db'];
     $data = (array)json_decode($req->getContent(), true);
 
-
+    # TODO
 	$user = $app['db.user.load']->load($data['auth']['email']);
     Middleware::checkMessageTimestamp($data['date']);
     Middleware::verifyUserMessage(
