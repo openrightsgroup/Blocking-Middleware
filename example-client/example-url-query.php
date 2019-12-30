@@ -25,7 +25,7 @@ URL: <input type="input" name="url" />
 		'url' => $_POST['url'],
 	);
 	if ($AUTH == 'signature') {
-        $args['signature'] => createSignatureHash($_POST['url'], $SECRET)
+        $args['signature'] = createSignatureHash($_POST['url'], $SECRET);
     }
 	$qs = http_build_query($args);
 
