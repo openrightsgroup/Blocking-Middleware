@@ -23,6 +23,10 @@ services:
     links:
       - db
       - amqp
+    #volumes:
+    #  - ./api/1.2:/var/www/api/1.2
+    #  - ./backend:/var/www/backend
+    #  - ./config:/var/www/config
   init:
     build:
       context: .
@@ -50,6 +54,8 @@ services:
       - 8081:8081
     links:
       - api
+    #volumes:
+    #  - ./example-client:/var/www/example-client
   fakeprobe:
     build:
       context: backend/fakeprobe

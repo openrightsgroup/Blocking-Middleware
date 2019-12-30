@@ -5,6 +5,7 @@
 $API = "http://localhost/1.2"; // local test URL
 $USER = 'example@blocked.org.uk';
 $SECRET = 'abcdefghijklmnopqrstuvwxyz123';
+$AUTH = 'signature';
 
 function createSignatureHash($message, $secret) {
 	/* Use hmac functions to return signature for message string */

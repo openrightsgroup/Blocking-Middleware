@@ -56,19 +56,24 @@ INFORMATION <input type="textarea" name="information" /><br>
         'information' => $_POST['information']
     );
 	// Sign it using $USER's secret
-	$payload['signature'] = sign($SECRET, $payload, array("url"));
+    if ($AUTH == 'signature') {
+        $payload['signature'] = sign($SECRET, $payload, array("url"));
+    }
 	$content = http_build_query($payload);
 
 
 	// build the request
 	$options = array(
 		'http' => array(
-			'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+			'header' => array("Content-type: application/x-www-form-urlencoded"),
 			'method' => 'POST',
 			'content' => $content,
 			'ignore_errors' => '1',
 		)
 	);
+	if ($AUTH == "basic") {
+	    $options['http']['header'][] = "Authorization: Basic " . base64_encode("$USER:$SECRET") . "";
+    }
 
 	// send it
 	$ctx = stream_context_create($options);
@@ -83,6 +88,12 @@ INFORMATION <input type="textarea" name="information" /><br>
 <head><title>Client Test</title>
 </head>
 <body>
+
+<h2>Submitted content</h2>
+updated
+<div style="white-space: pre">
+    <?php var_dump($payload); ?>
+</div>
 
 <h2>
 Submission result
