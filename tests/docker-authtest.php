@@ -23,30 +23,43 @@ function sign($secret, $data, $keys) {
 	return createSignatureHash($signdata, $secret);
 }
 
+function make_request($args, $opts) {
+    global $API;
+
+    $qs = http_build_query($args);
+
+    $options = array(
+        'http' => array(
+            'method' => 'GET',
+            'ignore_errors' => '1',
+        )
+    );
+    foreach ($opts as $k => $v) {
+        $options['http'][$k] = $v;
+    }
+
+    // send it
+    $ctx = stream_context_create($options);
+    $result = file_get_contents("$API/status/url?$qs", false, $ctx);
+
+    // get the JSON data back from the api
+    $urldata = json_decode($result);
+
+    return $urldata;
+}
+
 function test_basic_auth() {
-    global $API, $USER, $SECRET;
+    global $USER, $SECRET;
 
 	$args = array(
 		'email' => $USER,
 		'url' => "http://www.example.com",
 	);
-	$qs = http_build_query($args);
+    $opts = array(
+        'header' => "Authorization: Basic " . base64_encode("$USER:$SECRET")
+    );
 
-	$options = array(
-		'http' => array(
-			'method' => 'GET',
-			'ignore_errors' => '1',
-		)
-	);
-    $options['http']['header'] = "Authorization: Basic " . base64_encode("$USER:$SECRET");
-
-
-    // send it
-	$ctx = stream_context_create($options);
-	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
-
-	// get the JSON data back from the api
-	$urldata = json_decode($result);
+    $urldata = make_request($args, $opts);
 
     print "Basic auth : ";
     if ($urldata->success == true) { 
@@ -57,28 +70,16 @@ function test_basic_auth() {
 }
 
 function test_signature_auth() {
-    global $API, $USER, $SECRET;
+    global $USER, $SECRET;
+
 	$args = array(
 		'email' => $USER,
 		'url' => "http://www.example.com",
 	);
     $args['signature'] = createSignatureHash("http://www.example.com", $SECRET);
-	$qs = http_build_query($args);
 
-	// build the request
-	$options = array(
-		'http' => array(
-			'method' => 'GET',
-			'ignore_errors' => '1',
-		)
-	);
-
-    // send it
-	$ctx = stream_context_create($options);
-	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
-
-	// get the JSON data back from the api
-	$urldata = json_decode($result);
+	$opts = array();
+    $urldata = make_request($args, $opts);
 
     print "Sig   auth : ";
     if ($urldata->success == true) { 
@@ -88,29 +89,19 @@ function test_signature_auth() {
     }
 }
 function test_basic_auth_fail() {
-    global $API, $USER, $SECRET;
+    global $USER, $SECRET;
 
 	$args = array(
 		'email' => $USER,
 		'url' => "http://www.example.com",
 	);
-	$qs = http_build_query($args);
-
-	$options = array(
-		'http' => array(
-			'method' => 'GET',
-			'ignore_errors' => '1',
-		)
-	);
-    $options['http']['header'] = "Authorization: Basic " . base64_encode("$USER:xx$SECRET");
 
 
-    // send it
-	$ctx = stream_context_create($options);
-	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
+    $opts = array(
+        'header' => "Authorization: Basic " . base64_encode("$USER:xx$SECRET")
+    );
 
-	// get the JSON data back from the api
-	$urldata = json_decode($result);
+    $urldata = make_request($args, $opts);
 
     print "Basic auth (fail) : ";
     if ($urldata->success == false) { 
@@ -127,22 +118,8 @@ function test_signature_auth_fail() {
 		'url' => "http://www.example.com",
 	);
     $args['signature'] = createSignatureHash("http://www.example.com", "xx" . $SECRET);
-	$qs = http_build_query($args);
 
-	// build the request
-	$options = array(
-		'http' => array(
-			'method' => 'GET',
-			'ignore_errors' => '1',
-		)
-	);
-
-    // send it
-	$ctx = stream_context_create($options);
-	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
-
-	// get the JSON data back from the api
-	$urldata = json_decode($result);
+    $urldata = make_request($args, array());
 
     print "Sig   auth (fail): ";
     if ($urldata->success == false) { 
