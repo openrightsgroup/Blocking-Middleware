@@ -161,7 +161,9 @@ function checkAuth($app, $req, $key, $admin=false) {
             } elseif (is_string($key)) {
                 $sigstring = $key;
             }
-            #Middleware::checkMessageTimestamp($req->get('date'));
+            if ($req->get('date')) {
+                Middleware::checkMessageTimestamp($req->get('date'));
+            }
             Middleware::verifyUserMessage($sigstring, $user['secret'], $req->get('signature'));
         }
     }
