@@ -141,7 +141,7 @@ function split_pg_array($value) {
 
 }
 
-function checkAuth($app, $req, $key, $admin=false) {
+function checkAuth($app, $req, $key=null, $admin=false, $check_date=true) {
     if ($req->getUser()) {
         // check basic auth credentials against database
         $user = $app['db.user.load']->load($req->getUser());
@@ -161,7 +161,7 @@ function checkAuth($app, $req, $key, $admin=false) {
             } elseif (is_string($key)) {
                 $sigstring = $key;
             }
-            if ($req->get('date')) {
+            if ($check_date) {
                 Middleware::checkMessageTimestamp($req->get('date'));
             }
             Middleware::verifyUserMessage($sigstring, $user['secret'], $req->get('signature'));
@@ -529,7 +529,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$conn = $app['service.db'];
-	$row = checkAuth($app, $req);
+	$row = checkAuth($app, $req, null, false, false);
 
 	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probehmac']);
 	if ($check_uuid != $req->get('probe_uuid')) {
@@ -1389,7 +1389,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 $app->get('/category/search', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','search'));
     $search = $req->get('search');
-    $user = checkAuth($app, $req, ['search']);
+    $user = checkAuth($app, $req, ['search'], false, false);
 
     $output = array('success' => true, 'categories' => array());
 
@@ -1417,7 +1417,7 @@ $app->get('/category/search', function(Request $req) use ($app) {
 
 $app->get('/category/random', function (Request $req) use ($app) {
     checkParameters($req, array('email','signature'));
-    $user = checkAuth($app, $req, []);
+    $user = $app['db.user.load']->load($req->get('email'));
 
     $output = array('success' => true);
 
@@ -1439,7 +1439,7 @@ $app->get('/category/random', function (Request $req) use ($app) {
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-    $user = checkAuth($app, $req, $parent);
+    $user = checkAuth($app, $req, $parent, false, false);
 
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
@@ -1498,7 +1498,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-    $user = checkAuth($app, $req, $parent);
+    $user = checkAuth($app, $req, $parent, false, false);
 
     $cat = $app['db.category.load']->load($parent);
     if (!$cat) {
