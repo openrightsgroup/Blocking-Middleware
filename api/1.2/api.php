@@ -146,6 +146,7 @@ function checkAuth($app, $req, $key=null, $admin=false, $check_date=true) {
         // check basic auth credentials against database
         $user = $app['db.user.load']->load($req->getUser());
         if ($user['secret'] != $req->getPassword()) {
+            error_log("Password authentication failed");
             throw new UserLookupError();
         }
     } else {
