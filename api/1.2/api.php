@@ -392,7 +392,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			array($url['urlid'], $contact['id'], $req->get('subscribereports', false) )
             );
         $row = $result->fetch(PDO::FETCH_NUM);
-        error_log("Inserted subscription: {$row[0]}");
+        debug_log("Inserted subscription: {$row[0]}");
 
 		# create verification token for email subscribe
 		# needs an update because we're using the row ID as a salt of sorts
@@ -403,7 +403,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			array(Middleware::generateSharedSecret(10), $row[0])
 			);
         $subscriberow = $r->fetch(PDO::FETCH_NUM);
-        error_log("generated token: {$subscriberow[0]}");
+        debug_log("generated token: {$subscriberow[0]}");
 
         if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
             $msg = new PHPMailer();
@@ -437,7 +437,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# checkLastPolled also updates the timestamp
     if ($is_admin && !is_null($target_queue) && $target_queue == 'url.none') {
         # admin requests that the URL is submitted but not queued
-        error_log("admin noqueue $urltext");
+        debug_log("admin noqueue $urltext");
         $queued = false;
     } elseif ($newurl || $app['db.url.load']->checkLastPolled($url['urlid']) || ($is_admin && $req->get('force',0))) {
 
@@ -563,7 +563,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 });
 
 $app->get('/config/{version}', function (Request $req, $version) use ($app) {
-	error_log("Version: $version");
+	debug_log("Version: $version");
 	if (!$version) {
 		throw new InputError();
 	}
@@ -583,7 +583,7 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 	// fetch and return config here
 
 	$configfile = __DIR__ . "/../../config/" . $version . "." . $format;
-	error_log("Config file: $configfile");
+	debug_log("Config file: $configfile");
 
 	$content = file_get_contents($configfile);
 	if (!$content) {
@@ -619,7 +619,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$descr = $isp['name'];
 	}
 	catch (IspLookupError $e) {
-		error_log("Caught failed lookup");
+		debug_log("Caught failed lookup");
 		$queue_name =  get_queue_name($descr);
 		$isp = $app['db.isp.load']->create($descr);
 
@@ -719,7 +719,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         $admin_fields = '';
     }
 
-	error_log("URL: " . $req->get('url') . "; " . $urltext);
+	debug_log("URL: " . $req->get('url') . "; " . $urltext);
 	$url = $app['db.url.load']->load($urltext);
 
 	$conn = $app['service.db'];
@@ -1215,7 +1215,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 	} else {
 		$timeout = 15;
 	}
-	error_log("Timeout set to: $timeout");
+	debug_log("Timeout set to: $timeout");
 
 	list($amqpconn, $ch) = amqp_connect_full();
 	$amqpconn->setTimeout($timeout);
@@ -1601,7 +1601,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     if (!(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
         // we are submittingt to ISPs, not feedback to ORG or BBFC
         if ($app['db.blacklist.load']->check($url['url'])) {
-            error_log("{$url['url']} is blacklisted; not submitting");
+            debug_log("{$url['url']} is blacklisted; not submitting");
             return $app->json(array('success' => false, 'message' => 'domain rejected'));
         }
     }
@@ -1614,7 +1614,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     if (!isset($data['networks']) || count($data['networks']) == 0) {
         $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
-        error_log("Unreported: " . implode(",", $data['networks']));
+        debug_log("Unreported: " . implode(",", $data['networks']));
     }
 
     if (!$contact['verified'] && !(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == 'BBFC') )) {
@@ -1635,7 +1635,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     $queued = array();
     $rejected = array();
     foreach($data['networks'] as $network_name) {
-        error_log("Looking up: ". $network_name);
+        debug_log("Looking up: ". $network_name);
         $age_limit = false;
         $network = $app['db.isp.load']->load($network_name);
 
@@ -1654,7 +1654,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             }
             if ($row[1] == 't') {
                 $age_limit = 't';
-                error_log("Age limited");
+                debug_log("Age limited");
                 $queued[] = $network_name;
             }
         }
