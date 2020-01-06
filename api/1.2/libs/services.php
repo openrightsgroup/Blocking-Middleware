@@ -850,7 +850,7 @@ class ISPReportLoader {
     }
 
     function get_url_reports($urlid) {
-        $res = $this->conn->query("select id, network_name, fmtime(created) as created, report_type, allow_publish, name, message, (select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count
+        $res = $this->conn->query("select id, network_name, fmtime(created) as created, report_type, allow_publish, name, message, (select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, status
             from isp_reports
             where urlid = ?
             order by network_name",
