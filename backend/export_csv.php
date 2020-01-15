@@ -28,23 +28,39 @@ fputcsv($fp, array('# Latest results per URL/Network'));
 fputcsv($fp, array('URL','URL Submission Timestamp','Network Name','Status','Result Timestamp','Block Category','Block Type'));
 
 foreach ($urllist as $urlids) {
-    fputs($stderr, "URL: {$urlids['urlid']}, tags: {$urlids['tags']}");
-    $result = $conn->query(
-        "select url, urls.inserted url_submitted, network_name, uls.status, uls.created,  uls.category, uls.blocktype 
-        from 
-        url_latest_status uls
-        inner join urls using (urlid)
-        inner join isps on network_name = isps.name
-        where regions && '{gb}'::varchar[] and urlid = ?
-        order by urlid, network_name, uls.created",
-        array($urlids['urlid'])
-    );
-
-
-    while ($row = $result->fetch(PDO::FETCH_NUM)) {
-        #print implode($row, "\t") . "\n";
-        fputcsv($fp, $row);
+    while (true) {
+        $ids = array();
+        for ($i = 0; $i < 50; $i++) {
+            $urlids = $urllist->fetch();
+            if (is_null($urlids)) {
+                break;
+            }
+            #fputs($stderr, "URL: {$urlids['urlid']}, tags: {$urlids['tags']}");
+            $ids[] = $urlids['urlid'];
+        }
+        if (count($ids) == 0) {
+            break;
+        }
+        $placeholders = array();
+        array_pad($placeholders, count($ids), '?');
+        $placeholders = implode(',', $placeholders);
+        $result = $conn->query(
+            "select url, urls.inserted url_submitted, network_name, uls.status, uls.created,  uls.category, uls.blocktype 
+            from 
+            url_latest_status uls
+            inner join urls using (urlid)
+            inner join isps on network_name = isps.name
+            where regions && '{gb}'::varchar[] and urlid in ($placeholders)
+            order by urlid, network_name, uls.created",
+            array($placeholders)
+        );
+        while ($row = $result->fetch(PDO::FETCH_NUM)) {
+            #print implode($row, "\t") . "\n";
+            fputcsv($fp, $row);
+        }
     }
+
+
 }
 fclose($fp);
 
