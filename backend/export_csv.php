@@ -11,7 +11,8 @@ $exclude_tags = "{uk-zone,com-zone,dotorg,dot-uk-zone,me-uk-zone,misc-uk-zone,or
 
 $urllist = $conn->query(
     "select urlid, tags from urls
-    where not (urls.tags::varchar[] <@ ?::varchar[]) and urls.status = 'ok'",
+    where not (urls.tags::varchar[] <@ ?::varchar[]) and urls.status = 'ok'
+    order by urlid",
     array($exclude_tags)
 );
 
