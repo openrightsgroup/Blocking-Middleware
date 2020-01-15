@@ -41,8 +41,7 @@ while (true) {
     if (count($ids) == 0) {
         break;
     }
-    $placeholders = array_pad(array(), count($ids), '?');
-    $placeholders = implode(',', $placeholders);
+    $placeholders = implode(',', array_pad(array(), count($ids), '?'));
     $result = $conn->query(
         "select url, urls.inserted url_submitted, network_name, uls.status, uls.created,  uls.category, uls.blocktype 
         from 
@@ -51,7 +50,7 @@ while (true) {
         inner join isps on network_name = isps.name
         where regions && '{gb}'::varchar[] and urlid in ($placeholders)
         order by urlid, network_name, uls.created",
-        array($placeholders)
+        $ids
     );
     while ($row = $result->fetch(PDO::FETCH_NUM)) {
         #print implode($row, "\t") . "\n";
