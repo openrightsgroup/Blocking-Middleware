@@ -32,10 +32,15 @@ while (true) {
     $ids = array();
     for ($i = 0; $i < 50; $i++) {
         $urlids = $urllist->fetch(PDO::FETCH_NUM);
-        if (is_null($urlids)) {
+        if ($urlids === false) {
             break;
         }
-        #fputs($stderr, "URL: {$urlids['urlid']}, tags: {$urlids['tags']}");
+        if (is_null($urlids[0])) {
+            break;
+        }
+        if ($i == 0) {
+            fputs($stderr, "URL: {$urlids[0]}, tags: {$urlids[1]}");
+        }
         $ids[] = $urlids[0];
     }
     if (count($ids) == 0) {
