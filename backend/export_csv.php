@@ -39,7 +39,7 @@ while (true) {
             break;
         }
         if ($i == 0) {
-            fputs($stderr, "URL: {$urlids[0]}, tags: {$urlids[1]}");
+            fputs($stderr, "URL: {$urlids[0]}, tags: {$urlids[1]}\n");
         }
         $ids[] = $urlids[0];
     }
