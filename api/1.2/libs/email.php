@@ -50,7 +50,7 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
     if ($network == "Three") {
         $network = "3"; 
     }
-    if (!in_array($network, array("3","EE","O2","Vodafone") {
+    if (!in_array($network, array("3","EE","O2","Vodafone"))) {
         $other = $network;
         $network = "Other";
     }
