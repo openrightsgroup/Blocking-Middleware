@@ -99,7 +99,8 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
         ->send();
     $status = $rsp->getStatus();
     $body = $rsp->getBody();
-    error_log("BBFC Submit ($status) $body");
+    $loc = $rsp->getHeader("location");
+    error_log("BBFC Submit ($status) [$loc] $body");
         
     return true;
 }
