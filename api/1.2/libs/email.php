@@ -84,13 +84,17 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
         "form_id" => $form_id,
         "op" => "Submit"
         );
-
+    foreach ($data as $k => $v) {
+        error_log("BBFC submit data: $k = $v");
+    }
     
     $req = new HTTP_Request2(BBFC_SUBMIT_URL);
     $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
         ->addPostParameter($data)
-        ->send();   
+        ->send();
+    $status = $rsp->getStatus();
     $body = $rsp->getBody();
+    error_log("BBFC Submit $status $body");
         
     return true;
 }
