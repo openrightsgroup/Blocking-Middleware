@@ -1122,6 +1122,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $filter['policy'] = in_array($filter['policy'], array("false", "False", "0", "f", 0)) ? false : true;
     }
     $filter['year'] = $req->get('year', null);
+    $filter['report_type'] = $req->get('report_type');
 
     $page = $req->get('page', 0);
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;

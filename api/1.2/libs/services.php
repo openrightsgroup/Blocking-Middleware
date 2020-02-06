@@ -928,6 +928,10 @@ class ISPReportLoader {
             $output->args[] = $filter['network'];
         }
 
+        if (!is_null(@$filter['report_type'])) {
+            $output->filters[] = " AND report_type = ?";
+            $output->args[] = $filter['report_type'];
+        }
 
         if (@$filter['category']) {
             if ($filter['category'] == '_unassigned_') {
