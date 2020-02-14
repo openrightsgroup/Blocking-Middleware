@@ -74,7 +74,7 @@ def main():
             groupconfig['command'],
             int(groupconfig['interval']),
             int(groupconfig.get('delay', 0)),
-            args.run_on_startup,
+            (groupconfig.get('run_on_start', '0') == 1) or args.run_on_startup,
             ))
 
     while True:

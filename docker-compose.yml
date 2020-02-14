@@ -27,14 +27,22 @@ services:
     #  - ./api/1.2:/var/www/api/1.2
     #  - ./backend:/var/www/backend
     #  - ./config:/var/www/config
-  init:
+  cron:
     build:
       context: .
       dockerfile: Dockerfile
-    command: php ../backend/create_queues.php
+    command: python ../backend/scheduler.py -c ../backend/scheduler.ini
     links:
       - db
       - amqp
+# init:
+#   build:
+#     context: .
+#     dockerfile: Dockerfile
+#   command: php ../backend/create_queues.php
+#   links:
+#     - db
+#     - amqp
   record:
     build:
       context: .
