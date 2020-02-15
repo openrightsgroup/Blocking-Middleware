@@ -4,7 +4,7 @@ FROM php:7
 RUN mkdir /var/www/api
 
 RUN apt update && \
-    apt install -y librabbitmq-dev libpq-dev amqp-tools && \
+    apt install -y librabbitmq-dev libpq-dev amqp-tools python && \
     apt clean
 
 RUN pecl install amqp redis && \

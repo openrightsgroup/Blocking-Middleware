@@ -48,8 +48,6 @@ services:
       context: .
       dockerfile: Dockerfile
     command: php ../backend/record_results.php
-    depends_on:
-      - init
     links:
       - db
       - amqp
