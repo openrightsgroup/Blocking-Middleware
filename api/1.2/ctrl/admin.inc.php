@@ -10,11 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 $app->get('/list/users/{status}', function (Request $req, $status) use ($app) {
 	checkParameters($req, array('email','date','signature'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$user = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $user['secret'], $req->get('signature'));
-	checkAdministrator($user);
+    $user = checkAuth($app, $req, ['date'], true);
 
 	$conn = $app['service.db'];
 
@@ -39,12 +35,7 @@ $app->post('/status/user/{user}', function (Request $req, $user) use ($app) {
 	# Set the status of a user
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-
-	Middleware::verifyUserMessage($user . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, $user . ":". $req->get('status'), true);
 
 	$conn = $app['service.db'];
 	$result = $conn->query("UPDATE users set status = ? where email = ?",
@@ -61,11 +52,7 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 	# Set the status of a probe
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($uuid . ":". $req->get('status'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, $uuid . ":". $req->get('status'), true);
 
 	if (!($req->get('status') == "enabled" || $req->get('status') == 'disabled')) {
 		return $app->json(array(
@@ -90,11 +77,7 @@ $app->post('/status/probe/{uuid}', function (Request $req, $uuid) use ($app) {
 $app->post('/ispreport/flag', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date') . ":" . $req->get('url'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, ['date','url'], true);
 
     $urldata = $app['db.url.load']->load($req->get('url'));
     
@@ -108,11 +91,7 @@ $app->post('/ispreport/flag', function(Request $req) use ($app) {
 $app->post('/ispreport/unflag', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date') . ":" . $req->get('url'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, ['date','url'], true);
 
     $urldata = $app['db.url.load']->load($req->get('url'));
     
@@ -127,11 +106,7 @@ $app->post('/ispreport/unflag', function(Request $req) use ($app) {
 $app->post('/ispreport/blacklist', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date','domain'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date') . ":". $req->get('domain'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, ['date','domain'], true);
 
     $loader = $app['db.blacklist.load'];
 
@@ -145,12 +120,8 @@ $app->post('/ispreport/blacklist', function(Request $req) use ($app) {
 $app->get('/ispreport/blacklist', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
+    $adminuser = checkAuth($app, $req, ['date'], true);
 
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
-    
     $loader = $app['db.blacklist.load'];
     $entries = $loader->select();
 
@@ -161,11 +132,7 @@ $app->get('/ispreport/blacklist', function(Request $req) use ($app) {
 $app->delete('/ispreport/blacklist', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date','domain'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('date') .":". $req->get('domain'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, ['date','domain'], true);
 
     $loader = $app['db.blacklist.load'];
     $loader->delete($req->get('domain'));
@@ -177,11 +144,7 @@ $app->delete('/ispreport/blacklist', function(Request $req) use ($app) {
 $app->post('status/url', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','date'));
 
-	Middleware::checkMessageTimestamp($req->get('date'));
-
-	$adminuser = $app['db.user.load']->load($req->get('email'));
-	Middleware::verifyUserMessage($req->get('url'), $adminuser['secret'], $req->get('signature'));
-	checkAdministrator($adminuser);
+    $adminuser = checkAuth($app, $req, ['url'], true);
 
     $urlloader = $app['db.url.load'];
     if ($req->get('normalize',1) == 0) {
@@ -191,7 +154,7 @@ $app->post('status/url', function(Request $req) use ($app) {
     	$urltext = normalize_url($req->get('url'));
     }
     $urldata = $urlloader->load($urltext);
-    error_log("Updating: $urldata[url] to " . $req->get('status'));
+    debug_log("Updating: $urldata[url] to " . $req->get('status'));
     $ret = $urlloader->set_status($urldata['url'], $req->get('status'));
 
     return $app->json(array('success' => $ret));

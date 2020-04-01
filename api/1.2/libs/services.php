@@ -1,6 +1,7 @@
 <?php
 
 include_once "url.php";
+include_once "logging.php";
 
 class UserLoader {
 	function __construct($conn) {
@@ -400,7 +401,7 @@ class IpLookupService {
 	}
 
 	function check_cache($ip) {
-		error_log("Checking cache for $ip");
+		debug_log("Checking cache for $ip");
 		$result = $this->conn->query(
 			"select network from isp_cache where ip = ? and
 			created >= current_date  - interval '7 day'",
@@ -417,7 +418,7 @@ class IpLookupService {
 	}
 
 	function write_cache($ip, $network) {
-		error_log("Writing cache entry for $ip, $network");
+		debug_log("Writing cache entry for $ip, $network");
         $this->conn->beginTransaction();
         $q = $this->conn->query(
             "update isp_cache set network=?, created = now() where ip = ?",
@@ -430,7 +431,7 @@ class IpLookupService {
             );
         }
         $this->conn->commit();
-		error_log("Cache write complete");
+		debug_log("Cache write complete");
 	}
 
 	function lookup($ip) {
@@ -438,23 +439,23 @@ class IpLookupService {
 
 		$descr = $this->check_cache($ip);
 		if ($descr == null) {
-			error_log("Cache miss for $ip");
+			debug_log("Cache miss for $ip");
 
 			if (strpos($ip, ".") !== false) {
 				# ipv4 address
 
 				$parts = array_reverse(explode(".", $ip));
 				$hostname = implode(".", $parts) . '.origin.asn.cymru.com';
-				error_log("Hostname: $hostname");
+				debug_log("Hostname: $hostname");
 
 				$record = dns_get_record($hostname, DNS_TXT);
 				if (!$record) {
 					throw new IpLookupError();
 				}
-				error_log("TXT: " .  $record[0]['txt']);
+				debug_log("TXT: " .  $record[0]['txt']);
 				list($as, $junk) = explode(' ', $record[0]['txt'], 2);
 
-				error_log("AS: $as");
+				debug_log("AS: $as");
 
 				$ashost = "AS{$as}.asn.cymru.com";
 				$record2 = dns_get_record($ashost, DNS_TXT);
@@ -462,12 +463,12 @@ class IpLookupService {
 					throw new IpLookupError();
 				}
 
-				error_log("TXT: " .  $record2[0]['txt']);
+				debug_log("TXT: " .  $record2[0]['txt']);
 				if (!preg_match('/ \| (\- )?([^\|]*?)$/', $record2[0]['txt'], $matches)) {
 					throw new IpLookupError();
 				}
 				$descr = $matches[2];
-				error_log("Descr: $descr");
+				debug_log("Descr: $descr");
 
 			}
 
@@ -476,9 +477,9 @@ class IpLookupService {
 			}
 			$this->write_cache($ip, $descr);
 		} else {
-			error_log("Cache hit");
+			debug_log("Cache hit");
 		}
-		error_log("Descr: $descr");
+		debug_log("Descr: $descr");
 		return $descr;
 	}
 }
@@ -700,7 +701,7 @@ class DMOZCategoryLoader {
             left join cache_block_count on cache_block_count.urlID = urls.urlID
             where ? @> tree and $active > 0
             order by URL limit 20 offset $off";
-        error_log("SQL: $sql");
+        debug_log("SQL: $sql");
         $result = $this->conn->query(
             $sql,
             array(strlen($row['display_name'])+2, $row['tree'])
@@ -821,7 +822,7 @@ class ISPReportLoader {
         if ($status == 'sent') {
             $this->update_submitted($reportid);
         }
-        error_log("Updated status: report={$reportid}; status={$status}");
+        debug_log("Updated status: report={$reportid}; status={$status}");
 
     }
 
@@ -849,7 +850,7 @@ class ISPReportLoader {
     }
 
     function get_url_reports($urlid) {
-        $res = $this->conn->query("select id, network_name, fmtime(created) as created, report_type, allow_publish, name, message, (select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count
+        $res = $this->conn->query("select id, network_name, fmtime(created) as created, report_type, allow_publish, name, message, (select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, status
             from isp_reports
             where urlid = ?
             order by network_name",
@@ -927,6 +928,10 @@ class ISPReportLoader {
             $output->args[] = $filter['network'];
         }
 
+        if (!is_null(@$filter['report_type'])) {
+            $output->filters[] = " AND report_type = ?";
+            $output->args[] = $filter['report_type'];
+        }
 
         if (@$filter['category']) {
             if ($filter['category'] == '_unassigned_') {
@@ -1029,7 +1034,7 @@ class ISPReportLoader {
             $proc->args
             );
         $ct = $res->fetchColumn(0);
-        error_log("Count: $ct");
+        debug_log("Count: $ct");
         return $ct;
     }
 
@@ -1270,7 +1275,7 @@ class CourtOrderLoader {
     }
 
     function insert($name, $date, $url, $judgment, $judgment_date, $judgment_url) {
-        error_log("Name: $name, date: $date, url: $url");
+        debug_log("Name: $name, date: $date, url: $url");
         $this->conn->query("insert into courtorders(name, date, url, judgment, judgment_date, judgment_url, created) 
             values (?,?,?,?,?,?,now())",
             array($name, $date, $url, $judgment, $judgment_date, $judgment_url)
@@ -1278,7 +1283,7 @@ class CourtOrderLoader {
     }
 
     function update($original_name, $name, $date, $url, $judgment, $judgment_date, $judgment_url) {
-        error_log("Update Name: $name, date: $date, url: $url");
+        debug_log("Update Name: $name, date: $date, url: $url");
         $res = $this->conn->query("update courtorders set name=?, date=?, url=?, judgment=?, judgment_date=?, judgment_url=?
             where name = ? ",
             array($name, $date, $url, $judgment, $judgment_date, $judgment_url, $original_name)

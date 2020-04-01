@@ -7,6 +7,9 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
+include_once __DIR__ . "/silex/vendor/autoload.php";
+
+
 $opts = getopt('v', array('exchange:','queue:','no-verify','debug'));
 
 function opt($name, $default) {

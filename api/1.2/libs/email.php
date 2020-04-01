@@ -45,9 +45,14 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
     #    <option value="O2">O2</option>
     #    <option value="Vodafone">Vodafone</option>
     #    <option value="Other">Other</option>
-    
+
+    $other = "";
     if ($network == "Three") {
         $network = "3"; 
+    }
+    if (!in_array($network, array("3","EE","O2","Vodafone"))) {
+        $other = $network;
+        $network = "Other";
     }
     
     
@@ -67,7 +72,7 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
            
     $data = array(
         "submitted[who_is_your_mobile_network_operator]" => $network,
-        "submitted[please_specify]" => "",  # other ISP
+        "submitted[please_specify]" => $other,  # other ISP
         "submitted[have_you_contacted_your_mobile_operator]" => "01", # yes "01"
         "submitted[what_was_your_mobile_operators_response_to_your_complaint]" => $previous, # multine
         "submitted[your_name]" => $name,
@@ -84,13 +89,18 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
         "form_id" => $form_id,
         "op" => "Submit"
         );
-
+    foreach ($data as $k => $v) {
+        error_log("BBFC submit data: $k = $v");
+    }
     
     $req = new HTTP_Request2(BBFC_SUBMIT_URL);
     $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
         ->addPostParameter($data)
-        ->send();   
+        ->send();
+    $status = $rsp->getStatus();
     $body = $rsp->getBody();
+    $loc = $rsp->getHeader("location");
+    error_log("BBFC Submit ($status) [$loc] $body");
         
     return true;
 }
