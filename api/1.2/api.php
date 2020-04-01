@@ -102,6 +102,9 @@ function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
 	$keys = array_merge($req->request->keys(), $req->query->keys());
 	foreach($params as $requiredParam) {
+        if (in_array($requiredParam, array('email','signature'))) {
+            continue;
+        }
 		if (!in_array($requiredParam, $keys)) {
 			# throw if any are missing
 			error_log("Missing parameter: $requiredParam");
