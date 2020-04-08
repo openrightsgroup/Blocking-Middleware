@@ -105,7 +105,7 @@ function process_result($msg, $queue) {
           $reqdata = array(
             'url' => $data['url'], 
             'created' => $data['date'],
-            'id' => $data['test_uuid'],
+            'id' => gen_uuid(),
             'requests' => $data['request_data']
             );
         $dynamo->store($reqdata);
