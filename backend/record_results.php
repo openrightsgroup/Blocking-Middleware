@@ -8,9 +8,9 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-$opts = getopt('v', array('exchange:','queue:','no-verify','debug'));
+$opts = getopt('v', array('exchange:','queue:','no-verify','debug','dynamo'));
 
-function opt($name, $default) {
+function opt($name, $default=null) {
     global $opts;
     
     return (isset($opts[$name])) ? $opts[$name] : $default;
@@ -37,7 +37,7 @@ $q->bind('org.blocked', opt('queue', 'results') . '.#');
 $dynamo = new DynamoWrapper(
     AWS_DYNAMODB_ACCESS_KEY,
     AWS_DYNAMODB_SECRET_KEY,
-    AWS_DYNAMODB_URL,
+    AWS_DYNAMODB_URL
 );
 
 $conn = db_connect();
@@ -101,7 +101,7 @@ function process_result($msg, $queue) {
     try {
       $processor->process_result($data, $probe);
       
-      if (array_key_exists('request_data', $data)) {
+      if (flag('dynamo') && array_key_exists('request_data', $data)) {
           $reqdata = array(
             'url' => $data['url'], 
             'created' => $data['date'],
@@ -134,5 +134,7 @@ function process_result($msg, $queue) {
   return true;
 }
 
-// $dynamo->createTable();
+if (flag('dynamo')) {
+    $dynamo->createTable();
+}
 $q->consume("process_result");
