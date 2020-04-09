@@ -104,7 +104,9 @@ function process_result($msg, $queue) {
     }
 
     try {
-      $data['test_uuid'] = gen_uuid();
+      if (flag('dynamo')) {
+        $data['test_uuid'] = gen_uuid();
+      }
       $processor->process_result($data, $probe);
 
       if (flag('dynamo') && array_key_exists('request_data', $data)) {
