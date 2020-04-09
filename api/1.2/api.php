@@ -31,9 +31,9 @@ $app['service.db'] = $app->share(function() {
 
 $app['service.dynamo'] = $app->share(function() {
     return new DynamoWrapper(
-        AWS_DYNAMODB_URL,
         AWS_DYNAMODB_ACCESS_KEY,
-        AWS_DYNAMODB_SECRET_KEY
+        AWS_DYNAMODB_SECRET_KEY,
+        AWS_DYNAMODB_URL
     );
 });
 
