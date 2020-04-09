@@ -8,7 +8,7 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-$opts = getopt('v', array('exchange:','queue:','no-verify','debug','dynamo'));
+$opts = getopt('v', array('exchange:','queue:','no-verify','debug','dynamo','dynamo-setup'));
 
 
 function opt($name, $default=null) {
@@ -140,7 +140,7 @@ function process_result($msg, $queue) {
   return true;
 }
 
-if (flag('dynamo')) {
+if (flag('dynamo-setup')) {
     $dynamo->createTable();
 }
 $q->consume("process_result");
