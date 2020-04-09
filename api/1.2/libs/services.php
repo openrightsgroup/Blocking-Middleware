@@ -1439,7 +1439,8 @@ class DynamoWrapper {
             'TableName' => $this->_tablename,
             'Key' => $this->_marshaller->marshalItem(array('id' => $id))
         );
-        $result = $this->_marshaller->unmarshalItem($this->_db->getItem($params));
+        $resultobj = $this->_db->getItem($params);
+        $result = $this->_marshaller->unmarshalItem($resultobj['Item']);
         return $result;
     }
 

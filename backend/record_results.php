@@ -104,19 +104,20 @@ function process_result($msg, $queue) {
     }
 
     try {
-      if (flag('dynamo')) {
-        $data['test_uuid'] = gen_uuid();
-      }
-      $processor->process_result($data, $probe);
 
-      if (flag('dynamo') && array_key_exists('request_data', $data)) {
+      if (flag('dynamo') && array_key_exists('request_data', $data) && in_array($data['status'], array("ok","blocked")) ) {
+          $data['test_uuid'] = gen_uuid();
+          $processor->process_result($data, $probe);
           $reqdata = array(
             'url' => $data['url'],
             'created' => $data['date'],
             'id' => $data['test_uuid'],
             'requests' => $data['request_data']
             );
-        $dynamo->store($reqdata);
+          $dynamo->store($reqdata);
+      } else {
+          unset($data['test_uuid']);
+          $processor->process_result($data, $probe);
       }
 
     } catch (Exception $e) {
