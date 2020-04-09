@@ -43,10 +43,13 @@ class QueueService(object):
         except ConfigParser.NoSectionError:
             self.config = {}
 
-    def connect(self):
+    def connect_db(self):
         # create db connection
         pgopts = dict(self.cfg.items('db'))
         self.conn = psycopg2.connect(**pgopts)
+
+    def connect(self):
+        self.connect_db()
 
         # Create AMQP connection
         amqpopts = dict(self.cfg.items('amqp'))

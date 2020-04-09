@@ -23,8 +23,10 @@ URL: <input type="input" name="url" />
 	$args = array(
 		'email' => $USER,
 		'url' => $_POST['url'],
-		'signature' => createSignatureHash($_POST['url'], $SECRET )
 	);
+	if ($AUTH == 'signature') {
+        $args['signature'] = createSignatureHash($_POST['url'], $SECRET);
+    }
 	$qs = http_build_query($args);
 
 	// build the request
@@ -34,8 +36,12 @@ URL: <input type="input" name="url" />
 			'ignore_errors' => '1',
 		)
 	);
+    if ($AUTH == "basic") {
+        $options['http']['header'] = "Authorization: Basic " . base64_encode("$USER:$SECRET");
+    }
 
-	// send it
+
+    // send it
 	$ctx = stream_context_create($options);
 	$result = file_get_contents("$API/status/url?$qs", false, $ctx);
 

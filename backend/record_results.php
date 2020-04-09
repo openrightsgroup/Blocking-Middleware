@@ -10,6 +10,7 @@ include_once __DIR__ . "/../api/1.2/libs/services.php";
 
 $opts = getopt('v', array('exchange:','queue:','no-verify','debug','dynamo'));
 
+
 function opt($name, $default=null) {
     global $opts;
     
@@ -100,17 +101,17 @@ function process_result($msg, $queue) {
 
     try {
       $processor->process_result($data, $probe);
-      
+
       if (flag('dynamo') && array_key_exists('request_data', $data)) {
           $reqdata = array(
-            'url' => $data['url'], 
+            'url' => $data['url'],
             'created' => $data['date'],
             'id' => gen_uuid(),
             'requests' => $data['request_data']
             );
         $dynamo->store($reqdata);
       }
-      
+
     } catch (Exception $e) {
       error_log("processor->process_result failed.");
       error_log("Caught exception: " . get_class($e));

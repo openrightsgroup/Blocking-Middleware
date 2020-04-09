@@ -1,4 +1,5 @@
 
+import time
 import psycopg2
 import logging
 
@@ -16,6 +17,7 @@ class CategoryImporter(QueueService):
         self.ch.queue_declare("category", durable=True, auto_delete=False)
         self.ch.queue_bind("category", "org.blocked", "url.org")
         self.ch.queue_bind("category", "org.blocked", "url.public")
+        self.session = requests.session()
 
     def process_message(self, data):
         url = data['url']
@@ -24,19 +26,20 @@ class CategoryImporter(QueueService):
         if domain.startswith('www.'):
             domain = domain.split('.', 1)[-1]
 
-        req = requests.get(self.CATEGORIFY_API, params={'website': domain})
+        req = self.session.get(self.CATEGORIFY_API, params={'website': domain}, headers={'User-Agent': 'CategoryImporter/1.0 (+https://www.blocked.org.uk)'})
         if req.status_code != 200:
             logging.warn("Response %s for domain %s", req.status_code, domain)
             return True
 
 
         category = req.json()
-        logging.debug("%s: %s", req.status_code, str(category))
+        logging.info("%s: %s", req.status_code, str(category))
         logging.info("URL: %s, categories: %s", url, str(category['category']))
         try:
             self.store_category(url, category['category'] + [category['rating']['value']])
         except KeyError:
             self.store_category(url, category['category'])
+        time.sleep(0.1)
 
     def store_category(self, url, categories):
         c = self.conn.cursor()

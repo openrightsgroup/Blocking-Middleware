@@ -36,7 +36,7 @@ $app['service.dynamo'] = $app->share(function() {
         AWS_DYNAMODB_SECRET_KEY
     );
 });
-    
+
 
 $app['service.redis.cache'] = $app->share(function(){
     return redis_connect("cache");
@@ -155,11 +155,12 @@ function split_pg_array($value) {
 
 }
 
-function checkAuth($app, $req, $key, $admin=false) {
+function checkAuth($app, $req, $key=null, $admin=false, $check_date=true) {
     if ($req->getUser()) {
         // check basic auth credentials against database
         $user = $app['db.user.load']->load($req->getUser());
         if ($user['secret'] != $req->getPassword()) {
+            error_log("Password authentication failed");
             throw new UserLookupError();
         }
     } else {
@@ -175,7 +176,9 @@ function checkAuth($app, $req, $key, $admin=false) {
             } elseif (is_string($key)) {
                 $sigstring = $key;
             }
-            #Middleware::checkMessageTimestamp($req->get('date'));
+            if ($check_date) {
+                Middleware::checkMessageTimestamp($req->get('date'));
+            }
             Middleware::verifyUserMessage($sigstring, $user['secret'], $req->get('signature'));
         }
     }
@@ -404,7 +407,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			array($url['urlid'], $contact['id'], $req->get('subscribereports', false) )
             );
         $row = $result->fetch(PDO::FETCH_NUM);
-        error_log("Inserted subscription: {$row[0]}");
+        debug_log("Inserted subscription: {$row[0]}");
 
 		# create verification token for email subscribe
 		# needs an update because we're using the row ID as a salt of sorts
@@ -415,7 +418,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 			array(Middleware::generateSharedSecret(10), $row[0])
 			);
         $subscriberow = $r->fetch(PDO::FETCH_NUM);
-        error_log("generated token: {$subscriberow[0]}");
+        debug_log("generated token: {$subscriberow[0]}");
 
         if (defined('FEATURE_SEND_SUBSCRIBE_EMAIL') && FEATURE_SEND_SUBSCRIBE_EMAIL == true) {
             $msg = new PHPMailer();
@@ -449,7 +452,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# checkLastPolled also updates the timestamp
     if ($is_admin && !is_null($target_queue) && $target_queue == 'url.none') {
         # admin requests that the URL is submitted but not queued
-        error_log("admin noqueue $urltext");
+        debug_log("admin noqueue $urltext");
         $queued = false;
     } elseif ($newurl || $app['db.url.load']->checkLastPolled($url['urlid']) || ($is_admin && $req->get('force',0))) {
 
@@ -541,7 +544,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature'));
 
 	$conn = $app['service.db'];
-	$row = checkAuth($app, $req);
+	$row = checkAuth($app, $req, null, false, false);
 
 	$check_uuid = md5($req->get('probe_seed') . '-' . $row['probehmac']);
 	if ($check_uuid != $req->get('probe_uuid')) {
@@ -575,7 +578,7 @@ $app->post('/register/probe', function(Request $req) use ($app) {
 });
 
 $app->get('/config/{version}', function (Request $req, $version) use ($app) {
-	error_log("Version: $version");
+	debug_log("Version: $version");
 	if (!$version) {
 		throw new InputError();
 	}
@@ -595,7 +598,7 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 	// fetch and return config here
 
 	$configfile = __DIR__ . "/../../config/" . $version . "." . $format;
-	error_log("Config file: $configfile");
+	debug_log("Config file: $configfile");
 
 	$content = file_get_contents($configfile);
 	if (!$content) {
@@ -631,7 +634,7 @@ $app->get('/status/ip/{client_ip}', function(Request $req, $client_ip) use ($app
 		$descr = $isp['name'];
 	}
 	catch (IspLookupError $e) {
-		error_log("Caught failed lookup");
+		debug_log("Caught failed lookup");
 		$queue_name =  get_queue_name($descr);
 		$isp = $app['db.isp.load']->create($descr);
 
@@ -731,7 +734,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         $admin_fields = '';
     }
 
-	error_log("URL: " . $req->get('url') . "; " . $urltext);
+	debug_log("URL: " . $req->get('url') . "; " . $urltext);
 	$url = $app['db.url.load']->load($urltext);
 
 	$conn = $app['service.db'];
@@ -979,7 +982,7 @@ $app->get('/status/result/{uuid}', function (Request $req, $uuid) use ($app) {
     $user = checkAuth($app, $req, ['date']);
 
     $data = $app['service.dynamo']->get($uuid);
-    
+
     return $app->json(array(
         'success' => true,
         'result' => $data
@@ -1145,6 +1148,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         $filter['policy'] = in_array($filter['policy'], array("false", "False", "0", "f", 0)) ? false : true;
     }
     $filter['year'] = $req->get('year', null);
+    $filter['report_type'] = $req->get('report_type');
 
     $page = $req->get('page', 0);
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;
@@ -1239,7 +1243,7 @@ $app->get('/stream/results/{region}', function (Request $req, $region) use ($app
 	} else {
 		$timeout = 15;
 	}
-	error_log("Timeout set to: $timeout");
+	debug_log("Timeout set to: $timeout");
 
 	list($amqpconn, $ch) = amqp_connect_full();
 	$amqpconn->setTimeout($timeout);
@@ -1413,7 +1417,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
 $app->get('/category/search', function(Request $req) use ($app) {
 	checkParameters($req, array('email','signature','search'));
     $search = $req->get('search');
-    $user = checkAuth($app, $req, ['search']);
+    $user = checkAuth($app, $req, ['search'], false, false);
 
     $output = array('success' => true, 'categories' => array());
 
@@ -1463,7 +1467,7 @@ $app->get('/category/random', function (Request $req) use ($app) {
 $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-    $user = checkAuth($app, $req, $parent);
+    $user = checkAuth($app, $req, $parent, false, false);
 
     $show_empty = $req->get('show_empty', 1);
     $sort = $req->get('sort', 'display_name');
@@ -1522,7 +1526,7 @@ $app->get('/category/{parent}', function(Request $req, $parent) use ($app) {
 $app->get('/category/sites/{parent}', function (Request $req, $parent) use ($app) {
 
 	checkParameters($req, array('email','signature'));
-    $user = checkAuth($app, $req, $parent);
+    $user = checkAuth($app, $req, $parent, false, false);
 
     $cat = $app['db.category.load']->load($parent);
     if (!$cat) {
@@ -1625,7 +1629,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     if (!(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
         // we are submittingt to ISPs, not feedback to ORG or BBFC
         if ($app['db.blacklist.load']->check($url['url'])) {
-            error_log("{$url['url']} is blacklisted; not submitting");
+            debug_log("{$url['url']} is blacklisted; not submitting");
             return $app->json(array('success' => false, 'message' => 'domain rejected'));
         }
     }
@@ -1638,7 +1642,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     if (!isset($data['networks']) || count($data['networks']) == 0) {
         $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
-        error_log("Unreported: " . implode(",", $data['networks']));
+        debug_log("Unreported: " . implode(",", $data['networks']));
     }
 
     if (!$contact['verified'] && !(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == 'BBFC') )) {
@@ -1659,7 +1663,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     $queued = array();
     $rejected = array();
     foreach($data['networks'] as $network_name) {
-        error_log("Looking up: ". $network_name);
+        debug_log("Looking up: ". $network_name);
         $age_limit = false;
         $network = $app['db.isp.load']->load($network_name);
 
@@ -1678,7 +1682,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             }
             if ($row[1] == 't') {
                 $age_limit = 't';
-                error_log("Age limited");
+                debug_log("Age limited");
                 $queued[] = $network_name;
             }
         }
