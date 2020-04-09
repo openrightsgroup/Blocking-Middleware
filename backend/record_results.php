@@ -107,14 +107,21 @@ function process_result($msg, $queue) {
 
       if (flag('dynamo') && array_key_exists('request_data', $data) && in_array($data['status'], array("ok","blocked")) ) {
           $data['test_uuid'] = gen_uuid();
-          $processor->process_result($data, $probe);
-          $reqdata = array(
-            'url' => $data['url'],
-            'created' => $data['date'],
-            'id' => $data['test_uuid'],
-            'requests' => $data['request_data']
-            );
-          $dynamo->store($reqdata);
+          try {
+
+              $processor->process_result($data, $probe);
+              $reqdata = array(
+                'url' => $data['url'],
+                'created' => $data['date'],
+                'id' => $data['test_uuid'],
+                'requests' => $data['request_data']
+                );
+              $dynamo->store($reqdata);
+          } catch (Exception $e) {
+              error_log("dynamo->store failed.");
+              error_log("Caught exception: " . get_class($e));
+              error_log("Message was: " . $e->getMessage());
+          }
       } else {
           unset($data['test_uuid']);
           $processor->process_result($data, $probe);
