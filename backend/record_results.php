@@ -107,9 +107,8 @@ function process_result($msg, $queue) {
 
       if (flag('dynamo') && array_key_exists('request_data', $data) && in_array($data['status'], array("ok","blocked")) ) {
           $data['test_uuid'] = gen_uuid();
+          $processor->process_result($data, $probe);
           try {
-
-              $processor->process_result($data, $probe);
               $reqdata = array(
                 'url' => $data['url'],
                 'created' => $data['date'],
