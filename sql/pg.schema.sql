@@ -1555,3 +1555,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 GRANT EXECUTE ON FUNCTION get_blocked_networks(int) TO PUBLIC;
+
+CREATE FUNCTION url_variants(p1 varchar) RETURNS SETOF urls AS $$
+BEGIN
+	RETURN QUERY select * from urls where url in ('http://'||p1, 'https://'||p1, 'http://www.'||p1, 'https://www.'||p1);
+END;
+$$ LANGUAGE plpgsql;
