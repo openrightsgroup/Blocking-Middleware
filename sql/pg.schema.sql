@@ -363,7 +363,7 @@ ALTER SEQUENCE contacts_id_seq OWNED BY contacts.id;
 
 CREATE TABLE isp_aliases (
     id integer NOT NULL,
-    ispid integer NOT NULL,
+    ispid smallint NOT NULL,
     alias character varying(64) NOT NULL,
     created timestamp with time zone
 );
@@ -467,7 +467,7 @@ CREATE SEQUENCE isps_id_seq
 --
 
 CREATE TABLE isps (
-    id integer DEFAULT nextval('isps_id_seq'::regclass) NOT NULL,
+    id smallint DEFAULT nextval('isps_id_seq'::regclass) NOT NULL,
     name character varying(64),
     description text,
     queue_name text,
@@ -530,7 +530,7 @@ CREATE TABLE probes (
     enabled smallint DEFAULT 1 NOT NULL,
     lastseen timestamp with time zone,
     proberesprecv integer DEFAULT 0,
-    isp_id integer,
+    isp_id smallint,
     probe_status enum_probe_status default 'active'::enum_probe_status,
     location text,
     filter_enabled bool,
@@ -1419,7 +1419,7 @@ create table courtorders (
 create table courtorder_isp_urls (
     id serial primary key not null,
     order_id int not null,
-    isp_id int not null,
+    isp_id smallint not null,
     url varchar,
     created timestamptz
 );
