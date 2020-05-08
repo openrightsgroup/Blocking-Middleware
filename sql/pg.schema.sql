@@ -1091,6 +1091,8 @@ ALTER TABLE ONLY org_categories
 ALTER TABLE ONLY probes
     ADD CONSTRAINT probes_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY probes
+    ADD CONSTRAINT probes_isp_id_fkey FOREIGN KEY (isp_id) REFERENCES isps(id);
 
 --
 -- Name: probes_uuid_key; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
