@@ -193,7 +193,8 @@ BEGIN
   blocktype ,
   urlid ,
   network_name,
-  result_id)
+  result_id,
+  isp_id)
  values (
  NEW.status,
  NEW.created,
@@ -201,7 +202,8 @@ BEGIN
  NEW.blocktype,
  NEW.urlid,
  NEW.network_name,
- NEW.id
+ NEW.id,
+ (SELECT id FROM isps WHERE name = NEW.network_name)
  );
  END IF; 
  RETURN NEW;
@@ -786,7 +788,8 @@ CREATE TABLE url_latest_status (
     blocktype character varying(16),
     first_blocked timestamp with time zone,
     last_blocked timestamp with time zone,
-    result_id int
+    result_id int,
+    isp_id smallint
 );
 
 
