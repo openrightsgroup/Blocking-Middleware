@@ -193,7 +193,8 @@ BEGIN
   blocktype ,
   urlid ,
   network_name,
-  result_id)
+  result_id,
+  isp_id)
  values (
  NEW.status,
  NEW.created,
@@ -201,7 +202,8 @@ BEGIN
  NEW.blocktype,
  NEW.urlid,
  NEW.network_name,
- NEW.id
+ NEW.id,
+ (SELECT id FROM isps WHERE name = NEW.network_name)
  );
  END IF; 
  RETURN NEW;
@@ -363,7 +365,7 @@ ALTER SEQUENCE contacts_id_seq OWNED BY contacts.id;
 
 CREATE TABLE isp_aliases (
     id integer NOT NULL,
-    ispid integer NOT NULL,
+    ispid smallint NOT NULL,
     alias character varying(64) NOT NULL,
     created timestamp with time zone
 );
@@ -467,7 +469,7 @@ CREATE SEQUENCE isps_id_seq
 --
 
 CREATE TABLE isps (
-    id integer DEFAULT nextval('isps_id_seq'::regclass) NOT NULL,
+    id smallint DEFAULT nextval('isps_id_seq'::regclass) NOT NULL,
     name character varying(64),
     description text,
     queue_name text,
@@ -530,7 +532,7 @@ CREATE TABLE probes (
     enabled smallint DEFAULT 1 NOT NULL,
     lastseen timestamp with time zone,
     proberesprecv integer DEFAULT 0,
-    isp_id integer,
+    isp_id smallint,
     probe_status enum_probe_status default 'active'::enum_probe_status,
     location text,
     filter_enabled bool,
@@ -787,7 +789,8 @@ CREATE TABLE url_latest_status (
     blocktype character varying(16),
     first_blocked timestamp with time zone,
     last_blocked timestamp with time zone,
-    result_id int
+    result_id int,
+    isp_id smallint
 );
 
 
@@ -1092,6 +1095,8 @@ ALTER TABLE ONLY org_categories
 ALTER TABLE ONLY probes
     ADD CONSTRAINT probes_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY probes
+    ADD CONSTRAINT probes_isp_id_fkey FOREIGN KEY (isp_id) REFERENCES isps(id);
 
 --
 -- Name: probes_uuid_key; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
@@ -1418,7 +1423,7 @@ create table courtorders (
 create table courtorder_isp_urls (
     id serial primary key not null,
     order_id int not null,
-    isp_id int not null,
+    isp_id smallint not null,
     url varchar,
     created timestamptz
 );
@@ -1556,3 +1561,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 GRANT EXECUTE ON FUNCTION get_blocked_networks(int) TO PUBLIC;
+
+CREATE FUNCTION url_variants(p1 varchar) RETURNS SETOF urls AS $$
+BEGIN
+	RETURN QUERY select * from urls where url in ('http://'||p1, 'https://'||p1, 'http://www.'||p1, 'https://www.'||p1);
+END;
+$$ LANGUAGE plpgsql;
