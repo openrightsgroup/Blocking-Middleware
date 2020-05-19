@@ -73,7 +73,7 @@ class CloudflareProbe(QueueService):
 
             if cf['Status'] == 5:
                 status = 'blocked'
-            elif cf['Answer']['data'] == '0.0.0.0':
+            elif cf['Answer'][0]['data'] == '0.0.0.0':
                 status = 'blocked'
             elif cf['Status'] == 0:
                 status = 'ok'
@@ -90,7 +90,7 @@ class CloudflareProbe(QueueService):
             'network_name': self.network,
             'probe_uuid': self.cfg.get('cf-probe', 'probe_uuid'),
             'date': self.signer.timestamp(),
-            'blocktype': 'PARENTAL',
+            'blocktype': 'PARENTAL' if status == 'blocked' else null,
             'config': -1,
             'ip_network': None,
             'http_status': None,
