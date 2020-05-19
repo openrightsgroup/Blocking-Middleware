@@ -73,6 +73,8 @@ class CloudflareProbe(QueueService):
 
             if cf['Status'] == 5:
                 status = 'blocked'
+            elif cf['Answer']['data'] == '0.0.0.0':
+                status = 'blocked'
             elif cf['Status'] == 0:
                 status = 'ok'
             else:
