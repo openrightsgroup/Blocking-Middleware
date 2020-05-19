@@ -92,7 +92,7 @@ class CloudflareProbe(QueueService):
             'network_name': self.network,
             'probe_uuid': self.cfg.get('cf-probe', 'probe_uuid'),
             'date': self.signer.timestamp(),
-            'blocktype': 'PARENTAL' if status == 'blocked' else null,
+            'blocktype': 'PARENTAL' if status == 'blocked' else None,
             'config': -1,
             'ip_network': None,
             'http_status': None,
