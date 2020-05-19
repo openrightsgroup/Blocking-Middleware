@@ -73,6 +73,8 @@ class CloudflareProbe(QueueService):
 
             if cf['Status'] == 5:
                 status = 'blocked'
+            elif 'Answer' not in cf:
+                status = 'dnserror'
             elif cf['Answer'][0]['data'] == '0.0.0.0':
                 status = 'blocked'
             elif cf['Status'] == 0:
@@ -94,6 +96,7 @@ class CloudflareProbe(QueueService):
             'config': -1,
             'ip_network': None,
             'http_status': None,
+            'category': '',
         }
         rsp['signature'] = self.signer.get_signature(
             args=rsp,
