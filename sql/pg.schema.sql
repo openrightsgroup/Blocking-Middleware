@@ -1567,3 +1567,14 @@ BEGIN
 	RETURN QUERY select * from urls where url in ('http://'||p1, 'https://'||p1, 'http://www.'||p1, 'https://www.'||p1);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION add_tag(p_tags varchar[], p_newtag varchar) RETURNS varchar[] AS $$
+BEGIN
+  IF p_tags && ARRAY[p_newtag]
+  THEN
+    RETURN p_tags;
+  ELSE
+    RETURN p_tags || p_newtag;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
