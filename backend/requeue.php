@@ -86,6 +86,19 @@ function send_reported() {
     update_jobs($conn, "requeue_reported", "$c urls sent.");
 }
 
+function send_wpplugin() {
+    global $conn;
+    $result = $conn->query("select distinct urlid, url, hash, lastpolled from urls
+        where (lastpolled < (now() - interval '7 day')) and
+        urls.status = 'ok' and tags && '{wp-plugin}'
+        order by lastpolled limit 55", array());
+
+    print "Sending URLs (wpplugin)...\n";
+    $c = send_urls($result, 'url.public.gb');
+    print "$c urls sent.\n";
+    update_jobs($conn, "requeue_wpplugin", "$c urls sent.");
+}
+
 function send_dmoz() {
     global $conn;
 
@@ -136,6 +149,9 @@ if (has_arg("tested")) {
 }
 if  (has_arg("reported")) {
     send_reported();
+}
+if (has_arg("wpplugin")) {
+    send_wpplugin();
 }
 if (has_arg("dmoz")) {
     send_dmoz();
