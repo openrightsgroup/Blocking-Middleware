@@ -729,7 +729,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
     }
     
     if ($admin) {
-        $admin_fields = ',results_base.remote_ip,results_base.resolved_ip';
+        $admin_fields = ',results_base.remote_ip,results_base.resolved_ip,results_base.result_uuid';
     } else {
         $admin_fields = '';
     }
@@ -769,6 +769,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
         );
         if ($admin) {
             $out['remote_ip'] = $row['remote_ip'];
+            $out['result_uuid'] = $row['result_uuid'];
             $out['resolved_ip'] = $row['resolved_ip'];
         }
         $output[] = $out;
