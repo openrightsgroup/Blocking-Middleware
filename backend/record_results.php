@@ -140,6 +140,11 @@ function process_result($msg, $queue) {
     );
     $ex->publish(json_encode($forward), $msg->getRoutingKey() . '.' . $data['status'], AMQP_NOPARAM);
 
+    if (array_key_exists('request_data', $data) && in_array($data['status'], array("blocked")) ) {
+
+    }
+
+
   } catch (Exception $e) {
     error_log("process_result failed.");
     error_log("Caught exception: " . get_class($e));
