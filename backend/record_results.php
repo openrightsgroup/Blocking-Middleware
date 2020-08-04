@@ -64,7 +64,7 @@ function process_result($msg, $queue) {
     $queue->ack($msg->getDeliveryTag());
     $data = (array)json_decode($msg->getBody());
 
-    error_log("Got result: {$data['probe_uuid']} {$data['url']} {$data['date']} {$data['status']}");
+    error_log("Got result: {$data['probe_uuid']} {$data['network_name']} {$data['url']} {$data['date']} {$data['status']}");
 
     $probe = $processor->probe_loader->load($data['probe_uuid']);
     if ($probe['enabled'] != 1) {

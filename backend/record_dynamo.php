@@ -47,6 +47,8 @@ function receive_message($msg, $queue) {
 
     $queue->ack($msg->getDeliveryTag());
     $data = (array)json_decode($msg->getBody());
+    error_log("Got result: {$data['probe_uuid']} {$data['url']} {$data['date']} {$data['status']} " . count($data['request_data']) );
+
     try {
         $reqdata = array(
             'url' => $data['url'],
