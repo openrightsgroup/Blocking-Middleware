@@ -8,7 +8,7 @@ include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-$opts = getopt('v', array('exchange:','queue:','no-verify','debug','dynamo','dynamo-setup'));
+$opts = getopt('v', array('exchange:','queue:','no-verify','debug'));
 
 
 function opt($name, $default=null) {
@@ -35,16 +35,6 @@ $q->declare();
 
 $q->bind('org.blocked', opt('queue', 'results') . '.#');
 
-if (flag('dynamo')) {
-    $dynamo = new DynamoWrapper(
-        AWS_DYNAMODB_ACCESS_KEY,
-        AWS_DYNAMODB_SECRET_KEY,
-        AWS_DYNAMODB_URL
-    );
-} else {
-    $dynamo = null;
-}
-
 $conn = db_connect();
 
 $VERIFY = 1;
@@ -64,7 +54,7 @@ $processor = new ResultProcessorService(
 );
 
 function process_result($msg, $queue) {
-  global $processor, $ex, $dynamo, $VERIFY;
+  global $processor, $ex, $VERIFY;
 
   try {
 
@@ -105,26 +95,12 @@ function process_result($msg, $queue) {
 
     try {
 
-      if (flag('dynamo') && array_key_exists('request_data', $data) && in_array($data['status'], array("blocked")) ) {
+      if (array_key_exists('request_data', $data) && in_array($data['status'], array("blocked")) ) {
           $data['test_uuid'] = gen_uuid();
-          $processor->process_result($data, $probe);
-          try {
-              $reqdata = array(
-                'url' => $data['url'],
-                'created' => $data['date'],
-                'id' => $data['test_uuid'],
-                'requests' => $data['request_data']
-                );
-              $dynamo->store($reqdata);
-          } catch (Exception $e) {
-              error_log("dynamo->store failed.");
-              error_log("Caught exception: " . get_class($e));
-              error_log("Message was: " . $e->getMessage());
-          }
       } else {
           unset($data['test_uuid']);
-          $processor->process_result($data, $probe);
       }
+      $processor->process_result($data, $probe);
 
     } catch (Exception $e) {
       error_log("processor->process_result failed.");
@@ -141,7 +117,7 @@ function process_result($msg, $queue) {
     $ex->publish(json_encode($forward), $msg->getRoutingKey() . '.' . $data['status'], AMQP_NOPARAM);
 
     if (array_key_exists('request_data', $data) && in_array($data['status'], array("blocked")) ) {
-
+        $ex->publish(json_encode($data), "results_payload" . '.' . $data['status'], AMQP_NOPARAM);
     }
 
 
@@ -154,7 +130,4 @@ function process_result($msg, $queue) {
   return true;
 }
 
-if (flag('dynamo-setup')) {
-    $dynamo->createTable();
-}
 $q->consume("process_result");
