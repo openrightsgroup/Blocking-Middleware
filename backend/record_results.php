@@ -120,7 +120,7 @@ function process_result($msg, $queue) {
     $ex->publish(json_encode($forward), $msg->getRoutingKey() . '.' . $data['status'], AMQP_NOPARAM);
 
     if (array_key_exists('request_data', $data) && in_array($data['status'], array("blocked")) ) {
-        $fwdex->publish(json_encode($data), "results_payload" . '.' . $data['status'], AMQP_NOPARAM);
+        $fwdex->publish(json_encode($data), "result_payload" . '.' . $data['status'], AMQP_NOPARAM);
     }
 
 
