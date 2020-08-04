@@ -57,7 +57,7 @@ $processor = new ResultProcessorService(
 );
 
 function process_result($msg, $queue) {
-  global $processor, $ex, $VERIFY;
+  global $processor, $ex, $fwdex, $VERIFY;
 
   try {
 
