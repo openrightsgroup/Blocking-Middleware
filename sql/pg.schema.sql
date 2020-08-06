@@ -127,12 +127,12 @@ return subid; END; $$;
 -- Name: record_change(integer, character varying, character varying, character varying, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION record_change(p_urlid integer, p_network_name character varying, p_oldstatus character varying, p_newstatus character varying, p_created timestamp with time zone) RETURNS void
+CREATE FUNCTION record_change(p_urlid integer, p_network_name character varying, p_oldstatus character varying, p_newstatus character varying, p_created timestamp with time zone, p_oldresult_id int) RETURNS void
     LANGUAGE plpgsql
     AS $$
 begin
 if p_oldstatus <> p_newstatus or p_oldstatus is null then
-insert into url_status_changes(urlid, network_name, old_status, new_status, created) values (p_urlid, p_network_name,  p_oldstatus, p_newstatus, p_created);
+insert into url_status_changes(urlid, network_name, old_status, new_status, created, old_result_id) values (p_urlid, p_network_name,  p_oldstatus, p_newstatus, p_created, p_oldresult_id);
 end if;
 END;
 $$;
@@ -221,9 +221,9 @@ CREATE FUNCTION trig_uls_after_ins_upd() RETURNS trigger
 BEGIN
 if TG_OP = 'UPDATE'
 then
-perform record_change(NEW.urlid, NEW.network_name,OLD.status, NEW.status, NEW.created);
+perform record_change(NEW.urlid, NEW.network_name,OLD.status, NEW.status, NEW.created, OLD.result_id);
 else
-perform record_change(NEW.urlid, NEW.network_name,NULL, NEW.status, NEW.created);
+perform record_change(NEW.urlid, NEW.network_name,NULL, NEW.status, NEW.created, NULL);
 end if;
 perform update_cache_block_count(NEW.urlid);
 return NEW; END;
@@ -805,7 +805,8 @@ CREATE TABLE url_status_changes (
     old_status character varying(16),
     new_status character varying(16),
     created timestamp with time zone,
-    notified smallint DEFAULT 0 NOT NULL
+    notified smallint DEFAULT 0 NOT NULL,
+    old_result_id int NULL
 );
 
 
