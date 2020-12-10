@@ -23,7 +23,7 @@ $q = $conn->query("select isp_reports.id, usc.created, isp_reports.urlid from
 
 foreach($q as $row) {
     echo "Updating report: " . $row['id'] . "\n";
-    $conn->query("update isp_reports set unblocked = 1, matches_policy=false, last_updated = ? where id = ?",
+    $conn->query("update isp_reports set unblocked = 1, last_updated = ? where id = ?",
         array($row['created'], $row['id'])
         );
     $elastic->delete($row['urlid']);
