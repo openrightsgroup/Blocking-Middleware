@@ -977,7 +977,7 @@ class ISPReportLoader {
         $proc = $this->process_filter($filter);
 
         if ($is_admin) {
-            $admin_fields = 'isp_reports.status,isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
+            $admin_fields = 'isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
         } else {
             $admin_fields = '';
             $proc->filters[] = " and isp_reports.status not in ('cancelled','abuse')";
@@ -997,7 +997,8 @@ class ISPReportLoader {
                 $admin_fields
                 isps.description as description,
                 case when allow_publish = 1 then isp_reports.name else '' end as name,
-                case when allow_publish = 1 then isp_reports.message else '' end as message
+                case when allow_publish = 1 then isp_reports.message else '' end as message,
+                isp_reports.status
             from isp_reports
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
