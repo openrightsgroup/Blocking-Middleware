@@ -729,7 +729,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
     }
     
     if ($admin) {
-        $admin_fields = ',results_base.remote_ip,results_base.resolved_ip,results_base.result_uuid';
+        $admin_fields = ',results_base.remote_ip,results_base.resolved_ip,results_base.result_uuid,isps.isp_type';
     } else {
         $admin_fields = '';
     }
@@ -765,6 +765,7 @@ $app->get('/status/url', function (Request $req) use ($app) {
             'network_id' =>  $row['name'],
             'last_report_timestamp' =>  $url['last_reported'],
             'isp_active' =>  ($row['queue_name'] != null),
+            'isp_type' => $row['isp_type'],
             'final_url' => preg_replace('/&ipaddr=[0-9a-f\.:]*/','',$row['final_url'])
         );
         if ($admin) {

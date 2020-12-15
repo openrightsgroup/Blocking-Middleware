@@ -418,10 +418,10 @@ CREATE TABLE isp_reports (
     notified integer,
     send_updates integer,
     last_updated timestamp with time zone,
-    submitted timestamp with time zone,
     contact_id int,
     allow_publish int default 0,
     status enum_report_status default 'new',
+    submitted timestamp with time zone,
     site_category varchar(64),
     allow_contact int default 0,
     mailname varchar(32) null unique,
@@ -430,6 +430,7 @@ CREATE TABLE isp_reports (
     matches_policy bool null default null,
     egregious_block bool null,
     featured_block bool null,
+    reporter_category_id int,
     maybe_harmless bool null,
 
     user_type varchar[]
@@ -1512,7 +1513,7 @@ create table url_report_categories(
 
 create table url_report_category_asgt(
     id serial primary key,
-    report_id int not null,
+    urlid int not null,
     category_id int not null,
     created timestamptz, 
     last_updated timestamptz
@@ -1528,7 +1529,8 @@ CREATE TABLE url_report_category_comments(
     review_notes text,
     userid int,
     created timestamptz,
-    last_updated timestamptz
+    last_updated timestamptz,
+    urlid int
 );
 
 create index url_report_category_comments_report_id on url_report_category_comments(urlid);
