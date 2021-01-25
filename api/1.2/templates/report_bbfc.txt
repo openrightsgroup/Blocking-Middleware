@@ -1,0 +1,24 @@
+
+Request for BBFC review
+
+URL: {{ url|raw }}
+Network: {{ network|raw }}
+
+Contact: {{ reporter_name|raw }} <{{ reporter_email|raw }}>
+{{ submission.additional_contact_information|raw }}
+
+A request to unblock the site was submitted to the mobile operator, {{ network }}.
+
+Original complaint:
+
+{{ message|raw }}
+
+Mobile operator response:
+
+{{ submission.what_was_your_mobile_operators_response_to_your_complaint|raw }}
+
+Please can you review the website block for {{ url|raw }} and issue a clarification.
+
+
+
+

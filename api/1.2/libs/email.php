@@ -47,61 +47,61 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
     #    <option value="Other">Other</option>
 
     $other = "";
-    if ($network == "Three") {
-        $network = "3"; 
-    }
-    if (!in_array($network, array("3","EE","O2","Vodafone"))) {
+    if (!in_array($network, array("Three","EE","O2","Vodafone"))) {
         $other = $network;
         $network = "Other";
     }
-    
-    
-    $req = new HTTP_Request2(BBFC_FORM_URL);
-    
-    $rsp = $req->send();
-    
-    $form_html = $rsp->getBody();
-    
-    preg_match('/form_build_id" value="(.*)"/', $form_html, $matches);
-    $form_build_id = $matches[1];
-    preg_match('/form_id" value="(.*)"/', $form_html, $matches);
-    $form_id = $matches[1];
-    
-    // $form_build_id = 'ABCDEF';
-    // $form_id = 'ABC';
+
            
     $data = array(
-        "submitted[who_is_your_mobile_network_operator]" => $network,
-        "submitted[please_specify]" => $other,  # other ISP
-        "submitted[have_you_contacted_your_mobile_operator]" => "01", # yes "01"
-        "submitted[what_was_your_mobile_operators_response_to_your_complaint]" => $previous, # multine
-        "submitted[your_name]" => $name,
-        "submitted[your_email]" => $mailname . '@' . MAIL_DOMAIN,
-        "submitted[additional_contact_information]" => $additional_contact,
-        "submitted[url_of_the_content_in_question]" => $url,
-        "submitted[nature_of_the_complaint]" => $message,
-        # "details[sid]" 
-        "details[page_num]" => "1",
-        "details[page_count]" => "1",
-        "details[finished]" => "0",
-
-        "form_build_id" => $form_build_id,
-        "form_id" => $form_id,
-        "op" => "Submit"
+        "who_is_your_mobile_network_operator" => $network,
+        "please_specify" => $other,  # other ISP
+        "have_you_contacted_your_mobile_operator" => "01", # yes "01"
+        "what_was_your_mobile_operators_response_to_your_complaint" => $previous, # multine
+        "your_name" => $name,
+        "your_email" => $mailname . '@' . MAIL_DOMAIN,
+        "additional_contact_information" => $additional_contact,
+        "url_of_the_content_in_question" => $url,
+        "nature_of_the_complaint" => $message
         );
     foreach ($data as $k => $v) {
         error_log("BBFC submit data: $k = $v");
     }
-    
-    $req = new HTTP_Request2(BBFC_SUBMIT_URL);
-    $rsp = $req->setMethod(HTTP_Request2::METHOD_POST)
-        ->addPostParameter($data)
-        ->send();
-    $status = $rsp->getStatus();
-    $body = $rsp->getBody();
-    $loc = $rsp->getHeader("location");
-    error_log("BBFC Submit ($status) [$loc] $body");
-        
+
+   $msg = new PHPMailer();
+    if (FEATURE_EMAIL_TRACKING) {
+        $msg->setFrom($mailname . '@' . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
+        $msg->Sender = $mailname.'@'.MAIL_DOMAIN;
+    } else {
+        $msg->AddReplyTo($email, $name);
+        $msg->setFrom(SITE_EMAIL, $name . ' via Blocked.org.uk');
+        $msg->Sender = SITE_EMAIL;
+    }
+    $msg->addBCC(SITE_EMAIL);
+    $msg->addAddress($network['admin_email'], $network['admin_name']);
+    $msg->Subject = "Request for BBFC review - " . $url;
+    #$msg->addCustomHeader("Auto-Submitted", "auto-generated");
+    $msg->isHTML(false);
+    $msg->CharSet = 'utf-8';
+    $msg->Body = $renderer->render(
+        'report_bbfc.txt',
+        array(
+            'reporter_email' => $email,
+            'reporter_name' => $name,
+            'url' => $url,
+            'message' => $message,
+            'network' => $network,
+            'report_type' => explode(",", $report_type),
+            'category' => $category,
+            'submission' => $data
+            )
+        );
+
+    if(!$msg->send()) {
+        error_log("Unable to send message: " . $msg->ErrorInfo);
+        return false;
+    }
+
     return true;
 }
 
