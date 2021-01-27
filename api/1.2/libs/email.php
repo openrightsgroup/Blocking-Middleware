@@ -36,7 +36,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     return true;
 }
 
-function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $previous, $additional_contact) {
+function sendBBFCReport($mailname, $name, $email, $network, $original_network, $url, $message, $previous, $additional_contact, $renderer) {
     
     #    <option value="" selected="selected">- Select -</option>
     #    <option value="3">3</option>
@@ -46,16 +46,9 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
     #    <option value="Vodafone">Vodafone</option>
     #    <option value="Other">Other</option>
 
-    $other = "";
-    if (!in_array($network, array("Three","EE","O2","Vodafone"))) {
-        $other = $network;
-        $network = "Other";
-    }
-
            
-    $data = array(
-        "who_is_your_mobile_network_operator" => $network,
-        "please_specify" => $other,  # other ISP
+    $bbfcdata = array(
+        "who_is_your_mobile_network_operator" => $original_network,
         "have_you_contacted_your_mobile_operator" => "01", # yes "01"
         "what_was_your_mobile_operators_response_to_your_complaint" => $previous, # multine
         "your_name" => $name,
@@ -64,9 +57,6 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
         "url_of_the_content_in_question" => $url,
         "nature_of_the_complaint" => $message
         );
-    foreach ($data as $k => $v) {
-        error_log("BBFC submit data: $k = $v");
-    }
 
    $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
@@ -90,10 +80,12 @@ function sendBBFCReport($mailname, $name, $email, $network, $url, $message, $pre
             'reporter_name' => $name,
             'url' => $url,
             'message' => $message,
+            'previous_message' => $previous,
+            'additional_contact' => $additional_contact,
             'network' => $network,
+            'original_network' => $original_network,
             'report_type' => explode(",", $report_type),
-            'category' => $category,
-            'submission' => $data
+            'category' => $category
             )
         );
 

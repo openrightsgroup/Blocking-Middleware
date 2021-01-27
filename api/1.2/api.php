@@ -10,6 +10,7 @@ include_once "libs/exceptions.php";
 include_once "libs/services.php";
 include_once "libs/url.php";
 include_once "libs/email.php";
+include_once "libs/logging.php";
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,7 +63,8 @@ $app['service.elastic'] = $app->share(function($app) {
 $loader = new Twig_Loader_Filesystem("templates");
 $app['service.template'] = new Twig_Environment($loader, array(
     'cache' => false,
-    'debug' => true
+    'debug' => true,
+    'autoescape' => false
 ));
 $app['service.template']->addExtension(new Twig_Extension_Debug());
 
@@ -1616,6 +1618,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     $conn = $app['service.db'];
     $data = (array)json_decode($req->getContent(), true);
+    debug_log("POST: " . print_r($data, true));
 
     # TODO
 	$user = $app['db.user.load']->load($data['auth']['email']);
@@ -1731,14 +1734,14 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 sendBBFCReport($mailname,
                                $data['reporter']['name'],
                                $data['reporter']['email'],
+                               $network,
                                $data['original_network'],
                                $url['url'],
                                $data['message'],
                                $data['previous'],
-                               $data['additional_contact']
+                               $data['additional_contact'],
+                               $app['service.template']
                                );
-                               
-                               
             }
 
 
