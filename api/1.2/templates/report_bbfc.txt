@@ -12,13 +12,13 @@ Contact:
 
 A request to unblock the site was submitted to the mobile operator, {{ original_network }}.
 
-Original complaint:
-
-{{ message }}
-
 Mobile operator response:
 
 {{ previous_message }}
+
+Nature of complaint:
+
+{{ message }}
 
 Please can you review the website block for {{ url }} and issue a clarification.
 
