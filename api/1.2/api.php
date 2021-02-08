@@ -785,6 +785,9 @@ $app->get('/status/url', function (Request $req) use ($app) {
 
     $reports = array();
     foreach ($app['db.ispreport.load']->get_url_reports($url['urlid']) as $report) {
+        if ($report['network_name'] == 'BBFC') {
+            continue;
+        }
         $reports[] = array(
             'report_type' => $report['report_type'],
             'created' => $report['created'],
