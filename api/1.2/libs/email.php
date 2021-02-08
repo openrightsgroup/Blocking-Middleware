@@ -76,7 +76,7 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
     $msg->Body = $renderer->render(
         'report_bbfc.txt',
         array(
-            'reporter_email' => $email,
+            'reporter_email' => (FEATURE_EMAIL_TRACKING) ? ($mailname . "@" . MAIL_DOMAIN) : $email ,
             'reporter_name' => $name,
             'url' => $url,
             'message' => $message,
