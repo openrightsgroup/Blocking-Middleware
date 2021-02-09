@@ -1741,7 +1741,6 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                                $data['original_network'],
                                $url['url'],
                                $data['message'],
-                               $data['previous'],
                                $data['additional_contact'],
                                $app['service.template']
                                );

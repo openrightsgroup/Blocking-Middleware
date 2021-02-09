@@ -36,7 +36,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     return true;
 }
 
-function sendBBFCReport($mailname, $name, $email, $network, $original_network, $url, $message, $previous, $additional_contact, $renderer) {
+function sendBBFCReport($mailname, $name, $email, $network, $original_network, $url, $message, $additional_contact, $renderer) {
     
     #    <option value="" selected="selected">- Select -</option>
     #    <option value="3">3</option>
@@ -47,16 +47,16 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
     #    <option value="Other">Other</option>
 
            
-    $bbfcdata = array(
-        "who_is_your_mobile_network_operator" => $original_network,
-        "have_you_contacted_your_mobile_operator" => "01", # yes "01"
-        "what_was_your_mobile_operators_response_to_your_complaint" => $previous, # multine
-        "your_name" => $name,
-        "your_email" => $mailname . '@' . MAIL_DOMAIN,
-        "additional_contact_information" => $additional_contact,
-        "url_of_the_content_in_question" => $url,
-        "nature_of_the_complaint" => $message
-        );
+    //     $bbfcdata = array(
+    //         "who_is_your_mobile_network_operator" => $original_network,
+    //         "have_you_contacted_your_mobile_operator" => "01", # yes "01"
+    //         "what_was_your_mobile_operators_response_to_your_complaint" => $previous, # multine
+    //         "your_name" => $name,
+    //         "your_email" => $mailname . '@' . MAIL_DOMAIN,
+    //         "additional_contact_information" => $additional_contact,
+    //         "url_of_the_content_in_question" => $url,
+    //         "nature_of_the_complaint" => $message
+    //         );
 
    $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
@@ -80,7 +80,6 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
             'reporter_name' => $name,
             'url' => $url,
             'message' => $message,
-            'previous_message' => $previous,
             'additional_contact' => $additional_contact,
             'network' => $network,
             'original_network' => $original_network,
