@@ -966,6 +966,10 @@ class ISPReportLoader {
             $output->filters[] = " and date_part('year', isp_reports.created) = ?";
             $output->args[] = $filter['year'];
         }
+        if (@$filter['url']) {
+            $output->filters[] = " AND urls.url like ?";
+            $output->args[] = '%' . $filter['url'] . '%';
+        }
 
         return $output;
     }
