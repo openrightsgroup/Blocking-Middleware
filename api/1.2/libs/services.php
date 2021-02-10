@@ -927,8 +927,12 @@ class ISPReportLoader {
         }
 
         if (@$filter['network']) {
-            $output->filters[] = " AND network_name = ?";
-            $output->args[] = $filter['network'];
+            if ($filter['network'] == "@mobile") {
+                $output->filters[] = " AND isps.isp_type = 'mobile'::enum_isp_type";
+            } else {
+                $output->filters[] = " AND network_name = ?";
+                $output->args[] = $filter['network'];
+            }
         }
 
         if (!is_null(@$filter['report_type'])) {
@@ -1036,7 +1040,8 @@ class ISPReportLoader {
             count(*)
             from isp_reports
             inner join urls using(urlid)
-            left join contacts on contacts.id = isp_reports.contact_id            
+            inner join isps on isps.name = isp_reports.network_name
+            left join contacts on contacts.id = isp_reports.contact_id
             $tables
             where report_type = ? $filters",
             $proc->args
