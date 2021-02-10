@@ -920,9 +920,9 @@ class ISPReportLoader {
 
         if (!is_null(@$filter['policy'])) {
             if ($filter['policy']) {
-                $output->filters[] = " and matches_policy = true";
+                $output->filters[] = " and matches_policy = true and matches_policy is not null";
             } else {
-                $output->filters[] = " and matches_policy = false";
+                $output->filters[] = " and matches_policy = false and matches_policy is not null";
             }
         }
 
