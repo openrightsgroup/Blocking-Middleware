@@ -60,7 +60,8 @@ CREATE TYPE enum_report_status as ENUM (
     'abuse',
     'cancelled',
     'rejected',
-    'unblocked'
+    'unblocked',
+    'no-response'
 );
 
 CREATE TYPE enum_url_type as ENUM (
@@ -1548,7 +1549,7 @@ CREATE TABLE jobs (
     message varchar
 );
 
-CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected');
+CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-response');
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
 
