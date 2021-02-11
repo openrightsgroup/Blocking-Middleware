@@ -1146,6 +1146,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $filter['category'] = $req->get('category',null);
     $filter['reportercategory'] = $req->get('reportercategory', null);
     $filter['list'] = $req->get('list',null);
+    $filter['user'] = $req->get('user',null);
     $filter['order'] = $req->get('order', 'desc');
     if (!in_array($filter['order'], array('asc','desc'))) {
         throw new InvalidSortError();

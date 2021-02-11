@@ -935,6 +935,12 @@ class ISPReportLoader {
             }
         }
 
+        if (@$filter['user']) {
+            $output->tables[] = " INNER JOIN isp_report_users iru ON iru.urlid = isp_reports.urlid or iru.report_id = isp_reports.id";
+            $output->filters[] = " AND iru.userid = ?";
+            $output->args[] = $filter['user'];
+        }
+
         if (!is_null(@$filter['report_type'])) {
             $output->filters[] = " AND report_type = ?";
             $output->args[] = $filter['report_type'];
@@ -1000,25 +1006,31 @@ class ISPReportLoader {
             default: $order = 'desc'; break;
         };
 
-        $res = $this->conn->query("select
-            urls.url, network_name, fmtime(isp_reports.created) as created, unblocked, fmtime(isp_reports.submitted) as submitted,
-                $admin_fields
-                isps.description as description,
-                case when allow_publish = 1 then isp_reports.name else '' end as name,
-                case when allow_publish = 1 then isp_reports.message else '' end as message,
-                isp_reports.status
-            from isp_reports
-            inner join urls using(urlid)
-            inner join isps on isps.name = isp_reports.network_name
-            left join contacts on contacts.id = isp_reports.contact_id
-            $tables
-            where report_type = ? $filters
-            order by isp_reports.created $order
-            limit $pagesize offset $off",
+        $sql = "select distinct
+               urls.url, network_name, fmtime(isp_reports.created) as created, unblocked,
+               fmtime(isp_reports.submitted) as submitted, isp_reports.created as _order_created,
+                   $admin_fields
+                   isps.description as description,
+                   case when allow_publish = 1 then isp_reports.name else '' end as name,
+                   case when allow_publish = 1 then isp_reports.message else '' end as message,
+                   isp_reports.status
+               from isp_reports
+               inner join urls using(urlid)
+               inner join isps on isps.name = isp_reports.network_name
+               left join contacts on contacts.id = isp_reports.contact_id
+               $tables
+               where report_type = ? $filters
+               order by isp_reports.created $order
+               limit $pagesize offset $off";
+
+        // error_log("Report SQL: $sql");
+
+        $res = $this->conn->query($sql,
             $proc->args
             );
         $reports = array();
         foreach ($res as $row) {
+            unset($row['_order_created']);
             $reports[] = $row;
         }
         return $reports;
@@ -1037,7 +1049,7 @@ class ISPReportLoader {
         array_unshift($proc->args, $type);
 
         $res = $this->conn->query("select
-            count(*)
+            count(distinct isp_reports.id)
             from isp_reports
             inner join urls using(urlid)
             inner join isps on isps.name = isp_reports.network_name
