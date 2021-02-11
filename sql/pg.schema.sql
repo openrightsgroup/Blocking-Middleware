@@ -433,7 +433,8 @@ CREATE TABLE isp_reports (
     reporter_category_id int,
     maybe_harmless bool null,
 
-    user_type varchar[]
+    user_type varchar[],
+    resolved_userid int null
 );
 
 
