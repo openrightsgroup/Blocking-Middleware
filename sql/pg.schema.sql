@@ -61,7 +61,7 @@ CREATE TYPE enum_report_status as ENUM (
     'cancelled',
     'rejected',
     'unblocked',
-    'no-response'
+    'no-decision'
 );
 
 CREATE TYPE enum_url_type as ENUM (
