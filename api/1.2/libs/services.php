@@ -888,7 +888,7 @@ class ISPReportLoader {
             $output->filters[] = " and (isp_reports.status = 'sent' and isp_reports.unblocked = 0)";
             break;
         case 'closed':
-            $output->filters[] = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected'))";
+            $output->filters[] = " and ((isp_reports.status = 'sent' and unblocked=1) or isp_reports.status in ('unblocked','rejected','no-decision'))";
             break;
         case 'rejected':
             $output->filters[] = " and isp_reports.status in ('rejected')";
