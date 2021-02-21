@@ -1549,7 +1549,7 @@ CREATE TABLE jobs (
     message varchar
 );
 
-CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-response');
+CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-decision');
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
 
@@ -1582,4 +1582,19 @@ BEGIN
     RETURN p_tags || p_newtag;
   END IF;
 END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION report_email_lookup(p_email varchar) RETURNS varchar AS $$
+DECLARE
+  r_email varchar;
+BEGIN
+        SELECT email INTO r_email FROM (
+                SELECT email FROM isp_reports WHERE mailname = p_email
+                UNION
+                SELECT admin_email AS email FROM isps INNER JOIN isp_reports ON network_name = isps.name
+                        WHERE mailname = replace(p_email, 'reply-isp', 'reply')
+                ) x;
+        RETURN r_email;
+END
 $$ LANGUAGE plpgsql;
