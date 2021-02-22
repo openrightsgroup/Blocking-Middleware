@@ -1589,12 +1589,12 @@ CREATE OR REPLACE FUNCTION report_email_lookup(p_email varchar) RETURNS varchar 
 DECLARE
   r_email varchar;
 BEGIN
-        SELECT email INTO r_email FROM (
-                SELECT email FROM isp_reports WHERE mailname = p_email
-                UNION
-                SELECT admin_email AS email FROM isps INNER JOIN isp_reports ON network_name = isps.name
-                        WHERE mailname = replace(p_email, 'reply-isp', 'reply')
-                ) x;
-        RETURN r_email;
+    IF POSITION('reply-isp' in p_email) > 0 THEN
+        SELECT admin_email INTO r_email FROM isps INNER JOIN isp_reports ON network_name = isps.name
+                    WHERE mailname = replace(p_email, 'reply-isp', 'reply');
+    ELSE
+        SELECT email INTO r_email FROM isp_reports WHERE mailname = p_email;
+    END IF;
+    RETURN r_email;
 END
 $$ LANGUAGE plpgsql;
