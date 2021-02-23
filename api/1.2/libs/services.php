@@ -924,7 +924,7 @@ class ISPReportLoader {
             break;
         };
 
-        if (!is_null(@$filter['url_status']) {
+        if (!is_null(@$filter['url_status'])) {
             /* blocked = 0, unblocked = 1 */
             $output->filters[] = " and isp_reports.unblocked = ?";
             $output->args[] = $filter['url_status'];

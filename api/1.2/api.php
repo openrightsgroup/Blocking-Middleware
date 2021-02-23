@@ -1169,6 +1169,10 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $cancel_count   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'cancelled')), $is_admin);
     $harmless_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'harmless')), $is_admin);
     $resubmit_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'resubmit')), $is_admin);
+    
+    $accepted_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'accepted')), $is_admin);
+    $not_accepted_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'not_accepted')), $is_admin);
+    $rejected_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'rejected')), $is_admin);
 
     $reports = $app['db.ispreport.load']->get_reports('unblock', $filter, $page,  $is_admin);
 
@@ -1185,6 +1189,10 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output['cancel_count'] = $cancel_count;
     $output['harmless_count'] = $harmless_count;
     $output['resubmit_count'] = $resubmit_count;
+    
+    $output['accepted_count'] = $accepted_count;
+    $output['not_accepted_count'] = $not_accepted_count;
+    $output['rejected_count'] = $rejected_count;
 
     return $app->json($output);
 });
