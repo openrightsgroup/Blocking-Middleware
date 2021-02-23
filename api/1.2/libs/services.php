@@ -893,6 +893,12 @@ class ISPReportLoader {
         case 'rejected':
             $output->filters[] = " and isp_reports.status in ('rejected')";
             break;
+        case 'accepted':
+            $output->filters[] = " and isp_reports.status in ('unblocked')";
+            break;
+        case 'not_accepted':
+            $output->filters[] = " and isp_reports.status in ('rejected','no-decision')";
+            break;
         case 'reviewed':
             $output->filters[] = " and isp_reports.matches_policy is not null";
             break;
@@ -917,6 +923,13 @@ class ISPReportLoader {
                 and (isp_reports.created < now() - interval '30 days')";
             break;
         };
+
+        if (!is_null(@$filter['url_status']) {
+            /* blocked = 0, unblocked = 1 */
+            $output->filters[] = " and isp_reports.unblocked = ?";
+            $output->args[] = $filter['url_status'];
+        }
+
 
         if (!is_null(@$filter['policy'])) {
             if ($filter['policy']) {
