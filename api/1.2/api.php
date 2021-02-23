@@ -1134,7 +1134,8 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
 
     $filter = array();
 
-    foreach(array('open','sent','unresolved','rejected','reviewed','cancelled','featured','egregious','harmless','resubmit') as $ftype) {
+    foreach(array('open','sent','unresolved','reviewed','cancelled','featured','egregious','harmless','resubmit',
+        'accepted', 'rejected', 'not_accepted') as $ftype) {
         if ($req->get($ftype,null)) {
             $filter['state'] = $ftype;
             break;
