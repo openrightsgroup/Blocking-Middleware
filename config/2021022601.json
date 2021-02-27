@@ -29,7 +29,7 @@
                 "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/branded/restricted_access\\.html",
                 "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/unbranded/restricted_access\\.html",
                 "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-agerestricted\\.html?",
-		"re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-paym-agerestricted\\.html"
+		        "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-paym-agerestricted\\.html"
             ]
         },
         {
@@ -60,7 +60,9 @@
                 "re:body:^<p> Error \\- site blocked </p>",
                 "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court.",
                 "re:body:^<p> Error .*? site blocked</p>",
-                "re:body:title>BT Protect Intercept Page<"
+                "re:body:title>BT Protect Intercept Page<",
+                "re:body:This domain has been suspended on advice from the Police Intellectual"
+
             ],
             "blocktype": [
                 "PARENTAL",
@@ -68,7 +70,8 @@
                 "COPYRIGHT",
                 "COPYRIGHT",
                 "COPYRIGHT",
-                "MALWARE"
+                "MALWARE",
+                "SUSPENSION"
             ],
             "category": "querystring:list"
         },
@@ -115,7 +118,8 @@
                 "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl",
                 "re:url:^http://www\\.siteblocked\\.org/.*\\.html\\?",
                 "re:body:<h1>Access to this website has been blocked under an Order of the Higher Court.</h1>",
-                "re:body:<h1>DOMAIN SUSPENDED.</h1>.*This domain has been suspended on advice from the Police Intellectual.*Property Crime Unit (PIPCU)\\."
+                "re:body:This domain has been suspended on advice from the Police Intellectual"
+
             ],
             "blocktype": [
                 "PARENTAL",
@@ -153,14 +157,16 @@
                 "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk",
                 "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml",
                 "re:body:^<p> Error .*? site blocked</p>",
-                "re:url:^https://blocked\\.plus\\.net\\?originalURL"
+                "re:url:^https://blocked\\.plus\\.net\\?originalURL",
+                "re:body:This domain has been suspended on advice from the Police Intellectual"
             ],
             "blocktype": [
                 "COPYRIGHT",
                 "COPYRIGHT",
                 "PARENTAL",
                 "COPYRIGHT",
-                "PARENTAL"
+                "PARENTAL",
+                "SUSPENSION"
             ]
         },
         {
@@ -211,8 +217,7 @@
                 "re:url:http://block\\.nb\\.sky\\.com/\\?",
                 "re:url:http://blocked\\.nb\\.sky\\.com/\\?",
                 "re:url:http://block\\.cf\\.sky\\.com/\\?",
-
-                "re:body:<h1>DOMAIN SUSPENDED.</h1>.*This domain has been suspended on advice from the Police Intellectual.*Property Crime Unit (PIPCU)\\."
+                "re:body:This domain has been suspended on advice from the Police Intellectual"
             ],
             "blocktype": ["COPYRIGHT","PARENTAL","COPYRIGHT","PARENTAL","SUSPENSION"],
             "category": "querystring:categories"
@@ -240,7 +245,7 @@
                 "re:url:http://assets\\.virginmedia\\.com/parental\\.html",
                 "re:url:http://websafe\\.virginmedia\\.com/childsafe-blocked.html",
 		        "re:url:http://websafe\\.virginmedia\\.com/virussafe-blocked.html",
-                "re:body:<h1>DOMAIN SUSPENDED.</h1>.*This domain has been suspended on advice from the Police Intellectual.*Property Crime Unit (PIPCU)\\."
+                "re:body:This domain has been suspended on advice from the Police Intellectual"
             ],
             "blocktype": [
                 "COPYRIGHT",
