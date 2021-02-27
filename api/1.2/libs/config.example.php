@@ -42,6 +42,8 @@ define('REDIS', 'localhost:6379');
 
 define('DEBUG_LOG', false);
 
+define('CONFIG_LATEST', '2021022601');
+
 $ELASTIC = "http://localhost:9200";
 
 define('ELASTIC_ADULT_FILTER', 'escort~ OR fetish OR stripper~ OR porn~ OR blowjob~ OR femdom~ OR fuck~');

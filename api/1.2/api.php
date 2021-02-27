@@ -592,10 +592,13 @@ $app->get('/config/{version}', function (Request $req, $version) use ($app) {
 		$format = "json";
 	}
 	if ($format != "json") {
-		/* support XML as well eventually */
+		/* support XML or YAML as well eventually */
 		throw new InputError();
 	}
 
+    if ($version == 'latest') {
+        $version = CONFIG_LATEST;
+    }
 
 	// fetch and return config here
 
