@@ -8,6 +8,7 @@ import argparse
 import datetime
 import subprocess
 import configparser
+import multiprocessing
 
 import psycopg2
 import paramiko
@@ -153,9 +154,13 @@ def main():
 
     unpack(cfg, filename)
 
+    pool = multiprocessing.Pool(cfg.getint('worker', 'threads'))
+
     conn = connect_db(cfg)
 
-    for name in resolve_iter(compare(cfg, filename)):
+    for name in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
+        if name is None:
+            continue
         logging.info("Got: %s", name)
         dbstore(conn, name)
         if args.debug:
