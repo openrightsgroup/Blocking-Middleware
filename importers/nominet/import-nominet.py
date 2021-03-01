@@ -10,6 +10,7 @@ import subprocess
 import configparser
 import multiprocessing
 
+import requests
 import psycopg2
 import paramiko
 
@@ -18,6 +19,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Import and process nominet zone additions")
     parser.add_argument('--config', '-c', default='import-nominet.cfg', help="Path to config file")
     parser.add_argument('--verbose', '-v', action='store_true', default=False, help="Verbose mode")
+    parser.add_argument('--no-submit', '-N', action='store_true', default=False, help="Do not submit to API")
     parser.add_argument('--debug', action='store_true', default=False, help="Verbose mode")
     return parser
 
@@ -95,12 +97,12 @@ def resolve(name):
     for prefix in ('www.', ''):
         try:
             _ = socket.gethostbyname(prefix + name)
-            return prefix + name
+            return name, prefix + name
         except socket.gaierror as exc:
             logging.debug("Resolution failed: %s, %s", prefix + name, str(exc))
         except Exception as err:
             logging.warn("Error resolving: %s: %s", prefix+name, str(err))
-
+        return name, None
 
 def resolve_iter(it):
     for name in it:
@@ -114,12 +116,36 @@ def getdate():
     return datetime.date.today() - datetime.timedelta(1, 0)
 
 
-def dbstore(conn, name):
+def dbstore(conn, name, resolved):
     c = conn.cursor()
-    c.execute("insert into domains(domain, created) values (%s, now())",
-              [name])
+    c.execute("insert into domains(domain, created, resolved) values (%s, now(), %s)",
+              [name, resolved])
     c.close()
     conn.commit()
+
+
+def submit_api(cfg, domain):
+    opts = dict(cfg.items('api'))
+
+    req = requests.post(opts['baseurl'] + "submit/url",
+                        auth=(opts['user'], opts['secret']),
+                        data={'url': 'http://'+domain,
+                              'queue': 'public',
+                              'source': 'uk-zone-auto',
+                              }
+                        )
+    logging.debug("API post result: %s", req.status_code)
+
+
+def relink_prev(cfg, filename):
+    tmpname, _ = os.path.splitext(filename)
+
+    try:
+        os.unlink(os.path.join(cfg.get('paths', 'download'), 'prev'))
+    except OSError:
+        pass
+
+    os.symlink(tmpname, os.path.join(cfg.get('paths', 'download'), 'prev'))
 
 
 def main():
@@ -148,6 +174,7 @@ def main():
         sftp = connect(cfg)
         logging.info("Retrieving: %s", filename)
         sftp.get(filename, destpath)
+        sftp.close()
     else:
         logging.info("Already downloaded: %s", filename)
 
@@ -158,13 +185,15 @@ def main():
 
     conn = connect_db(cfg)
 
-    for name in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
-        if name is None:
-            continue
-        logging.info("Got: %s", name)
-        dbstore(conn, name)
-        if args.debug:
-            break
+    for (name, resolvedname) in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
+        dbstore(conn, resolvedname or name, resolvedname is not None)
+        logging.info("Got: %s %s", name, resolvedname)
+        if resolvedname:
+            submit_api(cfg, resolvedname)
+            if args.debug:
+                break
+
+    relink_prev(cfg, filename)
 
 
 if __name__ == '__main__':
