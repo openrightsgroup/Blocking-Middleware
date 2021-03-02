@@ -14,6 +14,8 @@ import requests
 import psycopg2
 import paramiko
 
+cfg = None
+args = None
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Import and process nominet zone additions")
@@ -21,10 +23,20 @@ def get_parser():
     parser.add_argument('--verbose', '-v', action='store_true', default=False, help="Verbose mode")
     parser.add_argument('--no-submit', '-N', action='store_true', default=False, help="Do not submit to API")
     parser.add_argument('--debug', action='store_true', default=False, help="Verbose mode")
+
+    parsers = parser.add_subparsers(dest='mode', help="Select mode")
+
+    subp = parsers.add_parser('fetch')
+    subp.add_argument('--no-submit', '-N', action='store_true', default=False, help="Do not submit to API")
+    subp.add_argument('--keep', '-K', action='store_true', default=False, help="Keep old downloaded files")
+
+    subp2 = parsers.add_parser('resubmit')
+    subp2.add_argument('--age', '-d', type=int, help="Resubmit at age")
+
     return parser
 
 
-def connect(cfg):
+def connect_ssh():
     transport = paramiko.Transport((cfg.get('sftp', 'host'), 22))
     transport.connect(None,
                       cfg.get('sftp', 'user'),
@@ -36,7 +48,7 @@ def connect(cfg):
     return sftp
 
 
-def connect_db(cfg):
+def connect_db():
     return psycopg2.connect(host=cfg.get('db', 'host'),
                             user=cfg.get('db', 'user'),
                             password=cfg.get('db', 'password'),
@@ -44,8 +56,8 @@ def connect_db(cfg):
                             )
 
 
-def unpack(cfg, filename):
-    workdir = get_workdir(cfg, filename)
+def unpack(filename):
+    workdir = get_workdir(filename)
     try:
         os.mkdir(workdir)
     except:
@@ -66,15 +78,15 @@ def sortfile(filename):
     return filename + '.sorted'
 
 
-def get_workdir(cfg, filename):
+def get_workdir(filename):
     tmpname, _ = os.path.splitext(filename)
     return os.path.join(cfg.get('paths', 'download'), tmpname)
 
 
-def compare(cfg, filename):
+def compare(filename):
 
     dbdumpname = 'db-dump-' + getdate().strftime('%Y%m%d') + '.csv'
-    dbdumppath = os.path.join(get_workdir(cfg, filename), dbdumpname)
+    dbdumppath = os.path.join(get_workdir(filename), dbdumpname)
 
     prevdump = glob.glob(os.path.join(cfg.get('paths', 'download'), 'prev', 'db-dump*.csv'))[0]
 
@@ -104,6 +116,7 @@ def resolve(name):
             logging.warn("Error resolving: %s: %s", prefix+name, str(err))
         return name, None
 
+
 def resolve_iter(it):
     for name in it:
         res = resolve(name)
@@ -124,7 +137,7 @@ def dbstore(conn, name, resolved):
     conn.commit()
 
 
-def submit_api(cfg, domain):
+def submit_api(domain):
     opts = dict(cfg.items('api'))
 
     req = requests.post(opts['baseurl'] + "submit/url",
@@ -137,7 +150,7 @@ def submit_api(cfg, domain):
     logging.debug("API post result: %s", req.status_code)
 
 
-def relink_prev(cfg, filename):
+def relink_prev(filename):
     tmpname, _ = os.path.splitext(filename)
 
     try:
@@ -148,7 +161,50 @@ def relink_prev(cfg, filename):
     os.symlink(tmpname, os.path.join(cfg.get('paths', 'download'), 'prev'))
 
 
+def fetch():
+    try:
+        os.makedirs(cfg.get('paths', 'download'))
+    except:
+    pass
+
+    dt = getdate()
+    filename = dt.strftime('ukdata-%Y%m%d.zip')
+    logging.info("Bundle: %s", filename)
+
+    destpath = os.path.join(cfg.get('paths', 'download'), filename)
+    if not os.path.isfile(destpath):
+        sftp = connect_ssh()
+        logging.info("Retrieving: %s", filename)
+        sftp.get(filename, destpath)
+        sftp.close()
+    else:
+        logging.info("Already downloaded: %s", filename)
+
+
+    unpack(filename)
+
+    pool = multiprocessing.Pool(cfg.getint('worker', 'threads'))
+
+    conn = connect_db()
+
+    for (name, resolvedname) in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
+        dbstore(conn, resolvedname or name, resolvedname is not None)
+        logging.info("Got: %s %s", name, resolvedname)
+        if resolvedname:
+            submit_api(resolvedname)
+            if args.debug:
+                break
+
+    relink_prev(filename)
+
+
+def resubmit():
+    pass
+
+
 def main():
+    global args
+    global cfg
     parser = get_parser()
     args = parser.parse_args()
 
@@ -160,40 +216,10 @@ def main():
     cfg = configparser.RawConfigParser()
     cfg.read([args.config])
 
-    try:
-        os.makedirs(cfg.get('paths', 'download'))
-    except:
-        pass
-
-    dt = getdate()
-    filename = dt.strftime('ukdata-%Y%m%d.zip')
-    logging.info("Bundle: %s", filename)
-
-    destpath = os.path.join(cfg.get('paths', 'download'), filename)
-    if not os.path.isfile(destpath):
-        sftp = connect(cfg)
-        logging.info("Retrieving: %s", filename)
-        sftp.get(filename, destpath)
-        sftp.close()
-    else:
-        logging.info("Already downloaded: %s", filename)
-
-
-    unpack(cfg, filename)
-
-    pool = multiprocessing.Pool(cfg.getint('worker', 'threads'))
-
-    conn = connect_db(cfg)
-
-    for (name, resolvedname) in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
-        dbstore(conn, resolvedname or name, resolvedname is not None)
-        logging.info("Got: %s %s", name, resolvedname)
-        if resolvedname:
-            submit_api(cfg, resolvedname)
-            if args.debug:
-                break
-
-    relink_prev(cfg, filename)
+    if args.mode == 'fetch':
+        fetch()
+    elif args.mode == 'resubmit':
+        resubmit()
 
 
 if __name__ == '__main__':
