@@ -1,0 +1,10 @@
+# update existing smtp entry
+
+smtp      inet  n       -       -       -       -       smtpd
+   -o content_filter=filter:dummy
+
+# add to end of file
+
+filter    unix  -       n       n       -       10      pipe
+  flags=Rq user=filter null_sender=
+  argv=/path/to/filter.sh -f ${sender} -- ${recipient}
