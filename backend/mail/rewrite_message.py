@@ -15,12 +15,12 @@ def main():
         del msg['Return-path']
         del msg['From']
         msg['From'] = email.utils.formataddr((fromname, toaddr.replace('reply-isp-', 'reply-', 1)))
-        msg['Return-path'] = email.formataddr(' ', toaddr).strip()
+        msg['Return-path'] = email.utils.formataddr(' ', toaddr).strip()
     elif 'reply-' in toaddr:
         del msg['Return-path']
         del msg['From']
         msg['From'] = email.utils.formataddr((fromname, toaddr.replace('reply-', 'reply-isp-', 1)))
-        msg['Return-path'] = email.formataddr(' ', toaddr).strip()
+        msg['Return-path'] = email.utils.formataddr(' ', toaddr).strip()
     else:
         # do nothing
         pass
