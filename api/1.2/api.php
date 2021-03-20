@@ -366,8 +366,13 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$urltext = normalize_url($req->get('url'));
 
+    if ($req->get('tags', null) && $is_admin) {
+        $tags = explode(':', $req->get('tags');
+    } else {
+        $tags = array();
+    }
 
-    $newurl = $app['db.url.load']->insert($urltext, $req->get('source','user'));
+    $newurl = $app['db.url.load']->insert($urltext, $req->get('source','user'), $tags);
 
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
@@ -467,13 +472,16 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	}
 
 	# return request details, with queue status for the frontend
-
-	return $app->json(array(
-		'success' => true,
-		'uuid' => $request_id,
-		'hash' => md5($urltext),
-		'queued' => $queued
-	), 201);
+    $out = array(
+           		'success' => true,
+           		'uuid' => $request_id,
+           		'hash' => md5($urltext),
+           		'queued' => $queued
+    );
+    if ($is_admin) {
+        $out['urlid'] = $url['urlid'];
+    }
+	return $app->json($out, 201);
 });
 
 $app->get('/status/user',function(Request $req) use ($app) {
