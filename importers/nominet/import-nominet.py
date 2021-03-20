@@ -152,6 +152,7 @@ def dbstore(conn, name, resolved):
 
 def submit_api(domain):
     opts = dict(cfg.items('api'))
+    suffixmap = dict(cfg.items('suffixmap'))
 
     data = {'url': 'http://'+domain,
             'queue': cfg.get('submission', 'queue'),
@@ -159,7 +160,18 @@ def submit_api(domain):
             }
 
     if cfg.has_option('submission', 'tags'):
-        data['tags'] = cfg.get('submission', 'tags')
+        tags = cfg.get('submission', 'tags').split(':')
+    else:
+        tags = []
+
+    if suffixmap:
+        # compare with suffixes by sort descending
+        for suffix in sorted(suffixmap, key=len, reverse=True):
+            if domain.endswith(suffix):
+                tags.append(suffixmap[suffix])
+                break
+
+    data['tags'] = ":".join(tags)
 
     if args.no_submit:
         logging.info("Dummy mode: data=%s", data)
@@ -168,7 +180,7 @@ def submit_api(domain):
                             auth=(opts['user'], opts['secret']),
                             data=data
                             )
-        logging.debug("API post result: %s", req.status_code)
+        logging.debug("API post result: %s; %s; %s", domain, req.status_code, req.json())
 
 
 def relink_prev(filename):
@@ -229,7 +241,8 @@ def fetch():
             if args.debug:
                 break
 
-    relink_prev(filename)
+    if not args.debug:
+        relink_prev(filename)
 
 
 def resubmit():
