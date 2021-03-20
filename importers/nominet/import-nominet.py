@@ -144,9 +144,15 @@ def getdate():
 
 def dbstore(conn, name, resolved):
     c = conn.cursor()
-    c.execute("insert into domains(domain, created, resolved) values (%s, now(), %s) "
-              "returning id as id",
-              [name, resolved])
+    try:
+        c.execute("insert into domains(domain, created, resolved) values (%s, now(), %s) "
+                  "returning id as id",
+                  [name, resolved])
+    except psycopg2.IntegrityError:
+        logging.debug("Caught duplicate: %s", name)
+        conn.rollback()
+        c.execute("update domains set resolved = true where domain = %s returning id as id", [name])
+
     row = c.fetchone()
     c.close()
     conn.commit()
