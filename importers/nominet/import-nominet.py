@@ -144,9 +144,18 @@ def getdate():
 
 def dbstore(conn, name, resolved):
     c = conn.cursor()
-    c.execute("insert into domains(domain, created, resolved) values (%s, now(), %s)",
+    c.execute("insert into domains(domain, created, resolved) values (%s, now(), %s) "
+              "returning id as id",
               [name, resolved])
+    row = c.fetchone()
     c.close()
+    conn.commit()
+    return row[0]
+
+
+def update_submitted(conn, recid, urlid=None):
+    c2 = conn.cursor()
+    c2.execute("update domains set submitted = now(), urlid=%s where id = %s", [urlid, recid])
     conn.commit()
 
 
@@ -181,7 +190,7 @@ def submit_api(domain):
                             data=data
                             )
         logging.debug("API post result: %s; %s; %s", domain, req.status_code, req.json())
-
+        return req.json().get('urlid')
 
 def relink_prev(filename):
     tmpname, _ = os.path.splitext(filename)
@@ -234,10 +243,11 @@ def fetch():
     conn = connect_db()
 
     for (name, resolvedname) in pool.imap_unordered(resolve, compare(filename), chunksize=16):
-        dbstore(conn, resolvedname or name, resolvedname is not None)
+        recid = dbstore(conn, resolvedname or name, resolvedname is not None)
         logging.info("Got: %s %s", name, resolvedname)
         if resolvedname:
-            submit_api(resolvedname)
+            urlid = submit_api(resolvedname)
+            update_submitted(conn, recid, urlid)
             if args.debug:
                 break
 
@@ -263,9 +273,8 @@ def resubmit():
         if args.no_submit:
             logging.debug("No submit")
         else:
-            submit_api(row[0])
-            c2.execute("update domains set submitted = now() where id = %s", [row[1]])
-            conn.commit()
+            urlid = submit_api(row[0])
+            update_submitted(conn, recid, urlid)
 
 
 def main():

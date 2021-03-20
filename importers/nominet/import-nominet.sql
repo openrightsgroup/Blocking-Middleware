@@ -4,7 +4,8 @@ CREATE TABLE domains(
     domain varchar unique,
     created timestamptz not null,
     resolved bool default false,
-    submitted timestamptz null
+    submitted timestamptz null,
+    urlid int null
 );
 
 CREATE INDEX ON domains(created);
