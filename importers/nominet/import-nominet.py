@@ -17,6 +17,7 @@ import paramiko
 cfg = None
 args = None
 
+
 def get_parser():
     parser = argparse.ArgumentParser(description="Import and process nominet zone additions")
     parser.add_argument('--config', '-c', default='import-nominet.cfg', help="Path to config file")
@@ -32,6 +33,9 @@ def get_parser():
 
     subp2 = parsers.add_parser('resubmit')
     subp2.add_argument('--age', '-d', type=int, help="Resubmit at age")
+
+    subp3 = parsers.add_parser('download')
+    subp3.add_argument('filename', type=str, help="filename to download")
 
     return parser
 
@@ -63,18 +67,25 @@ def unpack(filename):
     except:
         pass
 
-    if not glob.glob(os.path.join(workdir, 'db-dump-*')):
+    dbfile = filename.replace('.zip', '.csv').replace('ukdata-', 'db-dump-')
+
+    if os.path.isfile(os.path.join(workdir, dbfile)) or os.path.isfile(os.path.join(workdir, dbfile+'.sorted')):
         logging.info("Already unpacked: %s", workdir)
-        subprocess.check_call(['unzip', '../'+filename], cwd=workdir)
+    else:
+        logging.info("Unpacking %s", dbfile)
+        subprocess.check_call(['unzip', '../'+filename, dbfile], cwd=workdir)
 
 
 def sortfile(filename):
-    if not os.path.isfile(filename + '.sorted'):
+    if not os.path.isfile(filename + '.sorted') and not filename.endswith('.sorted'):
         logging.debug("Sorting: %s", filename)
         with open(filename, 'r') as fpin, open(filename + '.sorted', 'w') as fpout:
             subprocess.check_call(['sort'], stdin=fpin, stdout=fpout)
+        os.unlink(filename)
     else:
         logging.info("Already sorted: %s", filename)
+    if filename.endswith('.sorted'):
+        return filename
     return filename + '.sorted'
 
 
@@ -88,10 +99,12 @@ def compare(filename):
     dbdumpname = 'db-dump-' + getdate().strftime('%Y%m%d') + '.csv'
     dbdumppath = os.path.join(get_workdir(filename), dbdumpname)
 
-    prevdump = glob.glob(os.path.join(cfg.get('paths', 'download'), 'prev', 'db-dump*.csv'))[0]
+    prevdump = glob.glob(os.path.join(cfg.get('paths', 'download'), 'prev', 'db-dump*.csv*'))[0]
+    logging.debug("Comparing %s <=> %s", prevdump, dbdumppath)
 
     prevdump = sortfile(prevdump)
     dbdumppath = sortfile(dbdumppath)
+
 
     proc = subprocess.Popen(['diff', '-c', prevdump, dbdumppath],
                             stdout=subprocess.PIPE)
@@ -140,14 +153,22 @@ def dbstore(conn, name, resolved):
 def submit_api(domain):
     opts = dict(cfg.items('api'))
 
-    req = requests.post(opts['baseurl'] + "submit/url",
-                        auth=(opts['user'], opts['secret']),
-                        data={'url': 'http://'+domain,
-                              'queue': 'public',
-                              'source': 'uk-zone-auto',
-                              }
-                        )
-    logging.debug("API post result: %s", req.status_code)
+    data = {'url': 'http://'+domain,
+            'queue': cfg.get('submission', 'queue'),
+            'source': cfg.get('submission', 'source'),
+            }
+
+    if cfg.has_option('submission', 'tags'):
+        data['tags'] = cfg.get('submission', 'tags')
+
+    if args.no_submit:
+        logging.info("Dummy mode: data=%s", data)
+    else:
+        req = requests.post(opts['baseurl'] + "submit/url",
+                            auth=(opts['user'], opts['secret']),
+                            data=data
+                            )
+        logging.debug("API post result: %s", req.status_code)
 
 
 def relink_prev(filename):
@@ -161,11 +182,24 @@ def relink_prev(filename):
     os.symlink(tmpname, os.path.join(cfg.get('paths', 'download'), 'prev'))
 
 
+def download():
+    filename = args.filename
+    destpath = os.path.join(cfg.get('paths', 'download'), filename)
+    if not os.path.isfile(destpath):
+        sftp = connect_ssh()
+        logging.info("Retrieving: %s", filename)
+        sftp.get(filename, destpath)
+        sftp.close()
+    else:
+        logging.info("Already downloaded: %s", filename)
+    unpack(filename)
+
+
 def fetch():
     try:
         os.makedirs(cfg.get('paths', 'download'))
     except:
-    pass
+        pass
 
     dt = getdate()
     filename = dt.strftime('ukdata-%Y%m%d.zip')
@@ -187,7 +221,7 @@ def fetch():
 
     conn = connect_db()
 
-    for (name, resolvedname) in pool.imap_unordered(resolve, compare(cfg, filename), chunksize=16):
+    for (name, resolvedname) in pool.imap_unordered(resolve, compare(filename), chunksize=16):
         dbstore(conn, resolvedname or name, resolvedname is not None)
         logging.info("Got: %s %s", name, resolvedname)
         if resolvedname:
@@ -199,7 +233,26 @@ def fetch():
 
 
 def resubmit():
-    pass
+    conn = connect_db()
+    c = conn.cursor()
+    c2 = conn.cursor()
+    query_args = [
+        datetime.date.today() - datetime.timedelta(args.age+1),
+        datetime.date.today() - datetime.timedelta(args.age),
+    ]
+    logging.info("Date range: %s", query_args)
+    c.execute("select domain, id from domains "
+              "where created > %s and created < %s and resolved = true "
+              "order by domain",
+              query_args)
+    for row in c:
+        logging.info("Submitting %s(%s)", row[0], row[1])
+        if args.no_submit:
+            logging.debug("No submit")
+        else:
+            submit_api(row[0])
+            c2.execute("update domains set submitted = now() where id = %s", [row[1]])
+            conn.commit()
 
 
 def main():
@@ -211,7 +264,9 @@ def main():
     logging.basicConfig(level=logging.DEBUG if args.debug else
                               logging.INFO if args.verbose else logging.WARN,
                         format="%(asctime)s\t%(levelname)s\t%(message)s",
-                        datefmt="[%Y-%m-%d %H:%M:%S")
+                        datefmt="[%Y-%m-%d %H:%M:%S]")
+    logging.info("Args: %s", args)
+    logging.debug("foo")
 
     cfg = configparser.RawConfigParser()
     cfg.read([args.config])
@@ -220,6 +275,10 @@ def main():
         fetch()
     elif args.mode == 'resubmit':
         resubmit()
+    elif args.mode == 'download':
+        download()
+    else:
+        logging.warn("Unknown mode: %s", args.mode)
 
 
 if __name__ == '__main__':
