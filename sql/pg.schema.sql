@@ -91,6 +91,13 @@ CREATE TYPE enum_isp_status AS ENUM(
     'down'
 );
 
+
+CREATE TYPE enum_policy_match as ENUM (
+    'consistent',
+    'inconsistent',
+    'unknown'
+);
+
 --
 -- Name: insert_contact(character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -435,7 +442,9 @@ CREATE TABLE isp_reports (
     maybe_harmless bool null,
 
     user_type varchar[],
-    resolved_userid int null
+    resolved_userid int null,
+
+    policy_match enum_policy_match null
 );
 
 
@@ -1500,7 +1509,9 @@ CREATE TABLE isp_report_comments (
     review_notes text,
     userid int not null,
     created timestamptz,
-    last_updated timestamptz
+    last_updated timestamptz,
+
+    policy_match enum_policy_match null
 );
 
 CREATE INDEX isp_report_comments_report_id on isp_report_comments(report_id);

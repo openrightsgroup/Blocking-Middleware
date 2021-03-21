@@ -900,7 +900,7 @@ class ISPReportLoader {
             $output->filters[] = " and isp_reports.status in ('rejected','no-decision')";
             break;
         case 'reviewed':
-            $output->filters[] = " and isp_reports.matches_policy is not null";
+            $output->filters[] = " and isp_reports.policy_match is not null";
             break;
         case 'cancelled':
             $output->filters[] = " and isp_reports.status = 'cancelled'";
@@ -933,9 +933,9 @@ class ISPReportLoader {
 
         if (!is_null(@$filter['policy'])) {
             if ($filter['policy']) {
-                $output->filters[] = " and matches_policy = true and matches_policy is not null";
+                $output->filters[] = " and policy_match = 'consistent' and policy_match is not null";
             } else {
-                $output->filters[] = " and matches_policy = false and matches_policy is not null";
+                $output->filters[] = " and policy_match = 'inconsistent' and policy_match is not null";
             }
         }
 
