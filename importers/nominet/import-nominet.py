@@ -182,7 +182,7 @@ def submit_api(domain):
     if suffixmap:
         # compare with suffixes by sort descending
         for suffix in sorted(suffixmap, key=len, reverse=True):
-            if domain.endswith(suffix):
+            if domain.endswith('.' + suffix):
                 tags.append(suffixmap[suffix])
                 break
 
