@@ -932,7 +932,9 @@ class ISPReportLoader {
 
 
         if (!is_null(@$filter['policy'])) {
-            if ($filter['policy']) {
+            if ($filter['policy']) == "unknown") {
+                $output->filters[] = " and policy_match = 'unknown' and policy_match is not null";
+            } elseif ($filter['policy']) {
                 $output->filters[] = " and policy_match = 'consistent' and policy_match is not null";
             } else {
                 $output->filters[] = " and policy_match = 'inconsistent' and policy_match is not null";
@@ -1004,7 +1006,7 @@ class ISPReportLoader {
         $proc = $this->process_filter($filter);
 
         if ($is_admin) {
-            $admin_fields = 'isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, matches_policy, ';
+            $admin_fields = 'isp_reports.email,contacts.verified,(select count(*) from isp_report_emails where report_id = isp_reports.id) reply_count, policy_match, ';
         } else {
             $admin_fields = '';
             $proc->filters[] = " and isp_reports.status not in ('cancelled','abuse')";

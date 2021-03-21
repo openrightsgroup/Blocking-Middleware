@@ -1167,7 +1167,11 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $filter['policy'] = $req->get('policy', null);
     if (!is_null($filter['policy'])) {
         // convert to bool
-        $filter['policy'] = in_array($filter['policy'], array("false", "False", "0", "f", 0)) ? false : true;
+        if ($filter['policy'] == "unknown") {
+            $filter['policy'] = "unknown";
+        } else {}
+            $filter['policy'] = in_array($filter['policy'], array("false", "False", "0", "f", 0)) ? false : true;
+        }
     }
     $filter['year'] = $req->get('year', null);
     $filter['report_type'] = $req->get('report_type');
