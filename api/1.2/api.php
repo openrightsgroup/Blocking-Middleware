@@ -1169,7 +1169,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
         // convert to bool
         if ($filter['policy'] == "unknown") {
             $filter['policy'] = "unknown";
-        } else {}
+        } else {
             $filter['policy'] = in_array($filter['policy'], array("false", "False", "0", "f", 0)) ? false : true;
         }
     }
