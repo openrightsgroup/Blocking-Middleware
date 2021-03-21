@@ -932,7 +932,7 @@ class ISPReportLoader {
 
 
         if (!is_null(@$filter['policy'])) {
-            if ($filter['policy']) == "unknown") {
+            if ($filter['policy'] == "unknown") {
                 $output->filters[] = " and policy_match = 'unknown' and policy_match is not null";
             } elseif ($filter['policy']) {
                 $output->filters[] = " and policy_match = 'consistent' and policy_match is not null";
