@@ -367,7 +367,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	$urltext = normalize_url($req->get('url'));
 
     if ($req->get('tags', null) && $is_admin) {
-        $tags = explode(':', $req->get('tags');
+        $tags = explode(':', $req->get('tags'));
     } else {
         $tags = array();
     }
