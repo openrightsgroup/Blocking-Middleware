@@ -1565,7 +1565,7 @@ CREATE TABLE jobs (
 );
 
 CREATE TABLE registry_suspensions (
-    id int not null primary key,
+    id serial not null primary key,
     urlid int not null,
     registry varchar not null,
     created timestamptz,
