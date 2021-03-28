@@ -1560,6 +1560,16 @@ CREATE TABLE jobs (
     message varchar
 );
 
+CREATE TABLE registry_suspensions (
+    id int not null primary key,
+    urlid int not null,
+    registry varchar not null,
+    created timestamptz,
+    lastseen timestamptz
+);
+
+CREATE UNIQUE INDEX ON registry_suspensions(urlid, registry);
+
 CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-decision');
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
