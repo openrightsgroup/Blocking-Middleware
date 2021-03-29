@@ -83,7 +83,8 @@ CREATE TYPE enum_user_status AS ENUM (
 
 CREATE TYPE enum_isp_type AS ENUM(
     'fixed',
-    'mobile'
+    'mobile',
+    'dns'
 );
 
 CREATE TYPE enum_isp_status AS ENUM(
@@ -793,8 +794,8 @@ CREATE SEQUENCE url_latest_status_id_seq
 
 CREATE TABLE url_latest_status (
     id integer DEFAULT nextval('url_latest_status_id_seq'::regclass) NOT NULL,
-    urlid integer,
-    network_name text,
+    urlid integer NOT NULL,
+    network_name text NOT NULL,
     status text,
     created timestamp with time zone,
     category character varying(64),
