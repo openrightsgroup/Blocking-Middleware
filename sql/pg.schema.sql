@@ -1574,6 +1574,8 @@ CREATE TABLE registry_suspensions (
 
 CREATE UNIQUE INDEX ON registry_suspensions(urlid, registry);
 
+CREATE VIEW registry_suspension_urls AS SELECT r.*, urls.url FROM registry_suspensions r INNER JOIN urls USING (urlid) ORDER BY r.created desc, urls.url;
+
 CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-decision');
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;

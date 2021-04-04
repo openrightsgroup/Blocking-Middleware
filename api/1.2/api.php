@@ -1661,7 +1661,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     $url = $app['db.url.load']->load(normalize_url($data['url']));
 
-    if (!(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
+    if (!(@count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
         // we are submittingt to ISPs, not feedback to ORG or BBFC
         if ($app['db.blacklist.load']->check($url['url'])) {
             debug_log("{$url['url']} is blacklisted; not submitting");
