@@ -13,7 +13,7 @@ function process_entry($parts) {
 
     // parts: url  registry  timestamp
 
-    $urlservice->insert($parts[0], "registry-suspension");
+    $urlservice->insert("http://" . $parts[0], "registry-suspension");
     $url = $urlservice->load($parts[0]);
 
     $conn->beginTransaction();
