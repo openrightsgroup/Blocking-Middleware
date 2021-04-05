@@ -31,5 +31,3 @@ GRANT SELECT ON url_primary_categories TO blockedadmin;
 GRANT select ON contacts to blockedadmin;
 GRANT select ON tags to blockedadmin;
 
-
-grant select on public.registry_suspension_urls to blockedadmin;
