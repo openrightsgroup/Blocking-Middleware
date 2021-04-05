@@ -1284,7 +1284,7 @@ CREATE INDEX url_tags on urls using gin(tags);
 --
 
 CREATE UNIQUE INDEX uls_url_network ON url_latest_status USING btree (urlid, network_name);
-
+CREATE INDEX ON url_latest_status(urlid) WHERE blocktype = 'SUSPENSION';
 
 --
 -- Name: url_status_changes_created; Type: INDEX; Schema: public; Owner: -; Tablespace: 
@@ -1564,17 +1564,6 @@ CREATE TABLE jobs (
     message varchar
 );
 
-CREATE TABLE registry_suspensions (
-    id serial not null primary key,
-    urlid int not null,
-    registry varchar not null,
-    created timestamptz,
-    lastseen timestamptz
-);
-
-CREATE UNIQUE INDEX ON registry_suspensions(urlid, registry);
-
-CREATE VIEW registry_suspension_urls AS SELECT r.*, urls.url FROM registry_suspensions r INNER JOIN urls USING (urlid) ORDER BY r.created desc, urls.url;
 
 CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-decision');
 
