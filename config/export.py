@@ -12,6 +12,14 @@ def get_parser():
     parser.add_argument('--release', '-r', type=int, default=1, help="Release counter")
     return parser
 
+def export_isp(isp):
+    cp = isp.copy()
+    # not using values because we want to maintain order
+    cp['match'] = [isp['match'][x] for x in sorted(isp['match'])]
+    if 'blocktype' in cp:
+        cp['blocktype'] = [isp['blocktype'][x] for x in sorted(isp['blocktype'])]
+    return cp
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -20,7 +28,7 @@ def main():
         srcdata = yaml.load(fp)
 
     output = {
-        'rules': srcdata['isps'],
+        'rules': [export_isp(isp) for isp in srcdata['isps']],
         }
     output.update(srcdata['info'])
     output['version'] = "{}{:02}".format(datetime.date.today().strftime('%Y%m%d'),

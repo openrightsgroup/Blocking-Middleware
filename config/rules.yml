@@ -1,53 +1,54 @@
 global:
-  - rules:
-      - &susp-rule re:body:This domain has been suspended on advice from the Police Intellectual
-    blocktypes:
-      - &susp-block SUSPENSION
+  - rules: &susp-rules
+      zgm0: re:body:This domain has been suspended on advice from the Police Intellectual
+    blocktypes: &susp-types
+      zgb0: SUSPENSION
 isps:
 - isp: T-Mobile
   match:
-  - re:url:^http://www\.t-mobile\.co\.uk/service/wnw-mig/entry/
-  - re:url:http://tmobile\.ee\.co\.uk/common/system_error_pages/outage_wnw\.html
-  - re:url:^http://ee-outage\.s3\.amazonaws.com/outage-v1/outage-v1\.html
-  - re:url:^http://ee-outage\.s3\.amazonaws\.com/content-blocked/content-blocked-v1\.html
+    m0: "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/"
+    m1: "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html"
+    m2: "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html"
+    m3: "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html"
+
 - isp: EE
   match:
-  - re:url:^http://www\.t-mobile\.co\.uk/service/wnw-mig/entry/
-  - re:url:http://tmobile\.ee\.co\.uk/common/system_error_pages/outage_wnw\.html
-  - re:url:^http://ee-outage\.s3\.amazonaws.com/outage-v1/outage-v1\.html
-  - re:url:^http://ee-outage\.s3\.amazonaws\.com/content-blocked/content-blocked-v1\.html
-  - re:url:^http://ee-outage\.s3\.amazonaws\.com/content-blocked/content-blocked-nobranding\.html
-  - re:url:^http://myaccount\.ee\.co\.uk/anonymous-content-lock
-  - re:url:^https://myaccount\.ee\.co\.uk/anonymous-content-lock
-  - re:url:^https://id\.ee\.co\.uk/id/login
+    m0: "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/"
+    m1: "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html"
+    m2: "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html"
+    m3: "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html"
+    m4: "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-nobranding\\.html"
+    m5: "re:url:^http://myaccount\\.ee\\.co\\.uk/anonymous-content-lock"
+    m6: "re:url:^https://myaccount\\.ee\\.co\\.uk/anonymous-content-lock"
+    m7: "re:url:^https://id\\.ee\\.co\\.uk/id/login"
+
 - isp: Vodafone
   match:
-  - re:url:^http://online\.vodafone\.co\.uk/dispatch/Portal/ContentControlServlet\?type=restricted
-  - re:url:^http://online\.vodafone\.co\.uk/en_GB/assets/static/contentcontrol/branded/restricted_access\.html
-  - re:url:^http://online\.vodafone\.co\.uk/en_GB/assets/static/contentcontrol/unbranded/restricted_access\.html
-  - re:url:^https?://www\.vodafone\.co\.uk/restricted-content/branded-agerestricted\.html?
-  - re:url:^https?://www\.vodafone\.co\.uk/restricted-content/branded-paym-agerestricted\.html
+    m1: "re:url:^http://online\\.vodafone\\.co\\.uk/dispatch/Portal/ContentControlServlet\\?type=restricted"
+    m2: "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/branded/restricted_access\\.html"
+    m3: "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/unbranded/restricted_access\\.html"
+    m4: "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-agerestricted\\.html?"
+    m5: "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-paym-agerestricted\\.html"
 
 - &bt
   blocktype:
-  - PARENTAL
-  - COPYRIGHT
-  - COPYRIGHT
-  - COPYRIGHT
-  - COPYRIGHT
-  - MALWARE
-  - *susp-block
+    b0: "PARENTAL"
+    b1: "COPYRIGHT"
+    b2: "COPYRIGHT"
+    b3: "COPYRIGHT"
+    b4: "COPYRIGHT"
+    b5: "MALWARE"
+    <<: *susp-types
   category: querystring:list
   isp: BT
   match:
-  - re:url:^http://blockpage\.bt\.com/pcstaticpage/blocked\.html
-  - re:url:^http://www\.ukispcourtorders\.co\.uk/
-  - re:body:^<p> Error \- site blocked </p>
-  - re:body:^<p>Access to the websites listed on this page has been blocked pursuant
-    to orders of the high court.
-  - re:body:^<p> Error .*? site blocked</p>
-  - re:body:title>BT Protect Intercept Page<
-  - *susp-rule
+    m0: "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
+    m1: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
+    m2: "re:body:^<p> Error - site blocked </p>"
+    m3: "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court."
+    m4: "re:body:^<p> Error .*? site blocked</p>"
+    m5: "re:body:title>BT Protect Intercept Page<"
+    <<: *susp-rules
 
 - isp: BT-Unfiltered
   <<: *bt
@@ -57,158 +58,169 @@ isps:
 
 - &talktalk
   blocktype:
-  - PARENTAL
-  - PARENTAL
-  - COPYRIGHT
-  - COPYRIGHT
-  - *susp-block
+    b0: "PARENTAL"
+    b1: "PARENTAL"
+    b2: "COPYRIGHT"
+    b3: "COPYRIGHT"
+    <<: *susp-rules
   category: querystring:urlclassname:base64
   isp: TalkTalk
   match:
-  - re:body:http://www\.talktalk\.co\.uk/notices/parental-controls.html\?originalURL=
-  - re:url:^http://www\.talktalk\.co\.uk/notice/parental-controls\?accessurl
-  - re:url:^http://www\.siteblocked\.org/.*\.html\?
-  - re:body:<h1>Access to this website has been blocked under an Order of the Higher
-    Court.</h1>
-  - *susp-rule
+    m0: "re:body:http://www\\.talktalk\\.co\\.uk/notices/parental-controls.html\\?originalURL="
+    m1: "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
+    m2: "re:url:^http://www\\.siteblocked\\.org/.*\\.html\\?"
+    m3: "re:body:<h1>Access to this website has been blocked under an Order of the Higher Court.</h1>"
+    <<: *susp-types
 
 - isp: TalkTalk-unfiltered
   <<: *talktalk
 
 - &plusnet
   blocktype:
-  - COPYRIGHT
-  - COPYRIGHT
-  - PARENTAL
-  - COPYRIGHT
-  - PARENTAL
-  - PARENTAL
+    b0: "COPYRIGHT"
+    b1: "COPYRIGHT"
+    b2: "PARENTAL"
+    b3: "COPYRIGHT"
+    b4: "PARENTAL"
+    b5: "PARENTAL"
   category: querystring:category
   isp: Plusnet
   match:
-  - re:url:^http://www\.ukispcourtorders\.co\.uk/
-  - re:body:More information can be found at www\.ukispcourtorders\.co\.uk
-  - re:url:^http://www\.plus\.net/support/security/abuse/blocked\.shtml
-  - re:body:^<p> Error .*? site blocked</p>
-  - re:url:^https://blocked\.plus\.net\?originalURL
-  - re:url:^https://blocked.plus.net/index/
+    m0: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
+    m1: "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk"
+    m2: "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml"
+    m3: "re:body:^<p> Error .*? site blocked</p>"
+    m4: "re:url:^https://blocked\\.plus\\.net\\?originalURL"
+    m5: "re:url:^https://blocked.plus.net/index/"
 
 - isp: Plusnet-unfiltered
   <<: *plusnet
 
 - isp: Three
   match:
-  - re:url:^http://mobile\.three\.co\.uk/pc/Live/pcreator/live/100004/pin/blocked
-  - re:url:^http://mobile\.three\.co\.uk/misc/pin/blocked
+    m0: "re:url:^http://mobile\\.three\\.co\\.uk/pc/Live/pcreator/live/100004/pin/blocked"
+    m1: "re:url:^http://mobile\\.three\\.co\\.uk/misc/pin/blocked"
+
 - isp: AAISP
   match: []
+
 - isp: VirginMobile
   match:
-  - re:url:http://m\.virginmedia\.com/MiscPages/AdultWarning\.aspx
+    m0: "re:url:http://m\\.virginmedia\\.com/MiscPages/AdultWarning\\.aspx"
+
 - blocktype:
-  - PARENTAL
-  - COPYRIGHT
+    b0: "PARENTAL"
+    b1: "COPYRIGHT"
   isp: O2
   match:
-  - re:url:http://assets\.o2\.co\.uk/18plusaccess/
-  - re:body:<span class="style12" style="color:#1B224E;"><br /><br />We're complying
-    with a court order that means access to this website has<br />to be blocked to
-    protect against copyright infringement\.
+    m0: "re:url:http://assets\\.o2\\.co\\.uk/18plusaccess/"
+    m1: "re:body:<span class=\"style12\" style=\"color:#1B224E;\"><br /><br />We're complying with a court order that means access to this website has<br />to be blocked to protect against copyright infringement\\."
 
 - &sky
   blocktype:
-  - COPYRIGHT
-  - PARENTAL
-  - COPYRIGHT
-  - PARENTAL
-  - PARENTAL
+    b0: "COPYRIGHT"
+    b1: "PARENTAL"
+    b2: "COPYRIGHT"
+    b3: "PARENTAL"
+    b4: "PARENTAL"
   category: querystring:categories
   isp: Sky
   match:
-  - re:body:We are required by Court order to prevent access to this site
-  - re:url:http://block\.nb\.sky\.com/\?
-  - re:url:http://blocked\.nb\.sky\.com/\?
-  - re:url:http://block\.cf\.sky\.com/\?
-  - re:url:http://block\.isp\.sky\.com/\?
+    m0: "re:body:We are required by Court order to prevent access to this site"
+    m1: "re:url:http://block\\.nb\\.sky\\.com/\\?"
+    m2: "re:url:http://blocked\\.nb\\.sky\\.com/\\?"
+    m3: "re:url:http://block\\.cf\\.sky\\.com/\\?"
+    m4: "re:url:http://block\\.isp\\.sky\\.com/\\?"
+
 - isp: Sky-unfiltered
   <<: *sky
 
 - &virginmedia
   blocktype:
-  - COPYRIGHT
-  - PARENTAL
-  - PARENTAL
-  - MALWARE
-  - *susp-block
+    b0: "COPYRIGHT"
+    b1: "PARENTAL"
+    b2: "PARENTAL"
+    b3: "MALWARE"
+    <<: *susp-rules
   isp: VirginMedia
   match:
-  - re:url:http://assets\.virginmedia\.com/site-blocked\.html
-  - re:url:http://assets\.virginmedia\.com/parental\.html
-  - re:url:http://websafe\.virginmedia\.com/childsafe-blocked.html
-  - re:url:http://websafe\.virginmedia\.com/virussafe-blocked.html
-  - *susp-rule
+    m0: "re:url:http://assets\\.virginmedia\\.com/site-blocked\\.html"
+    m1: "re:url:http://assets\\.virginmedia\\.com/parental\\.html"
+    m2: "re:url:http://websafe\\.virginmedia\\.com/childsafe-blocked.html"
+    m3: "re:url:http://websafe\\.virginmedia\\.com/virussafe-blocked.html"
+    <<: *susp-types
 
 - isp: VirginMedia-unfiltered
   <<: *virginmedia
 
 - isp: Uno
   match: []
+
 - isp: PROXAD
   match: []
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: Telekom-AT
   match:
-  - re:body:Aufgrund eines Sperrbegehrens nach &sect; 81 Abs 1 UrhG wurde diese Website
-    gesperrt.
+    m0: "re:body:Aufgrund eines Sperrbegehrens nach &sect; 81 Abs 1 UrhG wurde diese Website gesperrt."
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: UPC-AT
   match:
-  - re:url:^https://www\.upc\.at/snippets/kundeninfo/
+    m0: "re:url:^https://www\\.upc\\.at/snippets/kundeninfo/"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: XS4ALL
   match:
-  - re:url:^https://www.xs4all.nl/geblokkeerd/
+    m0: "re:url:^https://www.xs4all.nl/geblokkeerd/"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: UPC-NL
   match:
-  - re:url:^https://www\.ziggo\.nl/yarrr/
+    m0: "re:url:^https://www\\.ziggo\\.nl/yarrr/"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: Belgacom
   match:
-  - re:body:stop page because the website you are trying to visit offers content
+    m0: "re:body:stop page because the website you are trying to visit offers content"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: GET NO
   match:
-  - re:url:^http://blokkert\.get\.no
+    m0: "re:url:^http://blokkert\\.get\\.no"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: NextGenTel NO
   match:
-  - re:body:Oslo Tingrett har besluttet at NextGenTel skal hindre tilgang til det
-    nettstedet du
+    m0: "re:body:Oslo Tingrett har besluttet at NextGenTel skal hindre tilgang til det nettstedet du"
+
 - blocktype:
-  - MALWARE
-  - PARENTAL
+    b0: "MALWARE"
+    b1: "PARENTAL"
   isp: OpenDNS
   match:
-  - re:body:https://phish.opendns.com/\?url=
-  - re:body:https://block.opendns.com/\?url=
+    m0: "re:body:https://phish.opendns.com/\\?url="
+    m1: "re:body:https://block.opendns.com/\\?url="
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: NOS
   match:
-  - re:body:title>Bloqueado por ordem judicial</title
+    m0: "re:body:title>Bloqueado por ordem judicial</title"
+
 - blocktype:
-  - COPYRIGHT
+    b0: "COPYRIGHT"
   isp: Vodafone PT
   match:
-  - re:url:http://mobilegen.vodafone.pt/denied/dn
+    m0: "re:url:http://mobilegen.vodafone.pt/denied/dn"
+
 info:
   self-test:
     must-allow:
@@ -218,4 +230,4 @@ info:
     - http://www.pornhub.com
     - http://www.youporn.com
   version: '2021022601'
-  org-block-rules: 1.2.3
+  org-block-rules: 0.2.3
