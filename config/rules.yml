@@ -41,7 +41,8 @@ isps:
     b4: "COPYRIGHT"
     b5: "MALWARE"
     <<: *susp-types
-  category: querystring:list
+  category:
+    c0: querystring:list
   match:
     m0: "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
     m1: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
@@ -65,7 +66,8 @@ isps:
     b2: "COPYRIGHT"
     b3: "COPYRIGHT"
     <<: *susp-types
-  category: querystring:urlclassname:base64
+  category:
+    c0: querystring:urlclassname:base64
   match:
     m0: "re:body:http://www\\.talktalk\\.co\\.uk/notices/parental-controls.html\\?originalURL="
     m1: "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
@@ -86,7 +88,8 @@ isps:
     b4: "PARENTAL"
     b5: "PARENTAL"
     <<: *susp-types
-  category: querystring:category
+  category:
+    c0: querystring:category
   match:
     m0: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
     m1: "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk"
@@ -128,7 +131,8 @@ isps:
     b3: "PARENTAL"
     b4: "PARENTAL"
     <<: *susp-types
-  category: querystring:categories
+  category:
+    c0: querystring:categories
   match:
     m0: "re:body:We are required by Court order to prevent access to this site"
     m1: "re:url:http://block\\.nb\\.sky\\.com/\\?"

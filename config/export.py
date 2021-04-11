@@ -14,13 +14,24 @@ def get_parser():
     parser.add_argument('--release', '-r', type=int, default=1, help="Release counter")
     return parser
 
+
 def export_isp(isp):
     cp = isp.copy()
     # not using values because we want to maintain order
     cp['match'] = [isp['match'][x] for x in sorted(isp['match'])]
     if 'blocktype' in cp:
         cp['blocktype'] = [isp['blocktype'][x] for x in sorted(isp['blocktype'])]
+    if 'category' in cp:
+        if isinstance(cp['category'], list):
+            cp['categorizers'] = cp['category']
+            cp['category'] = cp['categorizers'][0]
+        if isinstance(cp['category'], dict):
+            names = list(cp['category'].keys())
+            names.sort()
+            cp['categorizers'] = [cp['category'][x] for x in names]
+            cp['category'] = cp['categorizers'][0]
     return cp
+
 
 def main():
     parser = get_parser()
