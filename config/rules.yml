@@ -31,6 +31,7 @@ isps:
     m5: "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-paym-agerestricted\\.html"
 
 - &bt
+  isp: BT
   blocktype:
     b0: "PARENTAL"
     b1: "COPYRIGHT"
@@ -40,7 +41,6 @@ isps:
     b5: "MALWARE"
     <<: *susp-types
   category: querystring:list
-  isp: BT
   match:
     m0: "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
     m1: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
@@ -57,6 +57,7 @@ isps:
   <<: *bt
 
 - &talktalk
+  isp: TalkTalk
   blocktype:
     b0: "PARENTAL"
     b1: "PARENTAL"
@@ -64,7 +65,6 @@ isps:
     b3: "COPYRIGHT"
     <<: *susp-types
   category: querystring:urlclassname:base64
-  isp: TalkTalk
   match:
     m0: "re:body:http://www\\.talktalk\\.co\\.uk/notices/parental-controls.html\\?originalURL="
     m1: "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
@@ -108,15 +108,16 @@ isps:
   match:
     m0: "re:url:http://m\\.virginmedia\\.com/MiscPages/AdultWarning\\.aspx"
 
-- blocktype:
+- isp: O2
+  blocktype:
     b0: "PARENTAL"
     b1: "COPYRIGHT"
-  isp: O2
   match:
     m0: "re:url:http://assets\\.o2\\.co\\.uk/18plusaccess/"
     m1: "re:body:<span class=\"style12\" style=\"color:#1B224E;\"><br /><br />We're complying with a court order that means access to this website has<br />to be blocked to protect against copyright infringement\\."
 
 - &sky
+  isp: Sky
   blocktype:
     b0: "COPYRIGHT"
     b1: "PARENTAL"
@@ -124,7 +125,6 @@ isps:
     b3: "PARENTAL"
     b4: "PARENTAL"
   category: querystring:categories
-  isp: Sky
   match:
     m0: "re:body:We are required by Court order to prevent access to this site"
     m1: "re:url:http://block\\.nb\\.sky\\.com/\\?"
@@ -165,59 +165,59 @@ isps:
   match:
     m0: "re:body:Aufgrund eines Sperrbegehrens nach &sect; 81 Abs 1 UrhG wurde diese Website gesperrt."
 
-- blocktype:
+- isp: UPC-AT
+  blocktype:
     b0: "COPYRIGHT"
-  isp: UPC-AT
   match:
     m0: "re:url:^https://www\\.upc\\.at/snippets/kundeninfo/"
 
-- blocktype:
+- isp: XS4ALL
+  blocktype:
     b0: "COPYRIGHT"
-  isp: XS4ALL
   match:
     m0: "re:url:^https://www.xs4all.nl/geblokkeerd/"
 
-- blocktype:
+- isp: UPC-NL
+  blocktype:
     b0: "COPYRIGHT"
-  isp: UPC-NL
   match:
     m0: "re:url:^https://www\\.ziggo\\.nl/yarrr/"
 
-- blocktype:
+- isp: Belgacom
+  blocktype:
     b0: "COPYRIGHT"
-  isp: Belgacom
   match:
     m0: "re:body:stop page because the website you are trying to visit offers content"
 
-- blocktype:
+- isp: GET NO
+  blocktype:
     b0: "COPYRIGHT"
-  isp: GET NO
   match:
     m0: "re:url:^http://blokkert\\.get\\.no"
 
-- blocktype:
+- isp: NextGenTel NO
+  blocktype:
     b0: "COPYRIGHT"
-  isp: NextGenTel NO
   match:
     m0: "re:body:Oslo Tingrett har besluttet at NextGenTel skal hindre tilgang til det nettstedet du"
 
-- blocktype:
+- isp: OpenDNS
+  blocktype:
     b0: "MALWARE"
     b1: "PARENTAL"
-  isp: OpenDNS
   match:
     m0: "re:body:https://phish.opendns.com/\\?url="
     m1: "re:body:https://block.opendns.com/\\?url="
 
-- blocktype:
+- isp: NOS
+  blocktype:
     b0: "COPYRIGHT"
-  isp: NOS
   match:
     m0: "re:body:title>Bloqueado por ordem judicial</title"
 
-- blocktype:
+- isp: Vodafone PT
+  blocktype:
     b0: "COPYRIGHT"
-  isp: Vodafone PT
   match:
     m0: "re:url:http://mobilegen.vodafone.pt/denied/dn"
 
