@@ -21,6 +21,7 @@ isps:
     m5: "re:url:^http://myaccount\\.ee\\.co\\.uk/anonymous-content-lock"
     m6: "re:url:^https://myaccount\\.ee\\.co\\.uk/anonymous-content-lock"
     m7: "re:url:^https://id\\.ee\\.co\\.uk/id/login"
+    m8: "re:url:^http://radio-myaccount\\.ee\\.co\\.uk/app/radio"
 
 - isp: Vodafone
   match:
@@ -84,6 +85,7 @@ isps:
     b3: "COPYRIGHT"
     b4: "PARENTAL"
     b5: "PARENTAL"
+    <<: *susp-types
   category: querystring:category
   match:
     m0: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
@@ -92,6 +94,7 @@ isps:
     m3: "re:body:^<p> Error .*? site blocked</p>"
     m4: "re:url:^https://blocked\\.plus\\.net\\?originalURL"
     m5: "re:url:^https://blocked.plus.net/index/"
+    <<: *susp-rules
 
 - isp: Plusnet-unfiltered
   <<: *plusnet
@@ -124,6 +127,7 @@ isps:
     b2: "COPYRIGHT"
     b3: "PARENTAL"
     b4: "PARENTAL"
+    <<: *susp-types
   category: querystring:categories
   match:
     m0: "re:body:We are required by Court order to prevent access to this site"
@@ -131,6 +135,7 @@ isps:
     m2: "re:url:http://blocked\\.nb\\.sky\\.com/\\?"
     m3: "re:url:http://block\\.cf\\.sky\\.com/\\?"
     m4: "re:url:http://block\\.isp\\.sky\\.com/\\?"
+    <<: *susp-rules
 
 - isp: Sky-unfiltered
   <<: *sky
@@ -229,5 +234,5 @@ info:
     must-block:
     - http://www.pornhub.com
     - http://www.youporn.com
-  version: '2021022601'
+  version: '2021031401'
   org-block-rules: 0.2.3
