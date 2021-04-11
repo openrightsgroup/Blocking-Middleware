@@ -44,7 +44,7 @@ isps:
   match:
     m0: "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
     m1: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
-    m2: "re:body:^<p> Error - site blocked </p>"
+    m2: "re:body:^<p> Error \\- site blocked </p>"
     m3: "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court."
     m4: "re:body:^<p> Error .*? site blocked</p>"
     m5: "re:body:title>BT Protect Intercept Page<"
@@ -62,7 +62,7 @@ isps:
     b1: "PARENTAL"
     b2: "COPYRIGHT"
     b3: "COPYRIGHT"
-    <<: *susp-rules
+    <<: *susp-types
   category: querystring:urlclassname:base64
   isp: TalkTalk
   match:
@@ -70,12 +70,13 @@ isps:
     m1: "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl"
     m2: "re:url:^http://www\\.siteblocked\\.org/.*\\.html\\?"
     m3: "re:body:<h1>Access to this website has been blocked under an Order of the Higher Court.</h1>"
-    <<: *susp-types
+    <<: *susp-rules
 
 - isp: TalkTalk-unfiltered
   <<: *talktalk
 
 - &plusnet
+  isp: Plusnet
   blocktype:
     b0: "COPYRIGHT"
     b1: "COPYRIGHT"
@@ -84,7 +85,6 @@ isps:
     b4: "PARENTAL"
     b5: "PARENTAL"
   category: querystring:category
-  isp: Plusnet
   match:
     m0: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
     m1: "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk"
@@ -102,7 +102,7 @@ isps:
     m1: "re:url:^http://mobile\\.three\\.co\\.uk/misc/pin/blocked"
 
 - isp: AAISP
-  match: []
+  match: {}
 
 - isp: VirginMobile
   match:
@@ -136,28 +136,28 @@ isps:
   <<: *sky
 
 - &virginmedia
+  isp: VirginMedia
   blocktype:
     b0: "COPYRIGHT"
     b1: "PARENTAL"
     b2: "PARENTAL"
     b3: "MALWARE"
-    <<: *susp-rules
-  isp: VirginMedia
+    <<: *susp-types
   match:
     m0: "re:url:http://assets\\.virginmedia\\.com/site-blocked\\.html"
     m1: "re:url:http://assets\\.virginmedia\\.com/parental\\.html"
     m2: "re:url:http://websafe\\.virginmedia\\.com/childsafe-blocked.html"
     m3: "re:url:http://websafe\\.virginmedia\\.com/virussafe-blocked.html"
-    <<: *susp-types
+    <<: *susp-rules
 
 - isp: VirginMedia-unfiltered
   <<: *virginmedia
 
 - isp: Uno
-  match: []
+  match: {}
 
 - isp: PROXAD
-  match: []
+  match: {}
 
 - blocktype:
     b0: "COPYRIGHT"

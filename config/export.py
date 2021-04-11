@@ -9,6 +9,8 @@ import argparse
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Export rules to json config")
+    parser.add_argument('source', default='rules.yml', help='Source YAML')
+    parser.add_argument('--date', default=datetime.date.today().strftime('%Y%m%d'), help="Datecode")
     parser.add_argument('--release', '-r', type=int, default=1, help="Release counter")
     return parser
 
@@ -24,14 +26,14 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    with open('rules.yml') as fp:
+    with open(args.source) as fp:
         srcdata = yaml.load(fp)
 
     output = {
         'rules': [export_isp(isp) for isp in srcdata['isps']],
         }
     output.update(srcdata['info'])
-    output['version'] = "{}{:02}".format(datetime.date.today().strftime('%Y%m%d'),
+    output['version'] = "{}{:02}".format(args.date,
                                          args.release)
 
     json.dump(output, sys.stdout, indent='  ')
