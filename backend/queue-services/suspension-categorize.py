@@ -19,9 +19,11 @@ class SuspensionCategorizer(QueueService):
 
     def setup_bindings(self):
         self.ch.queue_declare("suspensions", durable=True, auto_delete=False)
-        self.ch.queue_bind("category", "org.results", "results.*")
+        self.ch.queue_bind("suspensions", "org.results", "results.*")
+        self.session = requests.session()
 
-    def get_category(self, content):
+
+def get_category(self, content):
         for (name, pattern) in self.PATTERNS.items():
             if re.search(pattern, content, re.S|re.M):
                 return name
