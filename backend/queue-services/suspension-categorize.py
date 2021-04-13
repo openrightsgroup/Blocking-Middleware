@@ -47,17 +47,10 @@ class SuspensionCategorizer(QueueService):
         c.execute("update url_latest_status "
                   "set category=%s "
                   "where urlid = (select urlid from urls where url = %s) "
-                  "  and blocktype = 'SUSPENSION' "
-                  "returning result_id as result_id ",
+                  "  and blocktype = 'SUSPENSION' ",
                   [category, data['url']])
         count += c.rowcount
-        c2 = self.conn.cursor()
-        for row in c:
-            count += 1
-            c2.execute("update results set category=%s where id=%s", [category, row[0]])
-
-        logging.info("Updated %s uls/results", count)
-        c2.close()
+        logging.info("Updated %s uls", count)
         c.close()
         self.conn.commit()
         return True
