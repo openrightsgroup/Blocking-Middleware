@@ -13,7 +13,7 @@ class SuspensionCategorizer(QueueService):
     QUEUE_NAME = 'suspensions'
     PATTERNS = {
         'MHRA': r'This domain has been suspended on advice from the Medicines and Healthcare products Regulatory Agency \(MHRA\)\.',
-        'FCA': r'This domain has been suspended on request from the Financial Conduct Authority \(FCA\)\. ',
+        'FCA': r'This domain has been suspended on request from the Financial Conduct Authority \(FCA\)\.',
         'PIPCU': r'This domain has been suspended on advice from the Police Intellectual.*Property Crime Unit \(PIPCU\)\.'
     }
 
