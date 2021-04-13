@@ -30,7 +30,7 @@ class SuspensionCategorizer(QueueService):
 
 
     def process_message(self, data):
-        if data.get('block_type') != 'SUSPENSION':
+        if data.get('blocktype') != 'SUSPENSION':
             return True
 
         logging.info("Got result for %s", data['url'])
