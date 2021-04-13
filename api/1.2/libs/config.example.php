@@ -42,7 +42,7 @@ define('REDIS', 'localhost:6379');
 
 define('DEBUG_LOG', false);
 
-define('CONFIG_LATEST', '2021022601');
+define('CONFIG_LATEST', '2021041301');
 
 $ELASTIC = "http://localhost:9200";
 

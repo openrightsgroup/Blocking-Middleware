@@ -6,6 +6,8 @@ import json
 import datetime
 import argparse
 
+ENABLE_CATEGORY_LIST = False
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Export rules to json config")
@@ -30,6 +32,8 @@ def export_isp(isp):
             names.sort()
             cp['categorizers'] = [cp['category'][x] for x in names]
             cp['category'] = cp['categorizers'][0]
+        if not ENABLE_CATEGORY_LIST:
+            del cp['categorizers']
     return cp
 
 

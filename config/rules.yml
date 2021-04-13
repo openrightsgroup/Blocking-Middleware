@@ -1,6 +1,6 @@
 global:
   - rules: &susp-rules
-      zgm0: re:body:This domain has been suspended on advice from the Police Intellectual
+      zgm0: re:body:This domain has been suspended on (request|advice) from the
     blocktypes: &susp-types
       zgb0: SUSPENSION
 isps:
