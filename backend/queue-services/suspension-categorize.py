@@ -37,6 +37,9 @@ class SuspensionCategorizer(QueueService):
 
         req = self.session.get(data['url'])
         category = self.get_category(req.content)
+        logging.info("Got category: %s", category)
+        if not category:
+            return True
 
         count = 0
 
