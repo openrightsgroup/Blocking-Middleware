@@ -1565,6 +1565,16 @@ CREATE TABLE jobs (
 );
 
 
+CREATE TABLE url_hierarchy (
+    id serial primary key not null,
+    urlid int not null,
+    parent_urlid int not null,
+    created timestamptz not null
+);
+
+alter table url_hierarchy add foreign key (urlid) references urls(urlid);
+alter table url_hierarchy add foreign key (parent_urlid) references urls(urlid);
+
 CREATE VIEW isp_reports_sent AS SELECT * from isp_reports where status in ('sent','unblocked','rejected', 'no-decision');
 
 CREATE VIEW url_primary_categories AS select url_categories.* from url_categories where primary_category = true;
@@ -1588,6 +1598,12 @@ BEGIN
 	RETURN QUERY select * from urls where url in ('http://'||p1, 'https://'||p1, 'http://www.'||p1, 'https://www.'||p1);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE FUNCTION url_root(p1 varchar) returns varchar AS $$
+BEGIN
+    return replace(replace(replace(p1, 'http://', ''), 'https://', ''), 'www.', '');
+END;
+$$ language plpgsql;
 
 CREATE OR REPLACE FUNCTION add_tag(p_tags varchar[], p_newtag varchar) RETURNS varchar[] AS $$
 BEGIN
