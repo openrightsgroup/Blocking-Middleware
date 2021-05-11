@@ -293,6 +293,28 @@ class UrlLoader {
 
         return $out;
     }
+
+
+    function get_preferred_domain_url($url) {
+        $urlobj = $this->load(preferred_domain_url($url['url']));
+
+        return $urlobj;
+    }
+
+    function update_url_hierarchy($url) {
+        $preferred = $this->get_preferred_domain_url($url);
+        if (!$preferred) {
+            return false;
+        }
+        $q = $this->conn->query("update url_hierarchy set parent_urlid = ? where urlid = ?",
+                                array($preferred['urlid'], $url['urlid']));
+        if ($q->rowCount() == 0) {
+            $q = $this->conn->query("insert into url_hierarchy (urlid, parent_urlid, created) values (?, ?, now())",
+                                    array($url['urlid'], $preferred['urlid']));
+        }
+        return true;
+    }
+
 }
 
 
