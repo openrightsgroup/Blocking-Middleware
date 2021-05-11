@@ -131,6 +131,8 @@ class UrlLoader {
         );
         /* returns true/false for whether a row was really inserted. */
 
+        $this->update_url_hierarchy($url);
+
         if ($result->rowCount()) {
             return true;
         } else {
@@ -142,7 +144,6 @@ class UrlLoader {
             }
             return false;
         }
-
     }
 
 	function loadByID($urlid) {
