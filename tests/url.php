@@ -45,6 +45,7 @@ function compare2($input, $expect) {
 
 compare2("https://www.reddit.com", "http://reddit.com");
 compare2("http://www.reddit.com", "http://reddit.com");
+compare2("http://ww2.reddit.com", "http://reddit.com");
 compare2("https://reddit.com", "http://reddit.com");
 compare2("http://reddit.com", "http://reddit.com");
 compare2("HTTPS://WWW.REDDIT.COM", "http://reddit.com");

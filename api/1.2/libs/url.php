@@ -83,6 +83,16 @@ function categorize_url($url) {
 
 function preferred_domain_url($url) {
     $url = preg_replace("!^https://!i", "http://", $url);
-    $url = preg_replace("!^http://www\.!i", "http://", $url);
+
+    $caturl = $url;
+    while (categorize_url($caturl) != 'DOMAIN' && !is_null(categorize_url($caturl))) {
+        // try removing first subdomain
+        $caturl = preg_replace('!://[^\.]+\.!', '://', $caturl);
+    }
+
+    // make sure transformation was successful
+    if (categorize_url($caturl) == 'DOMAIN') {
+        $url = $caturl;
+    }
     return normalize_url($url);
 }
