@@ -31,6 +31,26 @@ compare("HTTP://WWW.REDDIT.COM", "http://www.reddit.com");
 compare("HTTP://WWW.REDDIT.COM/R/NSFW", "http://www.reddit.com/R/NSFW");
 compare("HTTPS://WWW.REDDIT.COM/R/NSFW", "https://www.reddit.com/R/NSFW");
 
+function compare2($input, $expect) {
+    global $FAIL;
+
+    $output = preferred_domain_url($input);
+    if ($output != $expect) {
+        $FAIL = 1;
+        print "FAIL: $input => $output ($expect)\n";
+    } else {
+        print "  OK: $input => $output ($expect)\n";
+    }
+}
+
+compare2("https://www.reddit.com", "http://reddit.com");
+compare2("http://www.reddit.com", "http://reddit.com");
+compare2("https://reddit.com", "http://reddit.com");
+compare2("http://reddit.com", "http://reddit.com");
+compare2("HTTPS://WWW.REDDIT.COM", "http://reddit.com");
+compare2("http://reddit.com", "http://reddit.com");
+
 if ($FAIL) {
     exit(1);
 }
+

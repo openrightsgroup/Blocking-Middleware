@@ -80,3 +80,9 @@ function categorize_url($url) {
     }
     return null; // unknown
 }
+
+function preferred_domain_url($url) {
+    $url = preg_replace("!^https://!i", "http://", $url);
+    $url = preg_replace("!^http://www\.!i", "http://", $url);
+    return normalize_url($url);
+}
