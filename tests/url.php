@@ -51,6 +51,28 @@ compare2("http://reddit.com", "http://reddit.com");
 compare2("HTTPS://WWW.REDDIT.COM", "http://reddit.com");
 compare2("http://reddit.com", "http://reddit.com");
 
+function compare3($input, $expect) {
+    global $FAIL;
+    $output = categorize_url($input);
+    if ($output != $expect) {
+        $FAIL = 1;
+    }
+    if ($output != $expect) {
+        print "FAIL: $input => $output ($expect)\n";
+    } else {
+        print "  OK: $input => $output ($expect)\n";
+    }
+}
+
+compare3('http://www.tld.com', 'SUBDOMAIN');
+compare3('http://ww2.tld.com', 'SUBDOMAIN');
+compare3('http://www.tld.co.uk', 'SUBDOMAIN');
+compare3('http://ww2.tld.co.uk', 'SUBDOMAIN');
+compare3('http://tld.co.uk', 'DOMAIN');
+compare3('http://arthur.uk.com', 'SUBDOMAIN');
+compare3('http://arthur.test', 'DOMAIN');
+compare3('http://www.arthur.test', 'SUBDOMAIN');
+
 if ($FAIL) {
     exit(1);
 }
