@@ -298,7 +298,7 @@ class UrlLoader {
     function get_preferred_domain_url($url) {
         try {
             $urlobj = $this->load(preferred_domain_url($url['url']));
-        } catch (UrlLookupError as $e)
+        } catch (UrlLookupError $e)
             return null;
         }
 
