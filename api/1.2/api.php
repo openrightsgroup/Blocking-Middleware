@@ -377,6 +377,8 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 	# Because of the unique index (and the insert ignore) we have to query
 	# to get the ID, instead of just using insert_id
 	$url = $app['db.url.load']->load($urltext);
+	$app['db.url.load']->update_url_hierarchy($url);
+
 
 	# always record the request, even if we didn't queue it
     $args = array(
