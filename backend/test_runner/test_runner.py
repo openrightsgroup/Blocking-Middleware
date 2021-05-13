@@ -82,11 +82,11 @@ class Test(DBObject):
         self.store()
         
     def update_last_check(self):
-        self['last_check'] = datetime.datetime.now()
+        self['last_check'] = datetime.datetime.utcnow()
         self.store()
         
     def update_last_run(self):
-        self['last_run'] = datetime.datetime.now()
+        self['last_run'] = datetime.datetime.utcnow()
         self.store()        
 
     def update_total(self):
@@ -98,7 +98,7 @@ class Test(DBObject):
         
     def set_status(self, newstatus, message=None):
         if newstatus == 'RUNNING' and self['status'] == 'NEW':
-            self['last_run'] = datetime.datetime.now()
+            self['last_run'] = datetime.datetime.utcnow()
         self['status'] = newstatus
         if message is not None:
             self['status_message'] = message
