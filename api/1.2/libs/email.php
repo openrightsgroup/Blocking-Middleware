@@ -36,6 +36,13 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     return true;
 }
 
+function sendISPReminder($row, $renderer) {
+    $msg = new PHPMailer();
+
+
+
+}
+
 function sendBBFCReport($mailname, $name, $email, $network, $original_network, $url, $message, $additional_contact, $renderer) {
     
     #    <option value="" selected="selected">- Select -</option>
