@@ -1,0 +1,33 @@
+
+Blocked.org.uk previously sent a request for {{url|raw}} to be reviewed and unblocked.   Blocked has not received a
+reply to the enquiry or detected a change in the site's status.
+
+Please can you review {{url|raw}} and reply at your earliest convenience.  A copy of the enquiry is provided below.
+
+----
+
+Website blocking enquiry from {{reporter_name|raw}}, regarding the website at
+{{url|raw}}.
+
+The above website has been incorrectly blocked by your filters.
+
+{{message|raw}}
+
+Please could you look into this and let me know why this website was blocked
+and if the block will be lifted?
+
+Thanks, 
+
+{{reporter_name|raw}}
+
+{% if network['name'] == 'VirginMedia' %}
+Please reply directly to the user at this email address to ensure that they receive your response. Do not combine responses as they will be sent to the wrong person.
+
+{% endif %}
+You can view details including when the block was detected and which other ISPs appear to be blocking the site at: https://www.blocked.org.uk/site/{{url|raw}}
+
+This email was sent from https://www.blocked.org.uk — the user making the report may not be a customer of your ISP.
+You can learn more about how blocked reports are generated at https://www.blocked.org.uk/isps 
+
+Please note that responses are recorded and may be republished on https://www.blocked.org.uk.  
+
