@@ -17,7 +17,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     $msg->isHTML(false);
     $msg->CharSet = 'utf-8';
     $msg->Body = $renderer->render(
-        'report_email.txt',
+        'report_reminder.txt',
         array(
             'reporter_email' => $email,
             'reporter_name' => $name,
@@ -34,6 +34,45 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
         return false;
     }
     return true;
+}
+
+function sendISPReminder($row, $network, $url, $renderer) {
+    $msg = new PHPMailer();
+
+    if (FEATURE_EMAIL_TRACKING) {
+        $msg->setFrom($row['mailname'] . '@' . MAIL_DOMAIN, $row['name'] . ' via Blocked.org.uk');
+        $msg->Sender = $row['mailname'].'@'.MAIL_DOMAIN;
+    } else {
+        $msg->AddReplyTo($row['email'], $row['name']);
+        $msg->setFrom(SITE_EMAIL, $row['name'] . ' via Blocked.org.uk');
+        $msg->Sender = SITE_EMAIL;
+    }
+    $msg->addBCC(SITE_EMAIL);
+    $msg->addAddress($network['admin_email'], $network['admin_name']);
+    $msg->Subject = "Reminder: Website blocking enquiry - " . $url['url'];
+    #$msg->addCustomHeader("Auto-Submitted", "auto-generated");
+    $msg->isHTML(false);
+    $msg->CharSet = 'utf-8';
+    $msg->Body = $renderer->render(
+        'report_reminder.txt',
+        array(
+            'reporter_email' => $row['email'],
+            'reporter_name' => $row['name'],
+            'date' => $row['created'],
+            'url' => $url['url'],
+            'message' => $row['message'],
+            'network' => $network,
+            'report_type' => explode(",", $row['report_type']),
+            'category' => $row['site_category']
+        )
+    );
+
+    if(!$msg->send()) {
+        error_log("Unable to send message: " . $msg->ErrorInfo);
+        return false;
+    }
+    return true;
+
 }
 
 function sendBBFCReport($mailname, $name, $email, $network, $original_network, $url, $message, $additional_contact, $renderer) {

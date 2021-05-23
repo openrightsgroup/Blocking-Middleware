@@ -448,7 +448,9 @@ CREATE TABLE isp_reports (
     user_type varchar[],
     resolved_userid int null,
 
-    policy_match enum_policy_match null
+    policy_match enum_policy_match null,
+    last_reminder timestamptz null default null,
+    reminder_count int default 0
 );
 
 
