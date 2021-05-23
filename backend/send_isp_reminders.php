@@ -37,6 +37,7 @@ $q = $conn->query("select isp_reports.*, admin_name, admin_email
     inner join isps on network_name = isps.name
     inner join contacts on contact_id = contacts.id
     where status = 'sent' and isp_reports.created < now() - interval '14 days'
+    and isp_reports.created > now() - interval '6 months'
     and contacts.verified = 1
     and (last_reminder is null or last_reminder < now() - interval '30 days')",array());
     
