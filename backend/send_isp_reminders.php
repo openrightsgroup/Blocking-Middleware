@@ -36,9 +36,9 @@ $q = $conn->query("select isp_reports.*, admin_name, admin_email
     from isp_reports
     inner join isps on network_name = isps.name
     inner join contacts on contact_id = contacts.id
-    where status = 'SENT' and created < now() - interval ('14 days')
-    and contact.verified = 1
-    and (last_reminder is null or last_reminder < now() - interval('30 days'))",array());
+    where status = 'sent' and isp_reports.created < now() - interval '14 days'
+    and contacts.verified = 1
+    and (last_reminder is null or last_reminder < now() - interval '30 days')",array());
     
 foreach ($q as $row) {    
     print "Sending reminder for {$row['network_name']} : {$row['admin_email']} {$row['urlid']}\n";
@@ -48,12 +48,13 @@ foreach ($q as $row) {
     }
 
     $network = $isploader->load($row['network_name']);
-    $url = $urlloader->load($row['urlid']);
+    $url = $urlloader->loadByID($row['urlid']);
 
     sendIspReminder($row, $network, $url, $renderer);
 
-    $q2 = $conn->query("update isp_reports set reminder_count=reminder_count+1, last_reminder = now() where id = ?", $row['id']);
-    $conn->commit();
+    $q2 = $conn->query("update isp_reports set reminder_count=reminder_count+1, last_reminder = now() where id = ?",
+        array($row['id']));
+    #$conn->commit();
 }
 
 

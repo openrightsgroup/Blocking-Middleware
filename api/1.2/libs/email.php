@@ -49,12 +49,12 @@ function sendISPReminder($row, $network, $url, $renderer) {
     }
     $msg->addBCC(SITE_EMAIL);
     $msg->addAddress($network['admin_email'], $network['admin_name']);
-    $msg->Subject = "Reminder: Website blocking enquiry - " . $url;
+    $msg->Subject = "Reminder: Website blocking enquiry - " . $url['url'];
     #$msg->addCustomHeader("Auto-Submitted", "auto-generated");
     $msg->isHTML(false);
     $msg->CharSet = 'utf-8';
     $msg->Body = $renderer->render(
-        'report_email.txt',
+        'report_reminder.txt',
         array(
             'reporter_email' => $row['email'],
             'reporter_name' => $row['name'],

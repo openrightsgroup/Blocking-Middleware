@@ -449,7 +449,7 @@ CREATE TABLE isp_reports (
     resolved_userid int null,
 
     policy_match enum_policy_match null,
-    last_reminded timestamptz null default null,
+    last_reminder timestamptz null default null,
     reminder_count int default 0
 );
 
