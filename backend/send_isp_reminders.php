@@ -55,7 +55,7 @@ foreach ($q as $row) {
 
     $network = $isploader->load($row['network_name']);
 
-    sendIspReminder($row, $network, $url, $renderer);
+    sendISPReminder($row, $network, $url, $renderer);
 
     $q2 = $conn->query("update isp_reports set reminder_count=reminder_count+1, last_reminder = now() where id = ?",
         array($row['id']));
