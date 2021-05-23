@@ -32,7 +32,7 @@ if (isset($opts['h'])) {
 
 /* send ISP reminder reminder 1 after 1 day */
 
-$q = $conn->query("select isp_reports.*, admin_name, admin_email, urls.url
+$q = $conn->query("select isp_reports.*, admin_name, admin_email
     from isp_reports
     inner join isps on network_name = isps.name
     inner join contacts on contact_id = contacts.id
