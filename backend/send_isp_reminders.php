@@ -40,7 +40,8 @@ $q = $conn->query("select isp_reports.*, admin_name, admin_email
     and isp_reports.created > now() - interval '6 months'
     and network_name not in ('OpenDNS', 'Cloudflare family', 'Plusnet')
     and contacts.verified = 1
-    and (last_reminder is null or last_reminder < now() - interval '30 days')",array());
+    and (last_reminder is null or last_reminder < now() - interval '30 days')
+    limit 5",array());
     
 foreach ($q as $row) {    
     print "Sending reminder for {$row['network_name']} : {$row['admin_email']} {$row['urlid']}\n";
