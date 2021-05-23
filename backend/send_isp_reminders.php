@@ -40,6 +40,7 @@ $q = $conn->query("select isp_reports.*, admin_name, admin_email
     and isp_reports.created > now() - interval '6 months'
     and network_name not in ('OpenDNS', 'Cloudflare family', 'Plusnet')
     and contacts.verified = 1
+    and isp_reports.policy_match = 'inconsistent'
     and isp_reports.unblocked = 0
     and (last_reminder is null or last_reminder < now() - interval '30 days')
     limit 5",array());
