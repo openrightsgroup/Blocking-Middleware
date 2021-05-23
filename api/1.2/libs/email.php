@@ -17,7 +17,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
     $msg->isHTML(false);
     $msg->CharSet = 'utf-8';
     $msg->Body = $renderer->render(
-        'report_reminder.txt',
+        'report_email.txt',
         array(
             'reporter_email' => $email,
             'reporter_name' => $name,
