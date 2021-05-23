@@ -32,7 +32,7 @@ if (isset($opts['h'])) {
 
 /* send ISP reminder reminder 1 after 1 day */
 
-$q = $conn->query("select isp_reports.*, admin_name, admin_email
+$q = $conn->query("select isp_reports.*, admin_name, admin_email, urls.url
     from isp_reports
     inner join isps on network_name = isps.name
     inner join contacts on contact_id = contacts.id
@@ -45,14 +45,14 @@ $q = $conn->query("select isp_reports.*, admin_name, admin_email
     limit 5",array());
     
 foreach ($q as $row) {    
-    print "Sending reminder for {$row['network_name']} : {$row['admin_email']} {$row['urlid']}\n";
+    $url = $urlloader->loadByID($row['urlid']);
+    print "Sending reminder for {$row['network_name']} : {$row['admin_email']} {$url['url']}\n";
 
     if (isset($opts['n'])) {
         continue;
     }
 
     $network = $isploader->load($row['network_name']);
-    $url = $urlloader->loadByID($row['urlid']);
 
     sendIspReminder($row, $network, $url, $renderer);
 
