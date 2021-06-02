@@ -82,16 +82,26 @@ function categorize_url($url) {
 }
 
 function preferred_domain_url($url) {
-    $url = preg_replace("!^https://!i", "http://", $url);
+    $parts = parse_url($url);
 
-    $caturl = $url;
-    while (categorize_url($caturl) != 'DOMAIN' && !is_null(categorize_url($caturl))) {
-        // try removing first subdomain
-        $caturl = preg_replace('!://[^\.]+\.!', '://', $caturl);
-    }
+    $caturl = $parts['host'];
+    do {
+        $cat = categorize_url($parts['scheme'] . '://' . $caturl);
+        if (is_null($cat)) {
+            break;
+        }
+        if ($cat == 'DOMAIN') {
+            break;
+        }
+        $domparts = explode('.', $caturl, 2);
+        if (count($domparts) < 2) {
+            break;
+        }
+        $caturl = $domparts[1];
+    } while ($cat == 'SUBDOMAIN');
 
     // make sure transformation was successful
-    if (categorize_url($caturl) == 'DOMAIN') {
+    if ($cat == 'DOMAIN') {
         $url = $caturl;
     }
     return normalize_url($url);
