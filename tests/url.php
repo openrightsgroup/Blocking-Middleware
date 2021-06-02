@@ -73,6 +73,25 @@ compare3('http://arthur.uk.com', 'SUBDOMAIN');
 compare3('http://arthur.test', 'DOMAIN');
 compare3('http://www.arthur.test', 'SUBDOMAIN');
 
+function compare4($input, $expect) {
+    global $FAIL;
+
+    $output = preferred_domain_url($input);
+    if ($output != $expect) {
+        $FAIL = 1;
+    }
+    if ($output != $expect) {
+        print "FAIL: $input => $output ($expect)\n";
+    } else {
+        print "  OK: $input => $output ($expect)\n";
+    }
+}
+
+compare4("http://www.reddit.com", "http://reddit.com");
+compare4("https://www.reddit.com", "http://reddit.com");
+compare4("https://WWW.REDDIT.COM", "http://reddit.com");
+compare4("http://www.bbc.co.uk/news", "http://bbc.co.uk");
+
 if ($FAIL) {
     exit(1);
 }
