@@ -318,6 +318,15 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.DEBUG if args.debug else
+                              logging.INFO if args.verbose else logging.WARN,
+                        format="%(asctime)s\t%(levelname)s\t%(message)s",
+                        datefmt="[%Y-%m-%d %H:%M:%S]")
+    logging.info("Args: %s", args)
+
+    cfg = configparser.RawConfigParser()
+    cfg.read([args.config])
+
     if args.amqp:
         import amqplib.client_0_8 as amqp
 
@@ -333,15 +342,6 @@ def main():
         submit_func = submit_amqp
     else:
         submit_func = submit_api
-
-    logging.basicConfig(level=logging.DEBUG if args.debug else
-                              logging.INFO if args.verbose else logging.WARN,
-                        format="%(asctime)s\t%(levelname)s\t%(message)s",
-                        datefmt="[%Y-%m-%d %H:%M:%S]")
-    logging.info("Args: %s", args)
-
-    cfg = configparser.RawConfigParser()
-    cfg.read([args.config])
 
     if args.mode == 'fetch':
         fetch()
