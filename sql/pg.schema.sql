@@ -99,7 +99,8 @@ CREATE TYPE enum_isp_status AS ENUM(
 CREATE TYPE enum_policy_match as ENUM (
     'consistent',
     'inconsistent',
-    'unknown'
+    'unknown',
+    'no_longer_match'
 );
 
 --
