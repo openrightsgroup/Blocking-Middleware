@@ -14,6 +14,11 @@ import requests
 import psycopg2
 import paramiko
 
+try:
+    import amqplib.client_0_8 as amqp
+except ImportError:
+    pass
+
 cfg = None
 args = None
 
@@ -142,7 +147,7 @@ def resolve_iter(it):
 
 def getdate():
     if args.date:
-        dt = datetime.date.strptime(args.date, '%Y-%m-%d')
+        dt = datetime.datetime.strptime(args.date, '%Y-%m-%d').date()
     else:
         dt = datetime.date.today()
     return dt - datetime.timedelta(1, 0)
@@ -328,8 +333,6 @@ def main():
     cfg.read([args.config])
 
     if args.amqp:
-        import amqplib.client_0_8 as amqp
-
         amqpopts = dict(cfg.items('amqp'))
         amqpconn = amqp.Connection(
             host = amqpopts['host'],
