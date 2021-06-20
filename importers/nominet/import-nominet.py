@@ -24,6 +24,7 @@ def get_parser():
     parser.add_argument('--verbose', '-v', action='store_true', default=False, help="Verbose mode")
     parser.add_argument('--no-submit', '-N', action='store_true', default=False, help="Do not submit to API")
     parser.add_argument('--debug', action='store_true', default=False, help="Verbose mode")
+    parser.add_argument('--amqp', action='store_true', default=False, help="Submit through AMQP")
 
     parsers = parser.add_subparsers(dest='mode', help="Select mode")
 
@@ -164,15 +165,8 @@ def update_submitted(conn, recid, urlid=None):
     c2.execute("update domains set submitted = now(), urlid=%s where id = %s", [urlid, recid])
     conn.commit()
 
-
-def submit_api(domain):
-    opts = dict(cfg.items('api'))
+def get_submission_tags(domain):
     suffixmap = dict(cfg.items('suffixmap'))
-
-    data = {'url': 'http://'+domain,
-            'queue': cfg.get('submission', 'queue'),
-            'source': cfg.get('submission', 'source'),
-            }
 
     if cfg.has_option('submission', 'tags'):
         tags = cfg.get('submission', 'tags').split(':')
@@ -186,7 +180,17 @@ def submit_api(domain):
                 tags.append(suffixmap[suffix])
                 break
 
-    data['tags'] = ":".join(tags)
+    return tags
+
+def submit_api(domain):
+    opts = dict(cfg.items('api'))
+
+    data = {'url': 'http://'+domain,
+            'queue': cfg.get('submission', 'queue'),
+            'source': cfg.get('submission', 'source'),
+            }
+
+    data['tags'] = ":".join(get_submission_tags(domain))
 
     if args.no_submit:
         logging.info("Dummy mode: data=%s", data)
@@ -197,6 +201,24 @@ def submit_api(domain):
                             )
         logging.debug("API post result: %s; %s; %s", domain, req.status_code, req.json())
         return req.json().get('urlid')
+
+def submit_amqp(domain):
+    opts = dict(cfg.items('amqp'))
+
+    data = {
+        'url': 'http://'+domain,
+        'source': cfg.get('submission', 'source'),
+        'tags': ":".join(get_submission_tags(domain))
+    }
+
+    if args.no_submit:
+        logging.info("Dummy mode: data=%s", data)
+    else:
+        msg = amqp.Message(json.dumps(data))
+        ch.basic_publish(msg, opts['exchange'], opts['key'])
+        logging.info("Sent AMQP: data=%s", data)
+
+
 
 def relink_prev(filename):
     tmpname, _ = os.path.splitext(filename)
@@ -252,7 +274,7 @@ def fetch():
         recid = dbstore(conn, resolvedname or name, resolvedname is not None)
         logging.info("Got: %s %s", name, resolvedname)
         if resolvedname:
-            urlid = submit_api(resolvedname)
+            urlid = submit_func(resolvedname)
             update_submitted(conn, recid, urlid)
             if args.debug:
                 break
@@ -279,22 +301,40 @@ def resubmit():
         if args.no_submit:
             logging.debug("No submit")
         else:
-            urlid = submit_api(row[0])
+            urlid = submit_func(row[0])
             update_submitted(conn, recid, urlid)
 
 
 def main():
     global args
     global cfg
+    global ch
+    global submit_func
+
     parser = get_parser()
     args = parser.parse_args()
+
+    if args.amqp:
+        import amqplib.client_0_8 as amqp
+
+        amqpopts = dict(cfg.items('amqp'))
+        amqpconn = amqp.Connection(
+            host = amqpopts['host'],
+            userid = amqpopts['user'],
+            password = amqpopts['password'],
+            virtual_host = amqpopts['vhost']
+        )
+        ch = amqpconn.channel()
+
+        submit_func = submit_amqp
+    else:
+        submit_func = submit_api
 
     logging.basicConfig(level=logging.DEBUG if args.debug else
                               logging.INFO if args.verbose else logging.WARN,
                         format="%(asctime)s\t%(levelname)s\t%(message)s",
                         datefmt="[%Y-%m-%d %H:%M:%S]")
     logging.info("Args: %s", args)
-    logging.debug("foo")
 
     cfg = configparser.RawConfigParser()
     cfg.read([args.config])
