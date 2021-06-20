@@ -188,9 +188,8 @@ def submit_api(domain):
     data = {'url': 'http://'+domain,
             'queue': cfg.get('submission', 'queue'),
             'source': cfg.get('submission', 'source'),
+            'tags': ":".join(get_submission_tags(domain))
             }
-
-    data['tags'] = ":".join(get_submission_tags(domain))
 
     if args.no_submit:
         logging.info("Dummy mode: data=%s", data)
