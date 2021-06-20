@@ -29,6 +29,7 @@ def get_parser():
     parsers = parser.add_subparsers(dest='mode', help="Select mode")
 
     subp = parsers.add_parser('fetch')
+    subp.add_argument('--date', '-d', default=None, help="Source date")
     subp.add_argument('--no-submit', '-N', action='store_true', default=False, help="Do not submit to API")
     subp.add_argument('--keep', '-K', action='store_true', default=False, help="Keep old downloaded files")
 
@@ -140,7 +141,11 @@ def resolve_iter(it):
 
 
 def getdate():
-    return datetime.date.today() - datetime.timedelta(1, 0)
+    if args.date:
+        dt = datetime.date.strptime(args.date, '%Y-%m-%d')
+    else:
+        dt = datetime.date.today()
+    return dt - datetime.timedelta(1, 0)
 
 
 def dbstore(conn, name, resolved):
