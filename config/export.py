@@ -51,7 +51,7 @@ def main():
     output['version'] = "{}{:02}".format(args.date,
                                          args.release)
 
-    json.dump(output, sys.stdout, indent='  ')
+    json.dump(output, sys.stdout, indent=2)
 
 if __name__ == '__main__':
     main()
