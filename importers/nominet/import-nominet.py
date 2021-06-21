@@ -176,6 +176,7 @@ def update_submitted(conn, recid, urlid=None):
     c2.execute("update domains set submitted = now(), urlid=%s where id = %s", [urlid, recid])
     conn.commit()
 
+
 def get_submission_tags(domain):
     suffixmap = dict(cfg.items('suffixmap'))
 
@@ -193,10 +194,11 @@ def get_submission_tags(domain):
 
     return tags
 
+
 def submit_api(domain):
     opts = dict(cfg.items('api'))
 
-    data = {'url': 'http://'+domain,
+    data = {'url': 'http://' + domain,
             'queue': cfg.get('submission', 'queue'),
             'source': cfg.get('submission', 'source'),
             'tags': ":".join(get_submission_tags(domain))
@@ -212,13 +214,14 @@ def submit_api(domain):
         logging.debug("API post result: %s; %s; %s", domain, req.status_code, req.json())
         return req.json().get('urlid')
 
+
 def submit_amqp(domain):
     opts = dict(cfg.items('amqp'))
 
     data = {
         'url': 'http://'+domain,
         'source': cfg.get('submission', 'source'),
-        'tags': ":".join(get_submission_tags(domain))
+        'tags': list(get_submission_tags(domain))
     }
 
     if args.no_submit:
@@ -227,7 +230,6 @@ def submit_amqp(domain):
         msg = amqp.Message(json.dumps(data))
         ch.basic_publish(msg, opts['exchange'], opts['key'])
         logging.info("Sent AMQP: data=%s", data)
-
 
 
 def relink_prev(filename):

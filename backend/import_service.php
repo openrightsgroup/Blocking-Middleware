@@ -97,7 +97,13 @@ function process_import($msg, $queue) {
         }
     }
 
-    $isnew = $loader->insert($url, $data['source'], $data['tags']);
+    if (is_string($data['tags'])) {
+        $tags = explode(':', $data['tags']);
+    } else {
+        $tags = $data['tags'];
+    }
+
+    $isnew = $loader->insert($url, $data['source'], $tags);
     if ($isnew) {
         dbg("Inserted: $url");
     } else {
