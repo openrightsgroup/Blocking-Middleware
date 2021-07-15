@@ -1182,37 +1182,26 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $page = $req->get('page', 0);
     $is_admin = ($user['administrator'] == 1 && $req->get('admin') == 1) ? 1 : 0;
 
-    $count          = $app['db.ispreport.load']->count_reports('unblock', $filter, $is_admin);
-    $open_count     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'open')), $is_admin);
-    $review_count   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'reviewed')), $is_admin);
-    $feature_count  = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'featured')), $is_admin);
-    $cancel_count   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'cancelled')), $is_admin);
-    $harmless_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'harmless')), $is_admin);
-    $resubmit_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'resubmit')), $is_admin);
+    $output = array();
+    $output['count']          = $app['db.ispreport.load']->count_reports('unblock', $filter, $is_admin);
+    $output['open_count']     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'open')), $is_admin);
+    $output['review_count']   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'reviewed')), $is_admin);
+    $output['feature_count']  = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'featured')), $is_admin);
+    $output['cancel_count']   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'cancelled')), $is_admin);
+    $output['harmless_count'] = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'harmless')), $is_admin);
+    $output['resubmit_count'] = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'resubmit')), $is_admin);
     
-    $accepted_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'accepted')), $is_admin);
-    $not_accepted_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'not_accepted')), $is_admin);
-    $rejected_count = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'rejected')), $is_admin);
+    $output['accepted_count']     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'accepted')), $is_admin);
+    $output['not_accepted_count'] = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'not_accepted')), $is_admin);
+    $output['rejected_count']     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'rejected')), $is_admin);
 
     $reports = $app['db.ispreport.load']->get_reports('unblock', $filter, $page,  $is_admin);
 
-    $output = array();
     $output['success'] = true;
     $output['reports'] = $reports;
     if ($filter['network']) {
         $output['isp'] = $filter['network'];
     }
-    $output['count'] = $count;
-    $output['open_count'] = $open_count;
-    $output['review_count'] = $review_count;
-    $output['feature_count'] = $feature_count;
-    $output['cancel_count'] = $cancel_count;
-    $output['harmless_count'] = $harmless_count;
-    $output['resubmit_count'] = $resubmit_count;
-    
-    $output['accepted_count'] = $accepted_count;
-    $output['not_accepted_count'] = $not_accepted_count;
-    $output['rejected_count'] = $rejected_count;
 
     return $app->json($output);
 });
