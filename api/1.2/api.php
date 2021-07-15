@@ -1161,6 +1161,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $filter['reportercategory'] = $req->get('reportercategory', null);
     $filter['list'] = $req->get('list',null);
     $filter['user'] = $req->get('user',null);
+    $filter['age'] = $req->get('age', null);
     $filter['url_status'] = $req->get('url_status',null);
     $filter['order'] = $req->get('order', 'desc');
     if (!in_array($filter['order'], array('asc','desc'))) {

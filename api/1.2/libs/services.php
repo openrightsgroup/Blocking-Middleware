@@ -950,6 +950,10 @@ class ISPReportLoader {
             break;
         };
 
+        if (!is_null(@$filter['age'] && is_numeric($filter['age'])) {
+            $output->filters[] = " and isp_reports.created < current_timestamp - interval '{$filter['age']} days'";
+        }
+
         if (!is_null(@$filter['url_status'])) {
             /* blocked = 0, unblocked = 1 */
             $output->filters[] = " and isp_reports.unblocked = ?";
