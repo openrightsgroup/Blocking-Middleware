@@ -950,7 +950,7 @@ class ISPReportLoader {
             break;
         };
 
-        if (!is_null(@$filter['age'] && is_numeric($filter['age'])) {
+        if (!is_null(@$filter['age']) && is_numeric($filter['age'])) {
             $output->filters[] = " and isp_reports.created < current_timestamp - interval '{$filter['age']} days'";
         }
 
