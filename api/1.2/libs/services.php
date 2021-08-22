@@ -1175,6 +1175,24 @@ class AMQPQueueService {
             array('priority'=>2)
         );
     }
+
+    function submitted_url($urltext) {
+        $msgbody = json_encode(array(
+            'url'=>$urltext,
+            'hash'=>md5($urltext)
+        ));
+
+        $target_queue = 'submitted.' . md5($urltext);
+
+        $ch = $this->amqp;
+        $ex = new AMQPExchange($ch);
+        $ex->setName('org.blocked');
+        $ex->publish(
+            $msgbody, $target_queue, AMQP_NOPARAM,
+            array('priority'=>2)
+        );
+
+    }
 }
 
 

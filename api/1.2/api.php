@@ -1667,6 +1667,12 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         false
         );
 
+    try {
+        $app['service.queue']->submitted_url($url['url']);
+    } catch (Exception $exc) {
+        error_log("Error posting submission to queue: " . $exc);
+    }
+
     if (!isset($data['networks']) || count($data['networks']) == 0) {
         $data['networks'] = $app['db.ispreport.load']->get_unreported($url['urlid']);
         debug_log("Unreported: " . implode(",", $data['networks']));
