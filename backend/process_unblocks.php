@@ -53,8 +53,8 @@ $q = $conn->query("
 # when all mobile ISPs are unblocked==1, set the BBFC report unblocked=1
 
 foreach($q as $row) {
-    echo "Updating BBFC report: " . $row['id'] . "\n";
     if ($row['count'] == $row['sum']) {
+        echo "Updating BBFC report: " . $row['id'] . "\n";
         $conn->query("update isp_reports set unblocked = 1, last_updated=now() where id = ?", array($row['id']));
     }
 }
