@@ -55,7 +55,7 @@ $q = $conn->query("
 foreach($q as $row) {
     echo "Updating BBFC report: " . $row['id'] . "\n";
     if ($row['count'] == $row['sum']) {
-        $conn->query("update isp_reports set unblocked = 1, last_updated=now() where id = %s", array($row['id']));
+        $conn->query("update isp_reports set unblocked = 1, last_updated=now() where id = ?", array($row['id']));
     }
 }
 
