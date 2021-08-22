@@ -9,6 +9,11 @@ include_once __DIR__ . "/../api/1.2/libs/services.php";
 
 include_once __DIR__ . "/silex/vendor/autoload.php";
 
+/*****************
+ * Inspect the previous day's results, and update the "unblocked" column of any
+ * ISP_reports for that url/network
+ *
+ *****************/
 
 $conn = db_connect();
 $elastic = new ElasticService($ELASTIC);
@@ -27,6 +32,31 @@ foreach($q as $row) {
         array($row['created'], $row['id'])
         );
     $elastic->delete($row['urlid']);
+}
+
+/*****************
+ * update unblocked status on BBFC reports
+ *
+ *****************/
+
+$q = $conn->query("
+    select isp_reports.id, isp_reports.urlid, count(*), sum(r2.unblocked)
+    from isp_reports
+    inner join isp_reports r2 on r2.urlid = isp_reports.urlid
+    inner join isps on isps.name = r2.network_name
+    where isp_reports.network_name = 'BBFC'
+        and isp_reports.unblocked = 0
+        and isps.isp_type = 'mobile'
+    group by isp_reports.id, isp_reports.urlid
+    ");
+
+# when all mobile ISPs are unblocked==1, set the BBFC report unblocked=1
+
+foreach($q as $row) {
+    echo "Updating BBFC report: " . $row['id'] . "\n";
+    if ($row['count'] == $row['sum']) {
+        $conn->query("update isp_reports set unblocked = 1, last_updated=now() where id = %s", array($row['id']));
+    }
 }
 
 
