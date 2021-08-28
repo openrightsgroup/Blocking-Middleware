@@ -506,6 +506,8 @@ CREATE SEQUENCE public.urls_id_seq
     CACHE 1;
 
 
+SET default_tablespace = '';
+
 SET default_with_oids = false;
 
 --
@@ -546,71 +548,6 @@ $$;
 
 
 --
--- Name: isps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.isps_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: isps; Type: TABLE; Schema: public; Owner: -; Tablespace: ssd
---
-
-CREATE TABLE public.isps (
-    id smallint DEFAULT nextval('public.isps_id_seq'::regclass) NOT NULL,
-    name character varying(64),
-    description text,
-    queue_name text,
-    created timestamp with time zone,
-    show_results integer,
-    admin_email text,
-    admin_name text,
-    filter_level character varying(20) DEFAULT 'default'::character varying,
-    isp_type public.enum_isp_type,
-    isp_status public.enum_isp_status,
-    regions character varying[]
-);
-
-
---
--- Name: url_latest_status_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.url_latest_status_id_seq
-    START WITH 50510239
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-SET default_tablespace = '';
-
---
--- Name: url_latest_status; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE public.url_latest_status (
-    id integer DEFAULT nextval('public.url_latest_status_id_seq'::regclass) NOT NULL,
-    urlid integer NOT NULL,
-    network_name text NOT NULL,
-    status text,
-    created timestamp with time zone,
-    category character varying(64),
-    blocktype character varying(16),
-    first_blocked timestamp with time zone,
-    last_blocked timestamp with time zone,
-    result_id integer,
-    isp_id smallint NOT NULL
-);
-
-
---
 -- Name: adm_check_recirc; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -621,7 +558,7 @@ CREATE VIEW public.adm_check_recirc AS
     urls.source,
     urls.tags
    FROM public.urls
-  WHERE (((urls.lastpolled < (now() - '7 days'::interval)) AND ((urls.source)::text <> ALL ((ARRAY['social'::character varying, 'dmoz'::character varying, 'uk-zone'::character varying, 'org-uk-zone'::character varying, 'me-uk-zone'::character varying, 'dot-uk-zone'::character varying, 'dotorg'::character varying])::text[]))) AND (urls.status = 'ok'::public.enum_url_status))
+  WHERE (((urls.lastpolled < (now() - '7 days'::interval)) AND ((urls.source)::text <> ALL (ARRAY[('social'::character varying)::text, ('dmoz'::character varying)::text, ('uk-zone'::character varying)::text, ('org-uk-zone'::character varying)::text, ('me-uk-zone'::character varying)::text, ('dot-uk-zone'::character varying)::text, ('dotorg'::character varying)::text]))) AND (urls.status = 'ok'::public.enum_url_status))
   ORDER BY urls.lastpolled
  LIMIT 10;
 
@@ -1107,8 +1044,6 @@ CREATE VIEW public.isp_reports_sent_old AS
     isp_reports.allow_contact,
     isp_reports.mailname,
     isp_reports.resolved_email_id,
-    isp_reports.category_notes_x_del,
-    isp_reports.review_notes_x_del,
     isp_reports.x_matches_policy AS matches_policy,
     isp_reports.egregious_block,
     isp_reports.featured_block,
@@ -1133,6 +1068,38 @@ CREATE TABLE public.isp_stats_cache (
     dnsfail integer DEFAULT 0 NOT NULL,
     last_updated timestamp with time zone,
     total integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: isps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.isps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: isps; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE public.isps (
+    id smallint DEFAULT nextval('public.isps_id_seq'::regclass) NOT NULL,
+    name character varying(64),
+    description text,
+    queue_name text,
+    created timestamp with time zone,
+    show_results integer,
+    admin_email text,
+    admin_name text,
+    filter_level character varying(20) DEFAULT 'default'::character varying,
+    isp_type public.enum_isp_type,
+    isp_status public.enum_isp_status,
+    regions character varying[]
 );
 
 
@@ -1586,6 +1553,37 @@ CREATE TABLE public.tags (
     name character varying(64),
     description text,
     type character varying(32)
+);
+
+
+--
+-- Name: url_latest_status_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.url_latest_status_id_seq
+    START WITH 50510239
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: url_latest_status; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE public.url_latest_status (
+    id integer DEFAULT nextval('public.url_latest_status_id_seq'::regclass) NOT NULL,
+    urlid integer NOT NULL,
+    network_name text NOT NULL,
+    status text,
+    created timestamp with time zone,
+    category character varying(64),
+    blocktype character varying(16),
+    first_blocked timestamp with time zone,
+    last_blocked timestamp with time zone,
+    result_id integer,
+    isp_id smallint NOT NULL
 );
 
 
@@ -2125,14 +2123,6 @@ ALTER TABLE ONLY public.cache_block_count
 
 
 --
--- Name: cat_tmp_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY public.cat_tmp
-    ADD CONSTRAINT cat_tmp_pkey PRIMARY KEY (id);
-
-
---
 -- Name: categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -2269,7 +2259,7 @@ ALTER TABLE ONLY public.isp_stats_cache
 
 
 --
--- Name: isps_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: ssd
+-- Name: isps_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY public.isps
@@ -2397,7 +2387,7 @@ ALTER TABLE ONLY public.tags
 
 
 --
--- Name: uls_url_ispid; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: ssd
+-- Name: uls_url_ispid; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY public.url_latest_status
@@ -2453,7 +2443,7 @@ ALTER TABLE ONLY public.url_subscriptions
 
 
 --
--- Name: urls_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: ssd
+-- Name: urls_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY public.urls
@@ -2512,7 +2502,7 @@ CREATE INDEX isp_aliases_ispid ON public.isp_aliases USING btree (ispid);
 
 
 --
--- Name: isp_name; Type: INDEX; Schema: public; Owner: -; Tablespace: ssd
+-- Name: isp_name; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX isp_name ON public.isps USING btree (name);
@@ -2631,14 +2621,14 @@ CREATE INDEX url_status_changes_new_urlid_idx ON public.url_status_changes USING
 
 
 --
--- Name: url_tags; Type: INDEX; Schema: public; Owner: -; Tablespace: ssd
+-- Name: url_tags; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX url_tags ON public.urls USING gin (tags);
 
 
 --
--- Name: urls_url; Type: INDEX; Schema: public; Owner: -; Tablespace: ssd
+-- Name: urls_url; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX urls_url ON public.urls USING btree (url);
