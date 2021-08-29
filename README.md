@@ -1,48 +1,49 @@
-Blocked.org.uk Middleware
-=========================
+# Blocked.org.uk Middleware
 
 [API Specification](https://wiki.openrightsgroup.org/wiki/Censorship_Monitoring_Project_API)
 
 [Database Specification](https://wiki.openrightsgroup.org/wiki/Censorship_Monitoring_Project_DB)
 
-Using the Vagrant VM Image
---------------------------
+## Using the docker development seutp
 
-Download and install:
+To start a development instance, install docker and docker-compose and run:
 
-* [Oracle Virtualbox](https://www.virtualbox.org/wiki/Downloads)
-* [Vagrant](https://www.vagrantup.com/downloads.html)
+```
+docker-compose --profile dev up
+```
+(requires docker-compose v1.29)
 
-Obtain a git checkout of the Blocking Middleware repository, then run:
+This will start containers for:
+* The main API (on localhost:8080)
+* Postgres database
+* RabbitMQ messaging
+* System daemons:
+  * results recorder
+  * whois checker
+  * category importer
+  * metadata gatherer
+  * robots.txt checker
+* Example web client (on localhost:8081)
 
-    cd /path/to/Blocking-Middleware
-    vagrant up
+You can use the example web client by visiting http://localhost:8081/example-client/
 
-This will set up and run the VM image. The initial download of the compressed filesystem image can take a few minutes (size: 500MB)
+The postgres database is loaded with the main schema, as well as some example data to get started.
 
-The resulting VM contains a webserver configured to service requests by running the PHP pages from your checkout.  A MySQL database and RabbitMQ instance will be created and configured in the VM when it is first booted.
 
-You should then be able to execute API commands against your local running instance by
-using the base URL [http://localhost:8080/1.2/](http://localhost:8080/1.2/)
-
-The example client directory is accessible through the URL [http://localhost:8080/example-client/](http://localhost:8080/example-client/).
-
-Get involved!
--------------
+## Get involved!
 
 We welcome new contributors especially - we hope you find getting involved both easy and fun. All you need to get started is a github account.
 
 Please see our [issues repository](https://github.com/openrightsgroup/cmp-issues) for details on how to join in.
 
-Credits
--------
+## Credits
+
 We reused the following software components to make this:
 
 - @ircmaxell's [password compatibility library](https://github.com/ircmaxell/password_compat) (MIT license).
 - The [Symfony2](https://github.com/symfony/symfony) PHP web development framework (MIT license).
 - The [Silex](https://github.com/silexphp/Silex) PHP micro-framework to develop websites based on Symfony2 components (MIT license).
 - The [PostgreSQL](https://www.postgresql.org) database (PostgreSQL license).
-- The [Vagrant](https://github.com/mitchellh/vagrant) tool for building and distributing development environments (MIT license).
 - [php-amqp](http://pecl.php.net/package/amqp) from pecl (PHP license).
 - [RabbitMQ](https://www.rabbitmq.com) (Mozilla Public License 1.1)
 

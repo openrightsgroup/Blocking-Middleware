@@ -1,0 +1,131 @@
+---
+version: "3.9"
+services:
+  db:
+    build:
+      context: ./sql
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_USER=blocked
+      - POSTGRES_PASSWORD=blocked
+  amqp:
+    image: rabbitmq:3
+    environment:
+      - RABBITMQ_DEFAULT_USER=blocked
+      - RABBITMQ_DEFAULT_PASS=blocked
+  api:
+    build:
+      args:
+        deployment: production
+      context: .
+      dockerfile: Dockerfile
+    command: -S 0.0.0.0:8080
+    ports:
+      - 8080:8080
+    links:
+      - db
+      - amqp
+    profiles:
+      - prod
+    #volumes:
+    #  - ./api/1.2:/var/www/api/1.2
+    #  - ./backend:/var/www/backend
+    #  - ./config:/var/www/config
+  api_dev:
+    build:
+      args:
+        deployment: development
+      context: .
+      dockerfile: Dockerfile
+    command: -S 0.0.0.0:8080
+    profiles:
+      - dev
+    ports:
+      - 8080:8080
+    links:
+      - db
+      - amqp
+    volumes:
+      - ./api/1.2:/var/www/api/1.2
+      - ./backend:/var/www/backend
+      - ./config:/var/www/config
+      - ./tests:/var/www/tests
+  record:
+    build:
+      args:
+        deployment: development
+      context: .
+      dockerfile: Dockerfile
+    command: php ../backend/record_results.php --create
+    links:
+      - db
+      - amqp
+  example:
+    build:
+      args:
+        deployment: development
+      context: example-client
+      dockerfile: Dockerfile
+    command: -S 0.0.0.0:8081
+    profiles:
+      - dev
+    ports:
+      - 8081:8081
+    links:
+      - "api_dev:api"
+    volumes:
+      - ./example-client:/var/www/example-client
+  fakeprobe:
+    build:
+      context: backend/fakeprobe
+      dockerfile: Dockerfile
+    links:
+      - amqp
+    profiles:
+      - dev
+  checker:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python checker.py
+    links:
+      - db
+      - amqp
+    depends_on:
+      - record
+  metadata:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python metadata-gather.py
+    links:
+      - db
+      - amqp
+    depends_on:
+      - record
+  whois:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python whois-lookup.py
+    links:
+      - db
+      - amqp
+    depends_on:
+      - record
+  category:
+    build:
+      context: backend/queue-services
+      dockerfile: Dockerfile
+    command: python categoryimporter.py
+    links:
+      - db
+      - amqp
+    depends_on:
+      - record
+
+
+
+
+
+

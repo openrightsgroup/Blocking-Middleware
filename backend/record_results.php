@@ -7,8 +7,9 @@ include_once __DIR__ . "/../api/1.2/libs/amqp.php";
 include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
+include_once __DIR__ . "/../api/1.2/libs/queue.php";
 
-$opts = getopt('v', array('exchange:','queue:','no-verify','debug'));
+$opts = getopt('v', array('exchange:','queue:','no-verify','debug','create'));
 
 
 function opt($name, $default=null) {
@@ -23,7 +24,13 @@ function flag($flag) {
     return isset($opts[$flag]);
 }
 
-$ch = amqp_connect();
+list($amqp, $ch) = amqp_connect_full();
+$conn = db_connect();
+
+if (flag('create')) {
+    $qmgr = new QueueManager($conn, $amqp, $ch);
+    $qmgr->setup();
+}
 
 $ex = new AMQPExchange($ch);
 $ex->setName(opt('exchange', 'org.results'));

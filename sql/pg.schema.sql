@@ -1710,6 +1710,7 @@ CREATE TABLE public.url_status_changes (
     network_name character varying(64) NOT NULL,
     old_status character varying(16),
     new_status character varying(16),
+    old_result_id int null,
     created timestamp with time zone,
     notified smallint DEFAULT 0 NOT NULL
 );
