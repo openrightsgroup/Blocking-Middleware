@@ -464,25 +464,24 @@ class IpLookupService {
 	}
 
     function normalize_ipv6($ip) {
-        // normalize address to full 128 bits, returned as array of chars
+        // normalize address to shorter network prefix
         $words = explode(':', $ip);
+
+        // find empty segment denoting '::'
+        $dblpos = array_search("", $words);
+        if ($dblpos !== false) {
+            // eliminate run of zeros and everthing after
+            $words = array_slice($words, 0, $dblpos);
+        }
+
         foreach ($words as &$w) {
-            if ($w == "") {
-                continue;
-            }
-            elseif (strlen($w) < 4) {
+            // pad each segment with leading zeros
+            if (strlen($w) < 4) {
                 $w = str_pad($w, 4, "0", STR_PAD_LEFT);
             }
         }
-        if (count($words) < 8) {
-            $i = array_search("", $words);
-            $keep = array_slice($words, 0, $i);
-            $keepend = array_slice($words, $i+1);
-            $add = array_fill(0, 7-$i, "0000");
-            $words = array_merge($keep, $add, $keepend);
-        }
 
-        # flatten to single list
+        # flatten to single string
         $ipstr = join("", $words);
         return $ipstr;
     }
