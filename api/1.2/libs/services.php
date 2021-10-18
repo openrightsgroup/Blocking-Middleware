@@ -463,6 +463,32 @@ class IpLookupService {
 		debug_log("Cache write complete");
 	}
 
+    function normalize_ipv6($ip) {
+        // normalize address to full 128 bits, returned as array of chars
+        $words = explode(':', $ip);
+        foreach ($words as &$w) {
+            if ($w == "") {
+                continue;
+            }
+            elseif (strlen($w) < 4) {
+                $w = str_pad($w, 4, "0", STR_PAD_LEFT);
+            }
+        }
+        if (count($words) < 8) {
+            $i = array_search("", $words);
+            $keep = array_slice($words, 0, $i);
+            $keepend = array_slice($words, $i+1);
+            $add = array_fill(0, 7-$i, "0000");
+            $words = array_merge($keep, $add, $keepend);
+        }
+
+        # flatten to single list
+        $ipstr = join("", $words);
+        return $ipstr;
+    }
+
+
+
 	function lookup($ip) {
 		# run a DNS query for the IP address
 
@@ -474,32 +500,40 @@ class IpLookupService {
 				# ipv4 address
 
 				$parts = array_reverse(explode(".", $ip));
-				$hostname = implode(".", $parts) . '.origin.asn.cymru.com';
-				debug_log("Hostname: $hostname");
+                $lookupdomain = '.origin.asn.cymru.com';
+            }
+            if (strpos($ip, ":") !== false) {
+                // ipv6 address
 
-				$record = dns_get_record($hostname, DNS_TXT);
-				if (!$record) {
-					throw new IpLookupError();
-				}
-				debug_log("TXT: " .  $record[0]['txt']);
-				list($as, $junk) = explode(' ', $record[0]['txt'], 2);
+                $parts = array_reverse(str_split($this->normalize_ipv6($ip)));
+                $lookupdomain = '.origin6.asn.cymru.com';
+            }
 
-				debug_log("AS: $as");
+            $hostname = implode(".", $parts) . $lookupdomain;
+            debug_log("Hostname: $hostname");
 
-				$ashost = "AS{$as}.asn.cymru.com";
-				$record2 = dns_get_record($ashost, DNS_TXT);
-				if (!$record) {
-					throw new IpLookupError();
-				}
+            $record = dns_get_record($hostname, DNS_TXT);
+            if (!$record) {
+                throw new IpLookupError();
+            }
+            debug_log("TXT: " .  $record[0]['txt']);
+            list($as, $junk) = explode(' ', $record[0]['txt'], 2);
 
-				debug_log("TXT: " .  $record2[0]['txt']);
-				if (!preg_match('/ \| (\- )?([^\|]*?)$/', $record2[0]['txt'], $matches)) {
-					throw new IpLookupError();
-				}
-				$descr = $matches[2];
-				debug_log("Descr: $descr");
+            debug_log("AS: $as");
 
-			}
+            $ashost = "AS{$as}.asn.cymru.com";
+            $record2 = dns_get_record($ashost, DNS_TXT);
+            if (!$record) {
+                throw new IpLookupError();
+            }
+
+            debug_log("TXT: " .  $record2[0]['txt']);
+            if (!preg_match('/ \| (\- )?([^\|]*?)$/', $record2[0]['txt'], $matches)) {
+                throw new IpLookupError();
+            }
+            $descr = $matches[2];
+            debug_log("Descr: $descr");
+
 
 			if (!$descr) {
 				throw new IpLookupError();
