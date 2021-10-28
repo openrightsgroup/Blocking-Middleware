@@ -50,6 +50,11 @@ foreach($q as $result) {
         $network = $isploader->load($row['network_name']);
         $url = $urlloader->loadByID($row['urlid']);
 
+        if ($urlloader->has_hold_category($row['urlid'])) {
+            $reportloader->set_status($result['report_id'], 'hold', $result['created']);
+            continue;
+        }
+
         $res = sendISPReport(
             $row['mailname'],
             $row['name'],

@@ -49,15 +49,15 @@ Results for <?php echo $_GET['url'] ?>
 
 <form action="example-isp-report.php" method="POST">
 <div>
-Website URL: <input type="hidden" name="url" value="<?=$_GET['url']?>" />
-<?=$_GET['url']?>
+Website URL: <input type="hidden" name="url" value="<?php echo $_GET['url']?>" />
+<?php echo $_GET['url']?>
 </div>
 
 <div><h3>Report to networks</h3>
-<?foreach ($networks as $network):?>
-<div><input type="checkbox" checked name="network[]" value="<?=$network[1]?>" /><?=$network[0]?>
+<?php foreach ($networks as $network):?>
+<div><input type="checkbox" checked name="network[]" value="<?php echo $network[1]?>" /><?php echo $network[0]?>
 </div>
-<?endforeach?>
+<?php endforeach?>
 </div>
 
 <h3>Your information</h3>
@@ -70,10 +70,10 @@ Website URL: <input type="hidden" name="url" value="<?=$_GET['url']?>" />
 
 <div>I am:
 <div><input type="checkbox" name="user" />
-A user of of <?=$_GET['url']?>
+A user of of <?php echo $_GET['url']?>
 </div>
 <div><input type="checkbox" name="owner" />
-The owner/operator of <?=$_GET['url']?>
+The owner/operator of <?php echo $_GET['url']?>
 </div>
 </div>
 
@@ -90,7 +90,7 @@ The owner/operator of <?=$_GET['url']?>
 </body>
 </html>
 
-<? } else {
+<?php } else {
 
 // Post methods
 
@@ -144,4 +144,3 @@ The owner/operator of <?=$_GET['url']?>
 
 }
 
-?>
