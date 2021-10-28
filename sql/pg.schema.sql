@@ -97,6 +97,7 @@ CREATE TYPE public.enum_probe_status AS ENUM (
 CREATE TYPE public.enum_report_status AS ENUM (
     'new',
     'pending',
+    'hold',
     'sent',
     'abuse',
     'cancelled',
@@ -611,6 +612,7 @@ CREATE TABLE public.categories (
     tree public.ltree,
     name text,
     name_fts tsvector,
+    hold bool default false,
     namespace character varying(16),
     created timestamp with time zone,
     last_updated timestamp with time zone

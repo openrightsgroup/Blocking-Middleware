@@ -221,6 +221,21 @@ class UrlLoader {
 		return $out;
 	}
 
+    function has_hold_category($urlID) {
+        $result = $this->conn->query(
+            "select count(*) from url_categories
+                inner join categories on category_id = categories.id
+             where categories.hold = true and urlid = ?",
+            array($urlID),
+            PDO::FETCH_NUM
+            );
+        $row = $result->fetch();
+        if ($row[0] > 0) {
+            return true;
+        }
+        return false;
+    }
+
 	function updateLastPolled($urlid) {
 		$result = $this->conn->query("update urls set lastPolled=now() where urlID=?",
 			array($urlid));

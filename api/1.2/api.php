@@ -1656,7 +1656,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     if (!(@count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == "BBFC"))) {
         // we are submittingt to ISPs, not feedback to ORG or BBFC
         if ($app['db.blacklist.load']->check($url['url'])) {
-            debug_log("{$url['url']} is blacklisted; not submitting");
+            debug_log("{$url['url']} cannot be submitted");
             return $app->json(array('success' => false, 'message' => 'domain rejected'));
         }
     }
@@ -1695,6 +1695,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     $ids = array();
     $queued = array();
     $rejected = array();
+
+    $hold = $app['db.url.load']->has_hold_category($url['urlid']);
     foreach($data['networks'] as $network_name) {
         debug_log("Looking up: ". $network_name);
         $age_limit = false;
@@ -1724,6 +1726,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             continue;
         }
 
+        if ($hold) {
+            $queued[] = $network_name;
+        }
+
         if ($app['db.ispreport.load']->can_report($url['urlid'], $network_name)) {
 
             $mailname = "reply-" . strtolower(Middleware::generateSharedSecret(12));
@@ -1738,14 +1744,14 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 (@$data['send_updates'] ? 1 : 0),
                 $contact['id'],
                 (@$data['allow_publish'] ? 1: 0),
-                $age_limit ? 'pending' : 'sent',
+                $hold ? 'hold' : $age_limit ? 'pending' : 'sent',
                 @$data['category'],
                 (@$data['allow_contact'] ? 1: 0),
                 @$data['usertype'] ? $data['usertype'] : null
                 );
             # send email here
 
-            if (($contact['verified'] || $network_name == 'ORG') && $network_name != 'BBFC' && $age_limit == false) {
+            if (($contact['verified'] || $network_name == 'ORG') && $network_name != 'BBFC' && $age_limit == false && $hold == false) {
                 sendISPReport(
                     $mailname,
                     $data['reporter']['name'],
