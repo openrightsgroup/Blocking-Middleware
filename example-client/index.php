@@ -23,7 +23,7 @@
 			foreach (glob("example-*.*") as $filename) {
 				if(strpos($filename, "helper") === false)
 					echo "<li><a href=\"$filename\">$filename</a> - "
-						. $example_descriptions[$filename] ."</li>\n";
+						. @$example_descriptions[$filename] ."</li>\n";
 			}
 			?>
 		</ul>
