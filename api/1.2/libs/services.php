@@ -1082,7 +1082,7 @@ class ISPReportLoader {
 
     function get_reports($type, $filter=null, $page=0, $is_admin, $pagesize=25) {
 
-        $pagesize = (int)pagesize;
+        $pagesize = (int)$pagesize;
         $off = ((int)$page) * $pagesize;
 
         $proc = $this->process_filter($filter);

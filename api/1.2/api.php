@@ -1185,6 +1185,7 @@ $app->get('/status/ispreports', function (Request $req) use ($app) {
     $output = array();
     $output['count']          = $app['db.ispreport.load']->count_reports('unblock', $filter, $is_admin);
     $output['open_count']     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'open')), $is_admin);
+    $output['hold_count']     = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'hold')), $is_admin);
     $output['review_count']   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'reviewed')), $is_admin);
     $output['feature_count']  = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'featured')), $is_admin);
     $output['cancel_count']   = $app['db.ispreport.load']->count_reports('unblock', array_merge($filter, array('state' => 'cancelled')), $is_admin);
@@ -1424,7 +1425,7 @@ $app->post('/verify/email', function (Request $req) use ($app) {
                 if ($row['status'] == 'new') {
                     // now reports for unverified users are set to status 'new', so we set the status for
                     // requeue to send
-                    $app['db.ispreport.load']->set_status($result['report_id'], 'pending');
+                    $app['db.ispreport.load']->set_status($row['id'], 'pending');
                 }
             }
 
@@ -1750,7 +1751,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             } elseif ($contact['verified'] == '1') {
                 $status = 'sent';
             } else {
-                $status = 'pending';
+                $status = 'new';
             }
 
             debug_log("Status: $status $hold $age_limit {$contact['verified']}");

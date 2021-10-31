@@ -108,6 +108,7 @@ The owner/operator of <?php echo $_GET['url']?>
             'name' => $_POST['name'],
             'email' => $_POST['email']
         ),
+        'report_type' => 'unblock',
         'message' => $_POST['message'],
         'date' => $date,
         'auth' => array(
