@@ -43,3 +43,5 @@ class TokenLookupError extends APIException {}
 class InvalidTokenError extends APIException {}
 
 class InvalidSortError extends APIException {}
+
+class ContactPermissionDeniedError extends APIException {}
