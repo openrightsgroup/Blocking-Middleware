@@ -37,6 +37,8 @@ define('ELASTIC_ADULT_FILTER', 'escort~ OR fetish OR stripper~ OR porn~ OR blowj
 
 $REQUEUE_EXCLUDE_SOURCES = array();
 
+define('SEND_EMAIL', false);
+
 #define('AWS_DYNAMODB_ACCESS_KEY', 'asdasd');
 #define('AWS_DYNAMODB_SECRET_KEY', '');
 #define('AWS_DYNAMODB_URL', 'http://localhost:8000');

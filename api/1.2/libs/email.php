@@ -1,6 +1,10 @@
 <?php
 
 function sendISPReport($mailname, $name, $email, $network, $url, $message, $report_type, $category, $renderer) {
+    if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
+        // disable email flag for debug/testing
+        return;
+    }
     $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
         $msg->setFrom($mailname . '@' . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
@@ -37,6 +41,10 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
 }
 
 function sendISPReminder($row, $network, $url, $renderer) {
+    if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
+        // disable email flag for debug/testing
+        return;
+    }
     $msg = new PHPMailer();
 
     if (FEATURE_EMAIL_TRACKING) {
@@ -97,6 +105,11 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
     //         "nature_of_the_complaint" => $message
     //         );
 
+    if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
+        // disable email flag for debug/testing
+        return;
+    }
+
    $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
         $msg->setFrom($mailname . '@' . MAIL_DOMAIN, $name . ' via Blocked.org.uk');
@@ -136,6 +149,10 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
 }
 
 function sendUserVerification($email, $name, $token, $attempt, $renderer) {
+    if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
+        // disable email flag for debug/testing
+        return;
+    }
     $msg = new PHPMailer();
     $msg->setFrom(SITE_EMAIL, SITE_NAME);
     $msg->addAddress(

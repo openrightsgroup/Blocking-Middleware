@@ -1752,7 +1752,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
             # send email here
 
             if (($contact['verified'] || $network_name == 'ORG') && $network_name != 'BBFC' && $age_limit == false && $hold == false) {
-                false && sendISPReport(
+                sendISPReport(
                     $mailname,
                     $data['reporter']['name'],
                     $data['reporter']['email'],
