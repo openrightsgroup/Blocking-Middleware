@@ -3,7 +3,7 @@
 function sendISPReport($mailname, $name, $email, $network, $url, $message, $report_type, $category, $renderer) {
     if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
         // disable email flag for debug/testing
-        return;
+        return true;
     }
     $msg = new PHPMailer();
     if (FEATURE_EMAIL_TRACKING) {
@@ -43,7 +43,7 @@ function sendISPReport($mailname, $name, $email, $network, $url, $message, $repo
 function sendISPReminder($row, $network, $url, $renderer) {
     if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
         // disable email flag for debug/testing
-        return;
+        return true;
     }
     $msg = new PHPMailer();
 
@@ -107,7 +107,7 @@ function sendBBFCReport($mailname, $name, $email, $network, $original_network, $
 
     if (defined('SEND_EMAIL') && SEND_EMAIL == false) {
         // disable email flag for debug/testing
-        return;
+        return true;
     }
 
    $msg = new PHPMailer();

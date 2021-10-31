@@ -42,7 +42,7 @@ foreach($q as $result) {
     if ($row['status'] != 'pending') {
         # we might have already seen this result, if there have been multiple results for a url/network since the
         # last reporting run
-        error_log("Report {$row['report_id']} already processed: ${row['status']}.");
+        error_log("Report {$result['report_id']} already processed: ${row['status']}.");
         continue;
     }
 
