@@ -1398,25 +1398,34 @@ $app->post('/verify/email', function (Request $req) use ($app) {
             // now get pending reports
 
             $res = $conn->query("select * from isp_reports
-                where contact_id = ? and status = 'sent'", # should be 'new'
+                where contact_id = ? and (status = 'sent' or status = 'new')", # should be 'new', transitioning
                 array($contact['id'])
                 );
             foreach ($res as $row) {
-                $network = $app['db.isp.load']->load($row['network_name']);
-                $url = $app['db.url.load']->loadByID($row['urlid']);
+                if ($row['status'] == 'sent') {
+                    // previously reports for unverified users were set to status 'sent'
+                    // this block takes care of those.
 
-                sendISPReport(
-                    $row['mailname'],
-                    $row['name'],
-                    $row['email'],
-                    $network,
-                    $url['url'],
-                    $row['message'],
-                    $row['report_type'],
-                    $row['site_category'],
-                    $app['service.template']
-                );
+                    $network = $app['db.isp.load']->load($row['network_name']);
+                    $url = $app['db.url.load']->loadByID($row['urlid']);
 
+                    sendISPReport(
+                        $row['mailname'],
+                        $row['name'],
+                        $row['email'],
+                        $network,
+                        $url['url'],
+                        $row['message'],
+                        $row['report_type'],
+                        $row['site_category'],
+                        $app['service.template']
+                    );
+                }
+                if ($row['status'] == 'new') {
+                    // now reports for unverified users are set to status 'new', so we set the status for
+                    // requeue to send
+                    $app['db.ispreport.load']->set_status($result['report_id'], 'pending');
+                }
             }
 
             $conn->commit();
@@ -1744,7 +1753,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 (@$data['send_updates'] ? 1 : 0),
                 $contact['id'],
                 (@$data['allow_publish'] ? 1: 0),
-                $hold ? 'hold' : $age_limit ? 'pending' : 'sent',
+                $hold ? 'hold' :
+                    $age_limit ? 'pending' :
+                        $contact['verified'] ? 'sent' :
+                            'new',
                 @$data['category'],
                 (@$data['allow_contact'] ? 1: 0),
                 @$data['usertype'] ? $data['usertype'] : null

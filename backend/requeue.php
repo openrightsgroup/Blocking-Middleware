@@ -77,7 +77,7 @@ function send_reported() {
     $result = $conn->query("select distinct urlid, url, hash, lastpolled from urls
         inner join isp_reports using (urlID)
         where (lastpolled < (now() - interval '1 day')) and
-        urls.status = 'ok' and unblocked = 0 and (isp_reports.status <= 'sent' or isp_reports.status in ('unblocked','rejected'))
+        urls.status = 'ok' and unblocked = 0 and (isp_reports.status in ('pending', 'sent', 'unblocked', 'rejected'))
         order by lastpolled limit 55", array());
 
     print "Sending URLs (reported)...\n";

@@ -35,14 +35,14 @@ $q = $conn->query("select isp_reports.id as report_id, results.status, results.c
     );
 
 foreach($q as $result) {
-    echo "Updating report: " . $result['report_id'] . "\n";
+    echo "Checking report: " . $result['report_id'] . "\n";
 
     $row = $reportloader->load($result['report_id']);
 
     if ($row['status'] != 'pending') {
         # we might have already seen this result, if there have been multiple results for a url/network since the
         # last reporting run
-        error_log("Report {$row['report_id']} already processed.");
+        error_log("Report {$row['report_id']} already processed: ${row['status']}.");
         continue;
     }
 
@@ -50,10 +50,11 @@ foreach($q as $result) {
         $network = $isploader->load($row['network_name']);
         $url = $urlloader->loadByID($row['urlid']);
 
-        if ($urlloader->has_hold_category($row['urlid'])) {
-            $reportloader->set_status($result['report_id'], 'hold', $result['created']);
-            continue;
-        }
+//
+//        if ($urlloader->has_hold_category($row['urlid'])) {
+//            $reportloader->set_status($result['report_id'], 'hold', $result['created']);
+//            continue;
+//        }
 
         $res = sendISPReport(
             $row['mailname'],

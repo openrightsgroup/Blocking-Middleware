@@ -96,8 +96,8 @@ CREATE TYPE public.enum_probe_status AS ENUM (
 
 CREATE TYPE public.enum_report_status AS ENUM (
     'new',
-    'pending',
     'hold',
+    'pending',
     'sent',
     'abuse',
     'cancelled',
