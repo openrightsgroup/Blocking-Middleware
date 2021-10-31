@@ -139,7 +139,7 @@ function checkProbe($probe) {
 function checkUser($user) {
 	# User status check, throw if not "ok"
 	if ($user['status'] != 'ok') {
-		throw new UserStatusError($row['status']);
+		throw new UserStatusError($user['status']);
 	}
 }
 
