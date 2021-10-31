@@ -955,6 +955,9 @@ class ISPReportLoader {
         case 'open':
             $output->filters[] = " and isp_reports.status <= 'sent'";
             break;
+        case 'hold':
+            $output->filters[] = " and isp_reports.status = 'hold'";
+            break;
         case 'sent':
             $output->filters[] = " and isp_reports.status = 'sent'";
             break;
@@ -1079,6 +1082,7 @@ class ISPReportLoader {
 
     function get_reports($type, $filter=null, $page=0, $is_admin, $pagesize=25) {
 
+        $pagesize = (int)pagesize;
         $off = ((int)$page) * $pagesize;
 
         $proc = $this->process_filter($filter);
