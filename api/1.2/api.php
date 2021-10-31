@@ -1706,6 +1706,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     $rejected = array();
 
     $hold = $app['db.url.load']->has_hold_category($url['urlid']);
+    debug_log("Hold: $hold");
     foreach($data['networks'] as $network_name) {
         debug_log("Looking up: ". $network_name);
         $age_limit = false;
@@ -1741,6 +1742,18 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
         if ($app['db.ispreport.load']->can_report($url['urlid'], $network_name)) {
 
+            // don't get smart with ternary expressions here
+            if ($hold) {
+                $status = 'hold';
+            } elseif ($age_limit) {
+                $status = 'pending';
+            } elseif ($contact['verified'] == '1') {
+                $status = 'sent';
+            } else {
+                $status = 'pending';
+            }
+
+            debug_log("Status: $status $hold $age_limit {$contact['verified']}");
             $mailname = "reply-" . strtolower(Middleware::generateSharedSecret(12));
             $ids[$network_name] = $app['db.ispreport.load']->insert(
                 $mailname,
@@ -1753,10 +1766,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
                 (@$data['send_updates'] ? 1 : 0),
                 $contact['id'],
                 (@$data['allow_publish'] ? 1: 0),
-                $hold ? 'hold' :
-                    $age_limit ? 'pending' :
-                        $contact['verified'] ? 'sent' :
-                            'new',
+                $status,
                 @$data['category'],
                 (@$data['allow_contact'] ? 1: 0),
                 @$data['usertype'] ? $data['usertype'] : null
