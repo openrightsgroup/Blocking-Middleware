@@ -24,6 +24,8 @@ $templateloader = new Twig_Environment($loader, array(
     'debug' => true
 ));
 
+echo "Start: " . date('Y-m-d H:i:s');
+
 $q = $conn->query("select isp_reports.id as report_id, results.status, results.created, results.network_name
     from isp_reports
     inner join contacts on contact_id = contacts.id
@@ -81,3 +83,4 @@ foreach($q as $result) {
 }
 
 
+echo "End: " . date('Y-m-d H:i:s');
