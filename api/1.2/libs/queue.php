@@ -93,9 +93,10 @@ class QueueManager {
             }
 
         	$this->delete_queue('url.'.$isp['queue_name'].'.ooni');
+        	$this->delete_queue('url.'.$isp['queue_name'].'.fixed');
 
             if ($isp['isp_type'] == 'fixed') {
-                $this->createqueue('url.'.$isp['queue_name'].'.fixed', 'url.fixed', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
+                $this->createqueue('url.'.$isp['queue_name'].'.public', 'url.fixed', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
             }
 
             #createqueue('admin.view.' . $isp['queue_name'], 'admin.view.#');
