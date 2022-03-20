@@ -632,7 +632,8 @@ CREATE TABLE public.contacts (
     createdat timestamp with time zone,
     token character varying(36),
     verify_attempts smallint DEFAULT 0,
-    verify_last_attempt timestamp with time zone
+    verify_last_attempt timestamp with time zone,
+    enabled bool default true
 );
 
 

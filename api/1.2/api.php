@@ -233,6 +233,10 @@ $app->error(function(APIException $e, $code) {
 			$code = 409;
 			$message = $e->getMessage();
 			break;
+        Case 'ContactPermissionDeniedError':
+            $code = 403;
+            $message = "Contact email is disallowed";
+            break;
 		case 'UserStatusError':
 			$code = 403;
 			$message = "Account is " . $e->getMessage();
@@ -1676,6 +1680,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         $data['reporter']['name'],
         false
         );
+
+    if (!$contact['enabled']) {
+        throw new ContactPermissionDeniedError();
+    }
 
     try {
         $app['service.queue']->submitted_url($url['url']);
