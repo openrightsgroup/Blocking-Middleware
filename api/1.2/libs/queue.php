@@ -83,16 +83,16 @@ class QueueManager {
         	}
         	print "Creating queue: " . $isp['queue_name'] . "\n";
         	$this->createqueue('url.'.$isp['queue_name'].'.public',  'url.public', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
-        	$this->createqueue('url.'.$isp['queue_name'].'.org',  'url.org');
 
             if (strpos($isp['regions'], 'eu') !== false) {
                 $this->createqueue('url.' . $isp['queue_name'] . '.public', 'url.public.eu', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
+                $this->delete_queue('url.'.$isp['queue_name'].'.org');
             }
             if (strpos($isp['regions'], 'gb') !== false) {
+                $this->createqueue('url.'.$isp['queue_name'].'.org',  'url.org');
                 $this->createqueue('url.' . $isp['queue_name'] . '.public', 'url.public.gb', AMQP_PUBLIC_QUEUE_TIMEOUT, true);
             }
 
-        	$this->delete_queue('url.'.$isp['queue_name'].'.ooni');
         	$this->delete_queue('url.'.$isp['queue_name'].'.fixed');
 
             if ($isp['isp_type'] == 'fixed') {
