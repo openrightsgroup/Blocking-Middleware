@@ -65,7 +65,7 @@ class QueueManager {
                         $q->setArgument("x-message-ttl", $ttl);
                     }
                     $q->declare();
-                    $q->bind($this->exchange, $key);
+                    $q->bind($this->exchange_name, $key);
                 } catch (AMQPQueueException $e2) {
                     echo "Recreate Queue error: " .  $e2->getMessage() . "\n";
                 }
