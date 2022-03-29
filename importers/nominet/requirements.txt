@@ -1,4 +1,4 @@
-paramiko==2.7.2
+paramiko==2.10.1
 configparser==4.0.2
 requests==2.25.1
 psycopg2==2.8.6
