@@ -1698,15 +1698,17 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
 
     if (!$contact['verified'] && !(count($data['networks']) == 1 && ($data['networks'][0] == 'ORG' || $data['networks'][0] == 'BBFC') )) {
         // reports sent to ORG or BBFC only are exempt from validation
-        $token = "B" . md5($contact['id'] . "-" .
-            Middleware::generateSharedSecret(10));
+        if (!$contact['token']) {
+            $token = "B" . md5($contact['id'] . "-" .
+                Middleware::generateSharedSecret(10));
 
-        $conn->query("update contacts set
-            token = ?, verify_attempts=1, verify_last_attempt=now()  where id = ?",
-            array( $token, $contact['id'])
-            );
+            $conn->query("update contacts set
+                token = ?, verify_attempts=1, verify_last_attempt=now()  where id = ?",
+                array( $token, $contact['id'])
+                );
 
-        sendUserVerification($data['reporter']['email'], $data['reporter']['name'], $token, 1, $app['service.template']);
+            sendUserVerification($data['reporter']['email'], $data['reporter']['name'], $token, 1, $app['service.template']);
+        }
 
     }
 
@@ -1822,6 +1824,7 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
     return $app->json(array(
         'success' => true,
         'verification_required' => ($contact['verified']) ? false : true,
+        'verification_pending' => (!$contact['verified'] && $contact['token']) ? true : false,
         'report_ids' => $ids,
         'rejected' => $rejected,
         'queued' => $queued
