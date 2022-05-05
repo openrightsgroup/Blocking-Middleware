@@ -1645,10 +1645,10 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
       },
       'message': "I would like this unblocked because ...",
       'category': 'gambling',
-      'auth': [
+      'auth': {
         'email': 'useraccount@blocked.org.uk',
         'signature': 'abcdef0123456',
-      ]
+      }
     }
     */
 
