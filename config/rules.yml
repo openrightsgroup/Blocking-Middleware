@@ -120,7 +120,7 @@ isps:
     b0: "PARENTAL"
     b1: "COPYRIGHT"
   match:
-    m0: "re:url:http://assets\\.o2\\.co\\.uk/18plusaccess/"
+    m0: "re:url:http://assets\\.o2\\.co\\.uk/18plusaccess"
     m1: "re:body:<span class=\"style12\" style=\"color:#1B224E;\"><br /><br />We're complying with a court order that means access to this website has<br />to be blocked to protect against copyright infringement\\."
 
 - &sky
