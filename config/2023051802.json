@@ -1,0 +1,400 @@
+{
+  "rules": [
+    {
+      "isp": "T-Mobile",
+      "match": [
+        "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/",
+        "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html",
+        "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html",
+        "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html"
+      ]
+    },
+    {
+      "isp": "EE",
+      "match": [
+        "re:url:^http://www\\.t-mobile\\.co\\.uk/service/wnw-mig/entry/",
+        "re:url:http://tmobile\\.ee\\.co\\.uk/common/system_error_pages/outage_wnw\\.html",
+        "re:url:^http://ee-outage\\.s3\\.amazonaws.com/outage-v1/outage-v1\\.html",
+        "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-v1\\.html",
+        "re:url:^http://ee-outage\\.s3\\.amazonaws\\.com/content-blocked/content-blocked-nobranding\\.html",
+        "re:url:^http://myaccount\\.ee\\.co\\.uk/anonymous-content-lock",
+        "re:url:^https://myaccount\\.ee\\.co\\.uk/anonymous-content-lock",
+        "re:url:^https://id\\.ee\\.co\\.uk/id/login",
+        "re:url:^http://radio-myaccount\\.ee\\.co\\.uk/app/radio",
+        "re:url:^https://myaccount\\.ee\\.co\\.uk/app/anonymous-content-lock"
+      ]
+    },
+    {
+      "isp": "Vodafone",
+      "match": [
+        "re:url:^http://online\\.vodafone\\.co\\.uk/dispatch/Portal/ContentControlServlet\\?type=restricted",
+        "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/branded/restricted_access\\.html",
+        "re:url:^http://online\\.vodafone\\.co\\.uk/en_GB/assets/static/contentcontrol/unbranded/restricted_access\\.html",
+        "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-agerestricted\\.html?",
+        "re:url:^https?://www\\.vodafone\\.co\\.uk/restricted-content/branded-paym-agerestricted\\.html"
+      ]
+    },
+    {
+      "isp": "BT",
+      "blocktype": [
+        "PARENTAL",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "MALWARE",
+        "SUSPENSION"
+      ],
+      "category": "querystring:list",
+      "match": [
+        "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html",
+        "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/",
+        "re:body:^<p> Error \\- site blocked </p>",
+        "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court.",
+        "re:body:^<p> Error .*? site blocked</p>",
+        "re:body:title>BT Protect Intercept Page<",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "BT-Unfiltered",
+      "blocktype": [
+        "PARENTAL",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "MALWARE",
+        "SUSPENSION"
+      ],
+      "category": "querystring:list",
+      "match": [
+        "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html",
+        "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/",
+        "re:body:^<p> Error \\- site blocked </p>",
+        "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court.",
+        "re:body:^<p> Error .*? site blocked</p>",
+        "re:body:title>BT Protect Intercept Page<",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "BT-Strict",
+      "blocktype": [
+        "PARENTAL",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "MALWARE",
+        "SUSPENSION"
+      ],
+      "category": "querystring:list",
+      "match": [
+        "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html",
+        "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/",
+        "re:body:^<p> Error \\- site blocked </p>",
+        "re:body:^<p>Access to the websites listed on this page has been blocked pursuant to orders of the high court.",
+        "re:body:^<p> Error .*? site blocked</p>",
+        "re:body:title>BT Protect Intercept Page<",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "TalkTalk",
+      "blocktype": [
+        "PARENTAL",
+        "PARENTAL",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "SUSPENSION"
+      ],
+      "category": "querystring:urlclassname:base64",
+      "match": [
+        "re:body:http://www\\.talktalk\\.co\\.uk/notices/parental-controls.html\\?originalURL=",
+        "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl",
+        "re:url:^http://www\\.siteblocked\\.org/.*\\.html\\?",
+        "re:body:<h1>Access to this website has been blocked under an Order of the Higher Court.</h1>",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "TalkTalk-unfiltered",
+      "blocktype": [
+        "PARENTAL",
+        "PARENTAL",
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "SUSPENSION"
+      ],
+      "category": "querystring:urlclassname:base64",
+      "match": [
+        "re:body:http://www\\.talktalk\\.co\\.uk/notices/parental-controls.html\\?originalURL=",
+        "re:url:^http://www\\.talktalk\\.co\\.uk/notice/parental-controls\\?accessurl",
+        "re:url:^http://www\\.siteblocked\\.org/.*\\.html\\?",
+        "re:body:<h1>Access to this website has been blocked under an Order of the Higher Court.</h1>",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "Plusnet",
+      "blocktype": [
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "PARENTAL",
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "SUSPENSION"
+      ],
+      "category": "querystring:category",
+      "match": [
+        "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/",
+        "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk",
+        "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml",
+        "re:body:^<p> Error .*? site blocked</p>",
+        "re:url:^https://blocked\\.plus\\.net\\?originalURL",
+        "re:url:^https://blocked.plus.net/index/",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "Plusnet-unfiltered",
+      "blocktype": [
+        "COPYRIGHT",
+        "COPYRIGHT",
+        "PARENTAL",
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "SUSPENSION"
+      ],
+      "category": "querystring:category",
+      "match": [
+        "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/",
+        "re:body:More information can be found at www\\.ukispcourtorders\\.co\\.uk",
+        "re:url:^http://www\\.plus\\.net/support/security/abuse/blocked\\.shtml",
+        "re:body:^<p> Error .*? site blocked</p>",
+        "re:url:^https://blocked\\.plus\\.net\\?originalURL",
+        "re:url:^https://blocked.plus.net/index/",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "Three",
+      "match": [
+        "re:url:^http://mobile\\.three\\.co\\.uk/pc/Live/pcreator/live/100004/pin/blocked",
+        "re:url:^http://mobile\\.three\\.co\\.uk/misc/pin/blocked",
+        "re:url:^http://www\\.three\\.co\\.uk/support/internet-and-apps/accessing-and-blocking-adult-content",
+        "re:url:^https://www\\.three\\.co\\.uk/support/internet-and-apps/accessing-and-blocking-adult-content"
+      ]
+    },
+    {
+      "isp": "AAISP",
+      "match": []
+    },
+    {
+      "isp": "VirginMobile",
+      "match": [
+        "re:url:http://m\\.virginmedia\\.com/MiscPages/AdultWarning\\.aspx"
+      ]
+    },
+    {
+      "isp": "O2",
+      "blocktype": [
+        "PARENTAL",
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:http://assets\\.o2\\.co\\.uk/18plusaccess",
+        "re:body:<span class=\"style12\" style=\"color:#1B224E;\"><br /><br />We're complying with a court order that means access to this website has<br />to be blocked to protect against copyright infringement\\."
+      ]
+    },
+    {
+      "isp": "Sky",
+      "blocktype": [
+        "COPYRIGHT",
+        "PARENTAL",
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "SUSPENSION"
+      ],
+      "category": "querystring:categories",
+      "match": [
+        "re:body:We are required by Court order to prevent access to this site",
+        "re:url:http://block\\.nb\\.sky\\.com/\\?",
+        "re:url:http://blocked\\.nb\\.sky\\.com/\\?",
+        "re:url:http://block\\.cf\\.sky\\.com/\\?",
+        "re:url:http://block\\.isp\\.sky\\.com/\\?",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "Sky-unfiltered",
+      "blocktype": [
+        "COPYRIGHT",
+        "PARENTAL",
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "SUSPENSION"
+      ],
+      "category": "querystring:categories",
+      "match": [
+        "re:body:We are required by Court order to prevent access to this site",
+        "re:url:http://block\\.nb\\.sky\\.com/\\?",
+        "re:url:http://blocked\\.nb\\.sky\\.com/\\?",
+        "re:url:http://block\\.cf\\.sky\\.com/\\?",
+        "re:url:http://block\\.isp\\.sky\\.com/\\?",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "VirginMedia",
+      "blocktype": [
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "MALWARE",
+        "SUSPENSION"
+      ],
+      "match": [
+        "re:url:https?://assets\\.virginmedia\\.com/site-blocked\\.html",
+        "re:url:https?://assets\\.virginmedia\\.com/parental\\.html",
+        "re:url:https?://websafe\\.virginmedia\\.com/childsafe-blocked.html",
+        "re:url:https?://websafe\\.virginmedia\\.com/virussafe-blocked.html",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "VirginMedia-unfiltered",
+      "blocktype": [
+        "COPYRIGHT",
+        "PARENTAL",
+        "PARENTAL",
+        "MALWARE",
+        "SUSPENSION"
+      ],
+      "match": [
+        "re:url:https?://assets\\.virginmedia\\.com/site-blocked\\.html",
+        "re:url:https?://assets\\.virginmedia\\.com/parental\\.html",
+        "re:url:https?://websafe\\.virginmedia\\.com/childsafe-blocked.html",
+        "re:url:https?://websafe\\.virginmedia\\.com/virussafe-blocked.html",
+        "re:body:This domain has been suspended on (request|advice) from the"
+      ]
+    },
+    {
+      "isp": "Uno",
+      "match": []
+    },
+    {
+      "isp": "PROXAD",
+      "match": []
+    },
+    {
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "isp": "Telekom-AT",
+      "match": [
+        "re:body:Aufgrund eines Sperrbegehrens nach &sect; 81 Abs 1 UrhG wurde diese Website gesperrt."
+      ]
+    },
+    {
+      "isp": "UPC-AT",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:^https://www\\.upc\\.at/snippets/kundeninfo/"
+      ]
+    },
+    {
+      "isp": "XS4ALL",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:^https://www.xs4all.nl/geblokkeerd/"
+      ]
+    },
+    {
+      "isp": "UPC-NL",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:^https://www\\.ziggo\\.nl/yarrr/"
+      ]
+    },
+    {
+      "isp": "Belgacom",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:body:stop page because the website you are trying to visit offers content"
+      ]
+    },
+    {
+      "isp": "GET NO",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:^http://blokkert\\.get\\.no"
+      ]
+    },
+    {
+      "isp": "NextGenTel NO",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:body:Oslo Tingrett har besluttet at NextGenTel skal hindre tilgang til det nettstedet du"
+      ]
+    },
+    {
+      "isp": "OpenDNS",
+      "blocktype": [
+        "MALWARE",
+        "PARENTAL"
+      ],
+      "match": [
+        "re:body:https://phish.opendns.com/\\?url=",
+        "re:body:https://block.opendns.com/\\?url="
+      ]
+    },
+    {
+      "isp": "NOS",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:body:title>Bloqueado por ordem judicial</title"
+      ]
+    },
+    {
+      "isp": "Vodafone PT",
+      "blocktype": [
+        "COPYRIGHT"
+      ],
+      "match": [
+        "re:url:http://mobilegen.vodafone.pt/denied/dn"
+      ]
+    }
+  ],
+  "self-test": {
+    "must-allow": [
+      "http://www.bbc.co.uk",
+      "http://www.google.co.uk"
+    ],
+    "must-block": [
+      "http://www.pornhub.com",
+      "http://www.youporn.com"
+    ]
+  },
+  "version": "2023051802",
+  "org-block-rules": "0.2.3"
+}
