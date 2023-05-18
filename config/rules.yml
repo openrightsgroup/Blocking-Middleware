@@ -107,6 +107,7 @@ isps:
   match:
     m0: "re:url:^http://mobile\\.three\\.co\\.uk/pc/Live/pcreator/live/100004/pin/blocked"
     m1: "re:url:^http://mobile\\.three\\.co\\.uk/misc/pin/blocked"
+    m2: "re:url:^http://www\\.three\\.co\\.uk/support/internet-and-apps/accessing-and-blocking-adult-content"
 
 - isp: AAISP
   match: {}
