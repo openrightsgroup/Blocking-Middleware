@@ -1164,7 +1164,9 @@ CREATE TABLE public.probes (
     probe_status public.enum_probe_status,
     location text,
     filter_enabled boolean,
-    owner_link character varying
+    owner_link character varying,
+    selftest_status integer,
+    selftest_updated timestamp with time zone
 );
 
 
