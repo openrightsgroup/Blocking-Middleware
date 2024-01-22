@@ -32,6 +32,14 @@ function normalize_url($url) {
 		throw new BadUrlError("Invalid scheme: " . $parts['scheme']);
 	}
 
+    if (strpos($parts['host'], " ") !== false) {
+        throw new BadUrlError("Invalid host characters");
+    }
+    if (strpos($parts['host'], ".") === false) {
+        throw new BadUrlError("Invalid host, required character not found");
+    }
+
+
     # normalize case - domain and scheme to lower case, path preserves case
 
     # find first separater after the scheme; allow length 8 for https://

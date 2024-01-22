@@ -96,3 +96,23 @@ if ($FAIL) {
     exit(1);
 }
 
+function compareinvalid($input, $expect = true) {
+    global $FAIL;
+    try {
+        normalize_url($input);
+        $output = true;
+    } catch (BadUrlError $exc) {
+        $output = false;
+    }
+    if ($output != $expect) {
+        $FAIL = 1;
+        print "FAIL: $input => $output ($expect)\n";
+    } else {
+        print "  OK: $input => $output ($expect)\n";
+    }
+}
+
+compareinvalid("http://some stuff here", false);
+compareinvalid("http://whatever", false);
+compareinvalid("http://whatever/some.txt", false);
+compareinvalid("http://whatever.com/some here.txt", true);
