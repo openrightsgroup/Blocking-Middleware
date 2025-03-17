@@ -42,7 +42,7 @@ def main():
     args = parser.parse_args()
 
     with open(args.source) as fp:
-        srcdata = yaml.load(fp)
+        srcdata = yaml.safe_load(fp)
 
     output = {
         'rules': [export_isp(isp) for isp in srcdata['isps']],

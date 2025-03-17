@@ -23,6 +23,7 @@ isps:
     m7: "re:url:^https://id\\.ee\\.co\\.uk/id/login"
     m8: "re:url:^http://radio-myaccount\\.ee\\.co\\.uk/app/radio"
     m9: "re:url:^https://myaccount\\.ee\\.co\\.uk/app/anonymous-content-lock"
+    ma: "re:url:^https://ee\\.co\\.uk/bills-payments/mobile/anonymous-content-lock"
 
 - isp: Vodafone
   match:
