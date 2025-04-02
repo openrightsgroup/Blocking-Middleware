@@ -36,6 +36,8 @@ isps:
 - &bt
   isp: BT
   blocktype:
+    a0: "PARENTAL"
+    a1: "COPYRIGHT"
     b0: "PARENTAL"
     b1: "COPYRIGHT"
     b2: "COPYRIGHT"
@@ -46,6 +48,8 @@ isps:
   category:
     c0: querystring:list
   match:
+    h0: "re:hdr.location:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
+    h1: "re:hdr.location:^http://www\\.ukispcourtorders\\.co\\.uk/"
     m0: "re:url:^http://blockpage\\.bt\\.com/pcstaticpage/blocked\\.html"
     m1: "re:url:^http://www\\.ukispcourtorders\\.co\\.uk/"
     m2: "re:body:^<p> Error \\- site blocked </p>"
