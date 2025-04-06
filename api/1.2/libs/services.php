@@ -1560,7 +1560,7 @@ class DynamoWrapper {
         }
         $this->_sdk = new Aws\Sdk($opts);
         $this->_db = $this->_sdk->createDynamoDb();
-        $this->_marshaller = new Marshaler();
+        $this->_marshaller = new Marshaler($options=array('nullify_invalid' => true));
     }
     
     function store($data) {
