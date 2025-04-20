@@ -4,7 +4,11 @@ import sys
 import json
 import logging
 import psycopg2
-import ConfigParser
+
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 
 import amqplib.client_0_8 as amqp
 
