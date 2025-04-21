@@ -77,13 +77,13 @@ class AnomalyDetector(object):
 class AnomalyDetectorService(QueueService):
     QUEUE_NAME = 'anomalycheck'
     def __init__(self):
-        super(AnomalyDetector, self).__init__()
+        super(AnomalyDetectorService, self).__init__()
         self.count = 0
-        self.proxies = dict(self.cfg.items('anomaly_proxies'))
+        # self.proxies = dict(self.cfg.items('anomaly_proxies'))
 
     def setup_bindings(self):
         self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
-        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "anomalydetector")
+        # self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "anomalydetector")
 
     def process_message(self,data):
         try:
@@ -92,7 +92,7 @@ class AnomalyDetectorService(QueueService):
                 'url': data['url'],
                 'anomaly-report': result
                 }
-            retbody = json.encode(ret)
+            retbody = json.dumps(ret)
             msg = amqp.Message(retbody)
             self.ch.basic_publish(msg, self.cfg.get('daemon', 'exchange'), 'anomaly.response.' + hash(data['url']))
 
@@ -119,6 +119,8 @@ def get_parser():
     return parser
 
 def hash(s):
+    if isinstance(s, str):
+        s = s.encode('utf-8')
     return hashlib.sha256(s).hexdigest()
 
 def create_request_record(r):
@@ -150,7 +152,7 @@ def get_url(url, proxy, debug=False):
 
     logging.info("Using proxy: %s", proxies)
     req = requests.get(url, proxies=proxies,
-                       headers={'User-agent': "BlockedAnomaly/0.1.0(+www.blocked.org.uk)"})
+                       headers={'User-agent': "BlockedAnomaly/0.1.0 (+https://www.blocked.org.uk)"})
     r = create_request_record(req)
     if debug:
         print("{} req output ===>".format("Proxied" if proxy else "Non-proxied"))
