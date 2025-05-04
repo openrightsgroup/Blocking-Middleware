@@ -14,7 +14,7 @@ import amqplib.client_0_8 as amqp
 import queuelib
 from queuelib import QueueService
 
-
+from NORM import DBObject,Query
 
 """
 This daemon listens on a dedicated queue for URL results, and compares against
@@ -22,6 +22,15 @@ other results to detect anomalies.
 
 
 """
+
+class AnomalyCheckResult(DBObject):
+    TABLE = 'anomaly_check_results'
+    FIELDS = ['urlid','result_json','review','reviewed_by']
+
+class AnomalyCheckResponse(DBObject):
+    TABLE = 'anomaly_check_responses'
+    FIELDS = ['result_id','region','response_json']
+
 
 class AnomalyDetector(object):
     def __init__(self):
@@ -87,23 +96,26 @@ class AnomalyDetectorService(QueueService):
 
     def process_message(self,data):
         try:
-            result = test_url(data['url'], self.config['proxy'])
-            ret = {
-                'url': data['url'],
-                'anomaly-report': result
-                }
-            retbody = json.dumps(ret)
-            msg = amqp.Message(retbody)
-            self.ch.basic_publish(msg, self.cfg.get('daemon', 'exchange'), 'anomaly.response.' + hash(data['url']))
-
+            result = test_url(data['url'], self.config['proxy'],
+                              self.config['local_region'], self.config['proxy_region'],
+                              self.conn)
+            # ret = {
+            #     'url': data['url'],
+            #     'anomaly-report': result
+            #
+            # }
+            # retbody = json.dumps(ret)
+            # msg = amqp.Message(retbody)
+            # self.ch.basic_publish(msg, self.cfg.get('daemon', 'exchange'), 'anomaly.response.' + hash(data['url']))
+            logging.info("Stored result: %s", result)
         except Exception as v:
-            logging.warn("Error in anomaly detection: %s", repr(v))
+            logging.warning("Error in anomaly detection: %s", repr(v))
 
         self.count += 1
         logging.info("URL: %s; rss: %s; count: %s", data['url'], resource.getrusage(0).ru_maxrss, self.count)
 
         if self.count > 500:
-            logging.warn("Exiting after 500 requests")
+            logging.warning("Exiting after 500 requests")
             sys.exit(0)
 
         return True
@@ -145,14 +157,15 @@ def create_request_record(r):
         }
     }
 
-def get_url(url, proxy, debug=False):
+def fetch_url(url, proxy, debug=False):
     proxies = None
     if proxy:
         proxies = {'http': proxy, 'https': proxy}
 
     logging.info("Using proxy: %s", proxies)
-    req = requests.get(url, proxies=proxies,
-                       headers={'User-agent': "BlockedAnomaly/0.1.0 (+https://www.blocked.org.uk)"})
+    req = requests.get(url,
+                       proxies=proxies,
+                       headers={'User-agent': "BlockedAnomaly/0.1.0 (+https://www.blocked.org.uk)"}) # TODO: get from config
     r = create_request_record(req)
     if debug:
         print("{} req output ===>".format("Proxied" if proxy else "Non-proxied"))
@@ -160,13 +173,40 @@ def get_url(url, proxy, debug=False):
         print("---")
     return r
 
-def test_url(url, proxy, debug=False):
+def test_url(url, proxy, local_region, proxy_region, conn, debug=False):
     """ For ad-hoc testing through proxy"""
 
-    r1 = get_url(url, None, debug)
-    r2 = get_url(url, proxy, debug)
+    r1 = fetch_url(url, None, debug)
+    r2 = fetch_url(url, proxy, debug)
 
     result = AnomalyDetector().collate_analysis(r1, r2)
+
+    if conn:
+        q = Query(conn, "select urlid from public.urls where url = %s", [url])
+        row = q.fetchone()
+        q.close()
+        rec = AnomalyCheckResult(conn)
+        rec.update({
+            'urlid': row['urlid'],
+            'result_json': json.dumps(result)
+        })
+        rec.store()
+        rsp1 = AnomalyCheckResponse(conn)
+        rsp1.update({
+            'result_id': rec['id'],
+            'region': local_region,
+            'response_json': json.dumps(r1)
+        })
+        rsp1.store()
+        rsp2 = AnomalyCheckResponse(conn)
+        rsp2.update({
+            'result_id': rec['id'],
+            'region': proxy_region,
+            'response_json': json.dumps(r2)
+        })
+        rsp2.store()
+        conn.commit()
+
     return result
 
 
@@ -178,7 +218,7 @@ def main():
         if not args.proxy:
             print("Proxy argument required")
             sys.exit(1)
-        print(test_url(args.url, args.proxy, args.debug))
+        print(test_url(args.url, args.proxy, None, None, None, args.debug))
         return
 
     # otherwise run queue server
