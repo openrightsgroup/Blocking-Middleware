@@ -209,6 +209,7 @@ def main():
             sys.exit(1)
         print(service.test_url(args.url, args.proxy))
         return
+
     service.run()
 
 if __name__ == '__main__':

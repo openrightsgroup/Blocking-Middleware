@@ -29,6 +29,7 @@ class QueueService(object):
     QUEUE_QOS = 10
 
     def __init__(self):
+        self.conn = None
         self.configure()
         pass
 
