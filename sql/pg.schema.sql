@@ -1836,9 +1836,6 @@ CREATE TABLE public.anomaly_check_responses (
     last_updated timestamptz null
 );
 
-ALTER TABLE public.anomaly_check_responses add foreign key (result_id) references public.anomaly_check_results (id)  ON DELETE CASCADE;
-ALTER TABLE public.anomaly_check_results add foreign key (urlid) references public.urls (urlid);
-
 
 --
 -- Name: cache_copyright_blocks; Type: TABLE; Schema: stats; Owner: -; Tablespace: 
@@ -2799,6 +2796,15 @@ ALTER TABLE ONLY public.url_hierarchy
 
 ALTER TABLE ONLY public.url_hierarchy
     ADD CONSTRAINT url_hierarchy_urlid_fkey FOREIGN KEY (urlid) REFERENCES public.urls(urlid);
+
+
+--
+-- anomaly
+--
+
+ALTER TABLE public.anomaly_check_responses add foreign key (result_id) references public.anomaly_check_results (id)  ON DELETE CASCADE;
+ALTER TABLE public.anomaly_check_results add foreign key (urlid) references public.urls (urlid);
+
 
 
 --
