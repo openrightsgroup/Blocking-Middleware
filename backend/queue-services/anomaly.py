@@ -9,7 +9,6 @@ import resource
 import collections
 
 import requests
-import amqplib.client_0_8 as amqp
 
 import queuelib
 from queuelib import QueueService
@@ -20,17 +19,15 @@ from NORM import DBObject,Query
 This daemon listens on a dedicated queue for URL results, and compares against
 other results to detect anomalies.
 
-
 """
 
 class AnomalyCheckResult(DBObject):
     TABLE = 'anomaly_check_results'
-    FIELDS = ['urlid','result_json','review','reviewed_by']
+    FIELDS = ['urlid', 'result_json', 'review', 'reviewed_by']
 
 class AnomalyCheckResponse(DBObject):
     TABLE = 'anomaly_check_responses'
-    FIELDS = ['result_id','region','response_json']
-
+    FIELDS = ['result_id', 'region', 'response_json']
 
 class AnomalyDetector(object):
     def __init__(self):
@@ -61,7 +58,7 @@ class AnomalyDetector(object):
         if len(sample1['rsp']['headers']) != len(sample2['rsp']['headers']):
             yield {'header_count_mismatch': abs(len(sample1['rsp']['headers']) - len(sample2['rsp']['headers']))}
 
-        h1 = dict(sample1['rsp']['headers'])  # not strictly corrent, headers can repeat
+        h1 = dict(sample1['rsp']['headers'])  # not strictly correct, headers can repeat
         h2 = dict(sample2['rsp']['headers'])
         for k in h1:
             if k in h2:
@@ -96,17 +93,7 @@ class AnomalyDetectorService(QueueService):
 
     def process_message(self,data):
         try:
-            result = test_url(data['url'], self.config['proxy'],
-                              self.config['local_region'], self.config['proxy_region'],
-                              self.conn)
-            # ret = {
-            #     'url': data['url'],
-            #     'anomaly-report': result
-            #
-            # }
-            # retbody = json.dumps(ret)
-            # msg = amqp.Message(retbody)
-            # self.ch.basic_publish(msg, self.cfg.get('daemon', 'exchange'), 'anomaly.response.' + hash(data['url']))
+            result = self.test_url(data['url'], self.config['proxy'])
             logging.info("Stored result: %s", result)
         except Exception as v:
             logging.warning("Error in anomaly detection: %s", repr(v))
@@ -120,6 +107,85 @@ class AnomalyDetectorService(QueueService):
 
         return True
 
+    def fetch_url(self, url, proxy):
+        proxies = None
+        if proxy:
+            proxies = {'http': proxy, 'https': proxy}
+
+        logging.info("Using proxy: %s", proxies)
+        req = requests.get(url,
+                           proxies=proxies,
+                           headers={'User-agent': self.config['useragent']})
+        r = self.create_request_record(req)
+
+        return r
+
+    @staticmethod
+    def sha256(s):
+        if isinstance(s, str):
+            s = s.encode('utf-8')
+        return hashlib.sha256(s).hexdigest()
+
+    @classmethod
+    def create_request_record(cls, r):
+        """Copied from orgprobe: creates compatible request record from requests.get output"""
+        rq = r.request
+        return {
+            'req': {
+                'url': rq.url,
+                'headers': [(k,v) for k,v in rq.headers.items()],
+                'body': rq.body or None,
+                'hash': cls.sha256(rq.body) if rq.body else None,
+                'method': rq.method
+            },
+            'rsp': {
+                'headers': [(k,v) for k,v in r.headers.items()],
+                'status': r.status_code,
+                # 'ssl_fingerprint': r.ssl_fingerprint,
+                # 'ssl_verified': r.ssl_verified,
+                # 'ip': r.peername,
+                'content': r.text,
+                'hash': cls.sha256(r.content)
+            }
+        }
+
+    def test_url(self, url, proxy):
+        """ For ad-hoc testing through proxy"""
+    
+        r1 = self.fetch_url(url, None)
+        r2 = self.fetch_url(url, proxy)
+    
+        result = AnomalyDetector().collate_analysis(r1, r2)
+    
+        if self.conn:
+            q = Query(self.conn, "select urlid from public.urls where url = %s", [url])
+            row = q.fetchone()
+            q.close()
+            rec = AnomalyCheckResult(self.conn)
+            rec.update({
+                'urlid': row['urlid'],
+                'result_json': json.dumps(result)
+            })
+            rec.store()
+            rsp1 = AnomalyCheckResponse(self.conn)
+            rsp1.update({
+                'result_id': rec['id'],
+                'region': self.config['local_region'],
+                'response_json': json.dumps(r1)
+            })
+            rsp1.store()
+            rsp2 = AnomalyCheckResponse(self.conn)
+            rsp2.update({
+                'result_id': rec['id'],
+                'region': self.config['proxy_region'],
+                'response_json': json.dumps(r2)
+            })
+            rsp2.store()
+            self.conn.commit()
+    
+        return result
+
+
 def get_parser():
     parser = argparse.ArgumentParser(
         description="block analysis",
@@ -130,101 +196,20 @@ def get_parser():
     parser.add_argument('url', nargs='?')
     return parser
 
-def hash(s):
-    if isinstance(s, str):
-        s = s.encode('utf-8')
-    return hashlib.sha256(s).hexdigest()
-
-def create_request_record(r):
-    """Copied from orgprobe: creates compatible request record from requests.get output"""
-    rq = r.request
-    return {
-        'req': {
-            'url': rq.url,
-            'headers': [(k,v) for k,v in rq.headers.items()],
-            'body': rq.body or None,
-            'hash': hash(rq.body) if rq.body else None,
-            'method': rq.method
-        },
-        'rsp': {
-            'headers': [(k,v) for k,v in r.headers.items()],
-            'status': r.status_code,
-            # 'ssl_fingerprint': r.ssl_fingerprint,
-            # 'ssl_verified': r.ssl_verified,
-            # 'ip': r.peername,
-            'content': r.text,
-            'hash': hash(r.content)
-        }
-    }
-
-def fetch_url(url, proxy, debug=False):
-    proxies = None
-    if proxy:
-        proxies = {'http': proxy, 'https': proxy}
-
-    logging.info("Using proxy: %s", proxies)
-    req = requests.get(url,
-                       proxies=proxies,
-                       headers={'User-agent': "BlockedAnomaly/0.1.0 (+https://www.blocked.org.uk)"}) # TODO: get from config
-    r = create_request_record(req)
-    if debug:
-        print("{} req output ===>".format("Proxied" if proxy else "Non-proxied"))
-        print(r)
-        print("---")
-    return r
-
-def test_url(url, proxy, local_region, proxy_region, conn, debug=False):
-    """ For ad-hoc testing through proxy"""
-
-    r1 = fetch_url(url, None, debug)
-    r2 = fetch_url(url, proxy, debug)
-
-    result = AnomalyDetector().collate_analysis(r1, r2)
-
-    if conn:
-        q = Query(conn, "select urlid from public.urls where url = %s", [url])
-        row = q.fetchone()
-        q.close()
-        rec = AnomalyCheckResult(conn)
-        rec.update({
-            'urlid': row['urlid'],
-            'result_json': json.dumps(result)
-        })
-        rec.store()
-        rsp1 = AnomalyCheckResponse(conn)
-        rsp1.update({
-            'result_id': rec['id'],
-            'region': local_region,
-            'response_json': json.dumps(r1)
-        })
-        rsp1.store()
-        rsp2 = AnomalyCheckResponse(conn)
-        rsp2.update({
-            'result_id': rec['id'],
-            'region': proxy_region,
-            'response_json': json.dumps(r2)
-        })
-        rsp2.store()
-        conn.commit()
-
-    return result
-
 
 def main():
     parser = get_parser()
     args = parser.parse_args()
+
+    queuelib.setup_logging()
+    service = AnomalyDetectorService()
     if args.test:
-        logging.basicConfig(level=logging.INFO)
         if not args.proxy:
             print("Proxy argument required")
             sys.exit(1)
-        print(test_url(args.url, args.proxy, None, None, None, args.debug))
+        print(service.test_url(args.url, args.proxy))
         return
-
-    # otherwise run queue server
-    queuelib.setup_logging()
-    gather = AnomalyDetectorService()
-    gather.run()
+    service.run()
 
 if __name__ == '__main__':
     main()
