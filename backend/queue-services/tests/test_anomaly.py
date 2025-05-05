@@ -101,3 +101,22 @@ class AnomalyTests(unittest.TestCase):
 
     def testAnalyzeReal(self):
         self.detector.collate_analysis(AnomalyTestFixtures.UNBLOCKED, AnomalyTestFixtures.BLOCKED)
+
+class TestAnomalyService(unittest.TestCase):
+    def setUp(self):
+        self.service = anomaly.AnomalyDetectorService()
+
+    def test_summarize_script(self):
+        s = """<script> remove me 
+            </script>"""
+        self.assertEqual(self.service.text_summary(s), "")
+
+    def test_summarize_style(self):
+        s = """<style> remove me 
+            </style>"""
+        self.assertEqual(self.service.text_summary(s), "")
+
+    def test_summarize_tag(self):
+        s = """<b> remains 
+            </b>"""
+        self.assertEqual(self.service.text_summary(s), "remains")
