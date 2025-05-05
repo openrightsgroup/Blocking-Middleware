@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 
+import re
 import sys
 import json
 import logging
@@ -31,7 +32,6 @@ class AnomalyCheckResponse(DBObject):
 
 class AnomalyDetector(object):
     def __init__(self):
-        self.logger = logging.getLogger(__class__.__name__)
         pass
 
     def detect(self, result):
@@ -145,19 +145,30 @@ class AnomalyDetectorService(QueueService):
                 # 'ssl_verified': r.ssl_verified,
                 # 'ip': r.peername,
                 'content': r.text,
+                'text_summary': cls.text_summary(r.text),
                 'hash': cls.sha256(r.content)
             }
         }
 
+    @staticmethod
+    def text_summary(text):
+        s = re.sub(r'<(script|style).*?</(script|style)>', '', text, flags=re.DOTALL)
+        s = re.sub(r'<.*?>', '', s, flags=re.DOTALL)
+        s = re.sub(r'\s\s+', '\n', s, flags=re.DOTALL)
+        s = s.strip()
+        logging.info("Summary: %s", s[:300])
+        return s[:200]
+
     def test_url(self, url, proxy):
         """ For ad-hoc testing through proxy"""
-    
+
         r1 = self.fetch_url(url, None)
         r2 = self.fetch_url(url, proxy)
-    
+
         result = AnomalyDetector().collate_analysis(r1, r2)
-    
+
         if self.conn:
+            logging.info("Looking up urlid: %s", url)
             q = Query(self.conn, "select urlid from public.urls where url = %s", [url])
             row = q.fetchone()
             q.close()
@@ -182,7 +193,7 @@ class AnomalyDetectorService(QueueService):
             })
             rsp2.store()
             self.conn.commit()
-    
+
         return result
 
 
