@@ -90,8 +90,9 @@ class AnomalyDetectorService(QueueService):
 
     def setup_bindings(self):
         self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
-        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.anomaly")
-        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.org")
+        exch = self.cfg.get('daemon', 'exchange')
+        for key in self.config['routing_keys'].split(','):
+            self.ch.queue_bind(self.QUEUE_NAME, exch, key.strip())
 
     def process_message(self,data):
         try:
