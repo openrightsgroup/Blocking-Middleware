@@ -32,6 +32,7 @@ class AnomalyCheckResponse(DBObject):
 
 class AnomalyDetector(object):
     def __init__(self):
+        self.logger = logging.getLogger(__class__.__name__)
         pass
 
     def detect(self, result):
@@ -89,7 +90,8 @@ class AnomalyDetectorService(QueueService):
 
     def setup_bindings(self):
         self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
-        # self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "anomalydetector")
+        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.anomaly")
+        self.ch.queue_bind(self.QUEUE_NAME, "org.blocked", "url.org")
 
     def process_message(self,data):
         try:
