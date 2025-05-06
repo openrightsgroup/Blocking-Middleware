@@ -821,6 +821,13 @@ class ISPReportLoader {
         return '{' . implode(",",$values) . "}";
     }
 
+    function validateEmail($email) {
+        if (!preg_match('/^\S+@([a-zA-Z0-9\-]+\.)+[A-Za-z]{2,10}$/', $email)) {
+            throw new InvalidEmailError();
+        }
+        return true;
+    }
+    
     function insert($mailname, $name, $email, $urlID, $network_name, $message, $report_type, $send_updates, $contact_id, $allow_publish, $status, $site_category='', $allow_contact=0, $usertype=null) {
         $q = $this->conn->query("insert into isp_reports
         (name, email, urlID, network_name, message, report_type, send_updates, contact_id, allow_publish, status, site_category, allow_contact, mailname, user_type, created)

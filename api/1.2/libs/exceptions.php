@@ -45,3 +45,5 @@ class InvalidTokenError extends APIException {}
 class InvalidSortError extends APIException {}
 
 class ContactPermissionDeniedError extends APIException {}
+
+class InvalidEmailError extends APIException {}

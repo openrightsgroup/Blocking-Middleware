@@ -213,6 +213,10 @@ $app->error(function(APIException $e, $code) {
 			$code = 400;
 			$message = "One or more required parameters missing or invalid: " . $e->getMessage();
 			break;
+        case "InvalidEmailError":
+            $code = 400;
+            $message = "Invalid email address supplied";
+            break;
 		case "InvalidTokenError":
 			$code = 400;
 			$message = "The supplied verification token is not in a valid format";
@@ -1675,6 +1679,8 @@ $app->post('/ispreport/submit', function (Request $req) use ($app) {
         }
     }
 
+    $app['db.contact.load']->validateEmail($data['reporter']['email']);
+    
     $contact = $app['db.contact.load']->insert(
         $data['reporter']['email'],
         $data['reporter']['name'],
