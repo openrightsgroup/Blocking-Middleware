@@ -24,7 +24,7 @@ other results to detect anomalies.
 
 class AnomalyCheckResult(DBObject):
     TABLE = 'anomaly_check_results'
-    FIELDS = ['urlid', 'result_json', 'review', 'reviewed_by']
+    FIELDS = ['urlid', 'result_json', 'review', 'reviewed_by', 'review_timestamp']
 
 class AnomalyCheckResponse(DBObject):
     TABLE = 'anomaly_check_responses'
