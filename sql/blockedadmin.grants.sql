@@ -54,3 +54,7 @@ GRANT select ON tags to blockedadmin;
 GRANT select on selected_categories to blockedadmin;
 
 GRANT select on isp_report_users to blockedadmin;
+
+GRANT UPDATE(review,reviewed_by,reviewed_timestamp) on anomaly_check_results to blockedadmin;
+GRANT select on anomaly_check_results to blockedadmin;
+GRANT select on anomaly_check_responses to blockedadmin;
