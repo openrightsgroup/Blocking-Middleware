@@ -2,7 +2,10 @@
 import os
 import sys
 import json
+import time
+import random
 import logging
+import datetime
 import psycopg2
 
 try:
@@ -87,3 +90,13 @@ class QueueService(object):
                               callback=self.recv)
         while True:
             self.ch.wait()
+
+    def jitter(self, data):
+        if 'timestamp' not in data:
+            return
+        dt = datetime.datetime.strptime(data['timestamp'], '%Y-%m-%d %H:%M:%S')
+        if (datetime.datetime.now() - dt).total_seconds() < 60:
+            logging.debug("Invoking random jitter")
+            time.sleep(random.randint(2, 30))
+
+

@@ -96,6 +96,7 @@ class AnomalyDetectorService(QueueService):
 
     def process_message(self,data):
         try:
+            self.jitter(data)
             result = self.test_url(data['url'], self.config['proxy'])
             logging.info("Stored result: %s", result)
         except Exception as v:
