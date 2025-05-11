@@ -1813,6 +1813,30 @@ CREATE SEQUENCE public.users_id_seq
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
+--
+-- anomaly checker
+--
+
+CREATE TABLE public.anomaly_check_results (
+    id serial not null primary key,
+    urlid int not null,
+    result_json json not null,
+    review boolean,
+    reviewed_timestamp timestamptz,
+    reviewed_by text,
+    created timestamptz not null,
+    last_updated timestamptz null
+);
+
+CREATE TABLE public.anomaly_check_responses (
+    id serial not null primary key,
+    result_id int not null,
+    region varchar(10) not null,
+    response_json json not null,
+    created timestamptz not null,
+    last_updated timestamptz null
+);
+
 
 --
 -- Name: cache_copyright_blocks; Type: TABLE; Schema: stats; Owner: -; Tablespace: 
@@ -2773,6 +2797,15 @@ ALTER TABLE ONLY public.url_hierarchy
 
 ALTER TABLE ONLY public.url_hierarchy
     ADD CONSTRAINT url_hierarchy_urlid_fkey FOREIGN KEY (urlid) REFERENCES public.urls(urlid);
+
+
+--
+-- anomaly
+--
+
+ALTER TABLE public.anomaly_check_responses add foreign key (result_id) references public.anomaly_check_results (id)  ON DELETE CASCADE;
+ALTER TABLE public.anomaly_check_results add foreign key (urlid) references public.urls (urlid);
+
 
 
 --

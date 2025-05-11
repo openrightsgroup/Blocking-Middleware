@@ -9,7 +9,7 @@ GRANT UPDATE(last_updated) ON TABLE isp_reports TO blockedadmin;
 GRANT UPDATE(status) ON TABLE isp_reports TO blockedadmin;
 GRANT UPDATE(resolved_email_id) ON TABLE isp_reports TO blockedadmin;
 GRANT UPDATE(resolved_userid) ON isp_reports TO blockedadmin;
-GRANT UPDATE(allow_unpublish) ON isp_reports TO blockedadmin;
+GRANT UPDATE(allow_publish) ON isp_reports TO blockedadmin;
 
 GRANT SELECT,INSERT ON TABLE isp_report_comments TO blockedadmin;
 GRANT SELECT,UPDATE ON TABLE isp_report_comments_id_seq TO blockedadmin;
