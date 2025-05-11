@@ -1821,7 +1821,8 @@ CREATE TABLE public.anomaly_check_results (
     id serial not null primary key,
     urlid int not null,
     result_json json not null,
-    review text,
+    review boolean,
+    reviewed_timestamp timestamptz,
     reviewed_by text,
     created timestamptz not null,
     last_updated timestamptz null
