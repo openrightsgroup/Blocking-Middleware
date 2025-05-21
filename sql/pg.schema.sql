@@ -1817,11 +1817,17 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 -- anomaly checker
 --
 
+CREATE TYPE public.enum_anomaly_review_status AS ENUM(
+    'new',
+    'blocked',
+    'not-blocked'
+);
+
 CREATE TABLE public.anomaly_check_results (
     id serial not null primary key,
     urlid int not null,
     result_json json not null,
-    review boolean,
+    review enum_anomaly_review_status default 'new',
     reviewed_timestamp timestamptz,
     reviewed_by text,
     created timestamptz not null,
