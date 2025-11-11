@@ -159,12 +159,16 @@ isps:
     b1: "PARENTAL"
     b2: "PARENTAL"
     b3: "MALWARE"
+    bh1: "PARENTAL"
+    bh2: "PARENTAL"
     <<: *susp-types
   match:
     m0: "re:url:https?://assets\\.virginmedia\\.com/site-blocked\\.html"
     m1: "re:url:https?://assets\\.virginmedia\\.com/parental\\.html"
     m2: "re:url:https?://websafe\\.virginmedia\\.com/childsafe-blocked.html"
     m3: "re:url:https?://websafe\\.virginmedia\\.com/virussafe-blocked.html"
+    h1: "re:hdr.location:https?://assets\\.virginmedia\\.com/parental\\.html"
+    h2: "re:hdr.location:https?://websafe\\.virginmedia\\.com/childsafe-blocked.html"
     <<: *susp-rules
 
 - isp: VirginMedia-unfiltered
