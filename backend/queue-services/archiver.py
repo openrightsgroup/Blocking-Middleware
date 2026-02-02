@@ -39,7 +39,7 @@ class ArchiveService(QueueService):
             logging.error("wayback status: %s", repr(wbexc))
             raise
 
-    def process_message(self, data):
+    def process_message_ext(self, data, msg):
         try:
             self.snapshot_url(data['url'])
         except Exception:

@@ -3,3 +3,4 @@ requests_cache
 amqplib
 bs4
 psycopg2
+waybackpy

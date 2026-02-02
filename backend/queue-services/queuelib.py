@@ -73,7 +73,10 @@ class QueueService(object):
         if self.ACK == QueueAckBefore:
             self.ch.basic_ack(msg.delivery_tag)
 
-        ret = self.process_message(data)
+        if hasattr(self, 'process_message_ext'):
+            ret = self.process_message_ext(data, msg)
+        else:
+            ret = self.process_message(data)
 
         if self.ACK == QueueAckAfter:
             self.ch.basic_ack(msg.delivery_tag)
