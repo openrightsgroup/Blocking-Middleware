@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import time
 import logging
 import argparse
 
@@ -28,22 +29,35 @@ class ArchiveService(QueueService):
         for key in self.config['routing_keys'].split(','):
             self.ch.queue_bind(self.QUEUE_NAME, exch, key.strip())
 
-    @staticmethod
-    def snapshot_url(url):
+    @classmethod
+    def get_delay(cls, current):
+        if current == 0:
+            return 30
+        if current == 30:
+            return 60
+        if current < 600:
+            return current * 2
+        return 600
 
-        call = waybackpy.WaybackMachineSaveAPI(url)
-        try:
-            archive_url = call.save()
-            return {'archive_url': archive_url, 'status': 'success'}
-        except waybackpy.exceptions.WaybackError as wbexc:
-            logging.error("wayback status: %s", repr(wbexc))
-            raise
+    @classmethod
+    def snapshot_url(cls, url):
+        delay = 5
 
-    def process_message_ext(self, data, msg):
-        try:
-            self.snapshot_url(data['url'])
-        except Exception:
-            pass
+        for attempt in range(10):
+            call = waybackpy.WaybackMachineSaveAPI(url)
+            try:
+                archive_url = call.save()
+                return {'archive_url': archive_url, 'status': 'success', 'attempt': attempt}
+            except waybackpy.exceptions.WaybackError as wbexc:
+                logging.warning("wayback status: %s", repr(wbexc))
+                logging.info("delaying for %d seconds", delay)
+                time.sleep(delay)
+                delay = cls.get_delay(delay)
+        logging.error("Failed to ")
+        return {'status': 'failed', 'delay': delay}
+
+    def process_message(self, data):
+        self.snapshot_url(data['url'])
 
         return True
 
@@ -64,7 +78,7 @@ def main():
     queuelib.setup_logging()
     service = ArchiveService()
     if args.test:
-        print(service.snapshot_url(args.url)
+        print(service.snapshot_url(args.url))
         return
 
     service.run()
