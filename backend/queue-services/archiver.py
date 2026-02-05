@@ -42,14 +42,17 @@ class ArchivedUrl(NORM.DBObject):
 
 class ArchiveService(QueueService):
     QUEUE_NAME = 'archive'
-
+    DEFAULT_ROUTING_KEYS = "archive"
+    
     def __init__(self):
         super(ArchiveService, self).__init__()
 
     def setup_bindings(self):
         self.ch.queue_declare(self.QUEUE_NAME, durable=True, auto_delete=False)
         exch = self.cfg.get('daemon', 'exchange')
-        for key in self.config['routing_keys'].split(','):
+        
+        routing_keys = self.config['routing_keys'] or self.DEFAULT_ROUTING_KEYS
+        for key in routing_keys.split(','):
             self.ch.queue_bind(self.QUEUE_NAME, exch, key.strip())
 
     @classmethod
@@ -60,13 +63,23 @@ class ArchiveService(QueueService):
             return 600
         return current * 2
 
+    def testing_snapshot(self, url):
+        from urllib.parse import urlparse
+        parts = urlparse(url)
+        archive_url = f"http://localhost:8401/save/datecode/{parts.netloc}{parts.path}"
+        return archive_url
+
+
     def snapshot_url(self, url):
         delay = 0
 
         for attempt in range(10):
             call = waybackpy.WaybackMachineSaveAPI(url)
             try:
-                archive_url = call.save()
+                if self.is_testing():
+                    archive_url = self.testing_snapshot(url)
+                else:
+                    archive_url = call.save()
                 archobj = ArchivedUrl(self.conn)
                 archobj.update({
                     'snapshot_url': archive_url,
@@ -80,7 +93,7 @@ class ArchiveService(QueueService):
                 logging.info("delaying for %d seconds", delay)
                 time.sleep(delay)
                 delay = self.get_delay(delay)
-        logging.error("Failed to ")
+        logging.error("Failed to snapshot")
         return {'status': 'failed', 'delay': delay}
 
     def process_message(self, data):

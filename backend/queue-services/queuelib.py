@@ -39,6 +39,10 @@ class QueueService(object):
     def setup_bindings(self):
         pass
 
+    @classmethod
+    def is_testing(cls):
+        return 'TESTING' in os.environ or hasattr(cls, "TESTING")
+
     def process_message(self, message):
         pass
 
