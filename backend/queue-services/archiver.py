@@ -8,6 +8,8 @@ import argparse
 import queuelib
 from queuelib import QueueService
 
+import NORM
+
 import waybackpy
 
 """
@@ -15,6 +17,27 @@ This daemon listens on a dedicated queue for Archival requests to be submitted t
 
 Should include some sort of retry logic
 """
+
+class ArchivedUrl(NORM.DBObject):
+    TABLE = 'archived_urls'
+    FIELDS = [
+        'urlid',
+        'snapshot_url',
+        # 'status',  # PENDING, COMPLETE, ERROR ?
+    ]
+    
+    def get_urlid(self, url):
+        q = NORM.Query(self.conn,
+                       "select id from public.urls where url = %s",
+                       [url])
+        row = q.fetchone()
+        if row is None:
+            raise NORM.exceptions.ObjectNotFound
+        return row[0]
+    
+    @classmethod
+    def get_latest_snapshot(cls, conn, urlid):
+        return cls.select_one(conn, urlid=urlid, _order='-id', _limit=1)
 
 
 class ArchiveService(QueueService):
@@ -33,26 +56,30 @@ class ArchiveService(QueueService):
     def get_delay(cls, current):
         if current == 0:
             return 30
-        if current == 30:
-            return 60
-        if current < 600:
-            return current * 2
-        return 600
+        if current >= 600:
+            return 600
+        return current * 2
 
-    @classmethod
-    def snapshot_url(cls, url):
-        delay = 5
+    def snapshot_url(self, url):
+        delay = 0
 
         for attempt in range(10):
             call = waybackpy.WaybackMachineSaveAPI(url)
             try:
                 archive_url = call.save()
+                archobj = ArchivedUrl(self.conn)
+                archobj.update({
+                    'snapshot_url': archive_url,
+                    'urlid': archobj.get_urlid(url),
+                })
+                archobj.store()
+                self.conn.commit()
                 return {'archive_url': archive_url, 'status': 'success', 'attempt': attempt}
             except waybackpy.exceptions.WaybackError as wbexc:
                 logging.warning("wayback status: %s", repr(wbexc))
                 logging.info("delaying for %d seconds", delay)
                 time.sleep(delay)
-                delay = cls.get_delay(delay)
+                delay = self.get_delay(delay)
         logging.error("Failed to ")
         return {'status': 'failed', 'delay': delay}
 

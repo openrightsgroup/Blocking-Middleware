@@ -1843,6 +1843,13 @@ CREATE TABLE public.anomaly_check_responses (
     last_updated timestamptz null
 );
 
+CREATE TABLE public.archived_urls (
+    id serial primary key not null,
+    urlid int not null,
+    snapshot_url varchar not null,
+    created timestampstz not null,
+    last_updated timestamptz null,
+);
 
 --
 -- Name: cache_copyright_blocks; Type: TABLE; Schema: stats; Owner: -; Tablespace: 
