@@ -1827,7 +1827,7 @@ CREATE TABLE public.anomaly_check_results (
     id serial not null primary key,
     urlid int not null,
     result_json json not null,
-    review enum_anomaly_review_status default 'new',
+    review public.enum_anomaly_review_status default 'new',
     reviewed_timestamp timestamptz,
     reviewed_by text,
     created timestamptz not null,
@@ -1847,8 +1847,8 @@ CREATE TABLE public.archived_urls (
     id serial primary key not null,
     urlid int not null,
     snapshot_url varchar not null,
-    created timestampstz not null,
-    last_updated timestamptz null,
+    created timestamptz not null,
+    last_updated timestamptz null
 );
 
 --
