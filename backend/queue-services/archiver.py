@@ -28,7 +28,7 @@ class ArchivedUrl(NORM.DBObject):
     
     def get_urlid(self, url):
         q = NORM.Query(self.conn,
-                       "select id from public.urls where url = %s",
+                       "select urlid from public.urls where url = %s",
                        [url])
         row = q.fetchone()
         if row is None:
@@ -67,6 +67,7 @@ class ArchiveService(QueueService):
         from urllib.parse import urlparse
         parts = urlparse(url)
         archive_url = f"http://localhost:8401/save/datecode/{parts.netloc}{parts.path}"
+        logging.debug("TESTING: %s -> %s", url, archive_url)
         return archive_url
 
 
@@ -115,7 +116,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    queuelib.setup_logging()
+    queuelib.setup_logging(loglevel=logging.DEBUG if args.debug else logging.INFO)
     service = ArchiveService()
     if args.test:
         print(service.snapshot_url(args.url))

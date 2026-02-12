@@ -19,9 +19,9 @@ class QueueAckPosition(object): pass
 class QueueAckBefore(QueueAckPosition): pass
 class QueueAckAfter(QueueAckPosition): pass
 
-def setup_logging():
+def setup_logging(loglevel=logging.INFO):
     logging.basicConfig(
-        level=logging.INFO,
+        level=loglevel,
         format="%(asctime)s\t%(levelname)s\t%(message)s",
         datefmt="[%Y-%m-%d %H:%M:%S]",
         )
