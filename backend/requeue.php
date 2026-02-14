@@ -3,7 +3,6 @@
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 include "$dir/../api/1.2/libs/amqp.php";
-include "$dir/../api/1.2/libs/config.php";
 include "$dir/../api/1.2/libs/jobs.php";
 $conn = db_connect();
 
@@ -52,7 +51,7 @@ function send_untested() {
 
     print "Sending URLs (untested)...\n";
     $c = send_urls($result, "check.public");
-    print "$c urls sent.\n";
+    print "untested: $c urls sent.\n";
     update_jobs($conn, "requeue_untested", "$c urls sent.");
 }
 
@@ -68,7 +67,7 @@ function send_tested() {
 
     print "Sending URLs (previously tested)...\n";
     $c = send_urls($result);
-    print "$c urls sent.\n";
+    print "tested: $c urls sent.\n";
     update_jobs($conn, "requeue_tested", "$c urls sent.");
 }
 
@@ -82,7 +81,7 @@ function send_reported() {
 
     print "Sending URLs (reported)...\n";
     $c = send_urls($result, 'url.public.gb');
-    print "$c urls sent.\n";
+    print "reported: $c urls sent.\n";
     update_jobs($conn, "requeue_reported", "$c urls sent.");
 }
 
@@ -95,7 +94,7 @@ function send_wpplugin() {
 
     print "Sending URLs (wpplugin)...\n";
     $c = send_urls($result, 'url.public.gb');
-    print "$c urls sent.\n";
+    print "wpplugin: $c urls sent.\n";
     update_jobs($conn, "requeue_wpplugin", "$c urls sent.");
 }
 
@@ -121,7 +120,7 @@ function send_dmoz() {
 
     print "Sending URLs (blocked dmoz)...\n";
     $c = send_urls($result);
-    print "$c urls sent.\n";
+    print "blocked_dmoz: $c urls sent.\n";
     update_jobs($conn, "requeue_dmoz", "$c urls sent.");
 }
 
@@ -137,8 +136,29 @@ function send_copyright() {
 
     print "Sending URLs (copyright blocked)...\n";
     $c = send_urls($result, "url.public.gb");
-    print "$c urls sent.\n";
+    print "copyright: $c urls sent.\n";
     update_jobs($conn, "requeue_copyright", "$c urls sent.");
+}
+
+function send_snapshots() {
+    global $conn;
+    
+    $result = $conn->query("select distinct urls.urlid, url, hash
+        from urls
+        inner join frontend.osa_cases on osa_cases.urlid = urls.urlid
+        where osa_cases.status = 'at_risk' and 
+        snapshot_last_sent < case
+            when snapshot_priority = 'high' then now() - interval '1 day' 
+            when snapshot_priority = 'medium' then now() - interval '7 day' 
+            when snapshot_priority = 'low' then now() - interval '30 day' 
+            end
+        order by urls.urlid limit 10", 
+        array()
+        );
+    print "Sending URLs (snapshot)...\n";
+    $c = send_urls($result, "snapshot");
+    print "snapshot: $c urls sent\n";
+    update_jobs($conn, "queue_snapshot", "$c urls sent");
 }
 
 if (has_arg("untested")) {
@@ -158,4 +178,9 @@ if (has_arg("dmoz")) {
 }
 if (has_arg("copyright")) {
     send_copyright();
+}
+
+// don't include in the default set
+if (in_array("snapshot", $_SERVER['argv'])) {
+    send_snapshots();
 }
