@@ -143,20 +143,26 @@ function send_copyright() {
 function send_snapshots() {
     global $conn;
     
-    $result = $conn->query("select distinct urls.urlid, url, hash
+    $result = $conn->query("with a as (select distinct osa_cases.id, urls.urlid, url, hash
         from urls
         inner join frontend.osa_cases on osa_cases.urlid = urls.urlid
-        where osa_cases.status = 'at_risk' and 
-        snapshot_last_sent < case
-            when snapshot_priority = 'high' then now() - interval '1 day' 
-            when snapshot_priority = 'medium' then now() - interval '7 day' 
-            when snapshot_priority = 'low' then now() - interval '30 day' 
-            end
-        order by urls.urlid limit 10", 
+        where osa_cases.status = 'at_risk' and (
+            snapshot_last_sent is null or 
+            snapshot_last_sent < case
+                when snapshot_priority = 'high' then now() - interval '1 day' 
+                when snapshot_priority = 'medium' then now() - interval '7 day' 
+                when snapshot_priority = 'low' then now() - interval '30 day' 
+                end
+            )
+        order by urls.urlid limit 10)
+        update frontend.osa_cases set snapshot_last_sent=now()
+        from a
+        where osa_cases.id = a.id
+        returning a.urlid, a.url, a.hash", 
         array()
         );
     print "Sending URLs (snapshot)...\n";
-    $c = send_urls($result, "snapshot");
+    $c = send_urls($result, "archive");
     print "snapshot: $c urls sent\n";
     update_jobs($conn, "queue_snapshot", "$c urls sent");
 }
