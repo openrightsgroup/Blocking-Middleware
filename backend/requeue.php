@@ -167,6 +167,19 @@ function send_snapshots() {
     update_jobs($conn, "queue_snapshot", "$c urls sent");
 }
 
+function send_snapshot_shutdown() {
+    global $conn;
+    
+    $sql = "select archive_url as url from frontend.osa_cases 
+    where created > now() - interval '1 day' and archive_url is not null and archive_url !~ '^https://web.archive.org'
+    order by id";
+    $result = $conn->query($sql, array());
+    print "Sending URLs (snapshot_shutdown)...\n";
+    $c = send_urls($result, "archive");
+    print "snapshot_shutdown: $c urls sent\n";
+    update_jobs($conn, "queue_snapshot_shutdown", "$c urls sent");
+}
+
 if (has_arg("untested")) {
     send_untested();
 }
@@ -189,4 +202,7 @@ if (has_arg("copyright")) {
 // don't include in the default set
 if (in_array("snapshot", $_SERVER['argv'])) {
     send_snapshots();
+}
+if (in_array("snapshot_shutdown", $_SERVER['argv'])) {
+    send_snapshot_shutdown();
 }
