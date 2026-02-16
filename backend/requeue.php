@@ -171,7 +171,8 @@ function send_snapshot_shutdown() {
     global $conn;
     
     $sql = "select archive_url as url from frontend.osa_cases 
-    where created > now() - interval '1 day' and archive_url is not null and archive_url !~ '^https://web.archive.org'
+    where (created > now() - interval '1 day' or last_updated > now() - interval '1 day')
+    and archive_url is not null and archive_url !~ '^https://web.archive.org'
     order by id";
     $result = $conn->query($sql, array());
     print "Sending URLs (snapshot_shutdown)...\n";
