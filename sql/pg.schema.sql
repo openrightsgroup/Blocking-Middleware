@@ -1845,7 +1845,8 @@ CREATE TABLE public.anomaly_check_responses (
 
 CREATE TABLE public.archived_urls (
     id serial primary key not null,
-    urlid int not null,
+    urlid int null,
+    url varchar not null,
     snapshot_url varchar not null,
     created timestamptz not null,
     last_updated timestamptz null

@@ -22,6 +22,7 @@ class ArchivedUrl(NORM.DBObject):
     TABLE = 'archived_urls'
     FIELDS = [
         'urlid',
+        'url',
         'snapshot_url',
         # 'status',  # PENDING, COMPLETE, ERROR ?
     ]
@@ -32,7 +33,7 @@ class ArchivedUrl(NORM.DBObject):
                        [url])
         row = q.fetchone()
         if row is None:
-            raise NORM.exceptions.ObjectNotFound
+            return None
         return row[0]
     
     @classmethod
@@ -85,6 +86,7 @@ class ArchiveService(QueueService):
                 archobj.update({
                     'snapshot_url': archive_url,
                     'urlid': archobj.get_urlid(url),
+                    'url': url,
                 })
                 archobj.store()
                 self.conn.commit()
