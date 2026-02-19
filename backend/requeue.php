@@ -61,7 +61,7 @@ function send_tested() {
 
     $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
-	source not in ('social') and status = 'ok' order by lastpolled limit 100",
+	source not in ('social','dmoz') and status = 'ok' order by lastpolled limit 100",
         array()
     );
 
