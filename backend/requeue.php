@@ -61,8 +61,8 @@ function send_tested() {
 
     $result = $conn->query("select urlid, url, hash from urls 
 	where (lastpolled < (now() - interval '7 day')) and 
-	source not in ($placeholders) and status = 'ok' order by lastpolled limit 100",
-        $REQUEUE_EXCLUDE_SOURCES
+	source not in ('social') and status = 'ok' order by lastpolled limit 100",
+        array()
     );
 
     print "Sending URLs (previously tested)...\n";
