@@ -146,7 +146,7 @@ function send_snapshots() {
     $result = $conn->query("with a as (select distinct osa_cases.id, urls.urlid, url, hash
         from urls
         inner join frontend.osa_cases on osa_cases.urlid = urls.urlid
-        where osa_cases.status = 'at_risk' and (
+        where osa_cases.status = 'at-risk' and (
             snapshot_last_sent is null or 
             snapshot_last_sent < case
                 when snapshot_priority = 'high' then now() - interval '1 day' 
